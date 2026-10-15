@@ -5,6 +5,7 @@ its own tools. Every visible step is emitted on the EventBus.
 """
 
 import asyncio
+import json
 import os
 import re
 import subprocess
@@ -15,10 +16,11 @@ from claude_agent_sdk import (TERMINAL_TASK_STATUSES, AgentDefinition, Assistant
                               HookMatcher, ResultMessage, TaskNotificationMessage, TaskStartedMessage,
                               TaskUpdatedMessage, TextBlock, ToolResultBlock, ToolUseBlock, UserMessage, query)
 
-from . import agents, browser, tools
+from . import agents, browser, tools, wcag
 from .events import PHASES, EventBus
-from .state import Store
-from .tools import CTX, emit, label_of, log, path_of, url_of
+from .state import (BATCH_DONE, BATCH_ESCALATED, BATCH_IN_PROGRESS, BATCH_TODO, FIXED_PENDING, FIXING,
+                    NEEDS_HUMAN, REJECTED, SEVERITIES, TODO_STATUSES, VALIDATED, Store)
+from .tools import CTX, emit, label_of, log, path_of, set_status, url_of
 
 WRITE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 RESUME_PREFIX = "RESUMING after an interruption: check state via tools, finish only what is missing.\n\n"
@@ -32,11 +34,11 @@ class BudgetExceeded(RuntimeError):
 class Orchestrator:
     def __init__(self, *, store: Store, bus: EventBus, site_dir: Path, base_url: str, work_dir: Path,
                  model: str | None = None, chaos: bool = False, budget: float | None = None,
-                 until: str | None = None, site_name: str = "maison-lumiere.fr",
+                 until: str | None = None, only_batch: str | None = None, site_name: str = "maison-lumiere.fr",
                  repo: str = "maison-lumiere/storefront"):
         self.store, self.bus = store, bus
         self.site_dir, self.base_url, self.work_dir = Path(site_dir).resolve(), base_url, Path(work_dir).resolve()
-        self.model, self.budget, self.until = model, budget, until
+        self.model, self.budget, self.until, self.only_batch = model, budget, until, only_batch
         self.site_name, self.repo = site_name, repo
         self.cost = store.get("cost_usd")
         self.env = {}
@@ -62,7 +64,9 @@ class Orchestrator:
                 break
             self.store.start_phase(phase)
             emit("phase.changed", {"phase": phase})
-            await getattr(self, f"phase_{phase}")()
+            if await getattr(self, f"phase_{phase}")() is False:     # partial phase (--only-batch)
+                log(f"Phase {phase} left open; continue with --resume", "phase", "orchestrator")
+                break
             self.store.finish_phase(phase)
             if phase == self.until:
                 log(f"Stopped after phase {phase} (--until)", "phase", "orchestrator")
@@ -282,7 +286,7 @@ class Orchestrator:
         self.store.freeze_score()
         sc = self.store.score()
         self.store.set("meta", {**self.store.get("meta"), "baseline_score": sc["value"]})
-        tools.emit_score()
+        tools.emit_score(force=True)
         issues = self.store.issues()
         missed = sum(1 for i in issues if i["source"] != "axe")
         funnel = {p["url"] for p in pages if p["template"] in ("product", "cart", "checkout")}
@@ -290,6 +294,181 @@ class Orchestrator:
         log(f"Audit complete: {len(issues)} issues, {missed} missed by automated scanners, "
             f"{len(blockers)} purchase blockers ({', '.join(blockers) or 'none'}). Baseline score {sc['value']}.",
             "ok", "orchestrator")
+
+    # ------------------------------------------------------------------ plan / fix
+    async def phase_plan(self) -> None:
+        log("Planning: one batch per WCAG criterion, purchase blockers first", "phase", "orchestrator")
+        groups: dict[str, list[dict]] = {}
+        for i in self.store.issues():
+            groups.setdefault(i["wcag"], []).append(i)
+
+        def rank(crit: str):
+            sev = min(SEVERITIES.index(i["severity"]) for i in groups[crit])
+            return sev, [int(x) for x in crit.split(".")]
+
+        batches = []
+        for n, crit in enumerate(sorted(groups, key=rank), 1):
+            ids = [i["id"] for i in groups[crit]]
+            batches.append({"id": f"B{n:02d}", "criterion": crit, "issue_ids": ids, "status": BATCH_TODO,
+                            "attempt": 0, "commits": []})
+            log(f"Batch B{n:02d} · WCAG {crit} {wcag.name(crit)}: {', '.join(ids)}", "msg", "orchestrator")
+        self.store.set("batches", batches)
+        log(f"{len(batches)} batches planned for {sum(len(b['issue_ids']) for b in batches)} issues", "ok",
+            "orchestrator")
+
+    async def phase_fix(self) -> bool:
+        log("Fix and verify: developer ⇄ independent tester, one batch at a time", "phase", "orchestrator")
+        if self.git("status", "--porcelain"):          # interrupted mid-batch: replay it from committed code
+            self._discard("Discarded uncommitted changes from an interrupted batch")
+        for b in self.store.get("batches"):
+            if b["status"] in (BATCH_DONE, BATCH_ESCALATED):
+                continue
+            if self.only_batch and b["criterion"] != self.only_batch and b["id"] != self.only_batch:
+                continue
+            await self._fix_batch(b["id"])
+        if self.only_batch:
+            return False
+        self._status("developer", "done", "all batches done")
+        self._status("tester", "done", "all batches verified")
+        return True
+
+    def _batch(self, bid: str) -> dict:
+        return next(b for b in self.store.get("batches") if b["id"] == bid)
+
+    def _save_batch(self, batch: dict) -> None:
+        self.store.set("batches", [batch if b["id"] == batch["id"] else b for b in self.store.get("batches")])
+
+    def _discard(self, why: str, kind: str = "msg") -> None:
+        self.git("checkout", "--", ".")
+        self.git("clean", "-fdq")
+        log(why, kind, "orchestrator")
+
+    async def _fix_batch(self, bid: str) -> None:
+        b = self._batch(bid)
+        crit = b["criterion"]
+        b["status"] = BATCH_IN_PROGRESS
+        self._save_batch(b)
+        while b["attempt"] < 3:
+            todo = [i["id"] for i in self.store.issues() if i["id"] in b["issue_ids"] and i["status"] in TODO_STATUSES]
+            if not todo:
+                break
+            b["attempt"] += 1
+            CTX.attempt = b["attempt"]
+            self._save_batch(b)
+            emit("batch.started", {"id": bid, "criterion": crit, "issue_ids": todo, "attempt": b["attempt"]})
+            log(f"Batch {bid} · WCAG {crit} {wcag.name(crit)} · attempt {b['attempt']}: {', '.join(todo)}",
+                "phase", "orchestrator")
+            self._status("tester", "idle", "waiting")
+            for iid in todo:
+                set_status(iid, FIXING, "orchestrator", "Assigned to developer", attempts=b["attempt"])
+
+            # reference screenshots of the committed code, so the tester sees only this batch's changes
+            issues = [self.store.issue(i) for i in todo]
+            pages = sorted({p for i in issues for p in i["pages"]})
+            shots = tools.shots_dir()
+            refs = await asyncio.gather(*(browser.screenshot(
+                url_of(p), shots / f"ref-{label_of(p)}-{bid}-{b['attempt']}.png") for p in pages))
+            CTX.ref_shots = dict(zip(pages, refs))
+
+            # developer
+            try:
+                await self.run_agent("developer", agents.DEVELOPER, self._developer_prompt(b, issues),
+                                     cwd=self.site_dir, write_root=self.site_dir, max_turns=40,
+                                     activity=f"WCAG {crit}")
+            except BudgetExceeded:
+                raise
+            except Exception as e:
+                log(f"Developer session lost: {e}", "err", "orchestrator")
+            for iid in todo:
+                if self.store.issue(iid)["status"] == FIXING:
+                    set_status(iid, REJECTED, "orchestrator", "Not handled by the developer")
+            pending = [i for i in todo if self.store.issue(i)["status"] == FIXED_PENDING]
+            for iid in pending:
+                files = self.store.issue(iid)["files"]
+                diff = self.git("diff", "--", *files, check=False) if files else ""
+                self.store.update_issue(iid, fix_diff=(diff or self.git("diff", check=False))[:6000])
+
+            # independent tester
+            if pending:
+                CTX.batch_verdict = None
+                try:
+                    await self.run_agent("tester", agents.TESTER, self._tester_prompt(b, pending),
+                                         cwd=self.site_dir, write_root=None, max_turns=40,
+                                         activity=f"verifying WCAG {crit}")
+                except BudgetExceeded:
+                    raise
+                except Exception as e:
+                    log(f"Tester session lost: {e}", "err", "orchestrator")
+                for iid in pending:
+                    if self.store.issue(iid)["status"] == FIXED_PENDING:
+                        set_status(iid, REJECTED, "orchestrator", "No verdict from the tester")
+                bv = CTX.batch_verdict or {"accepted": True, "reason": ""}
+                if not bv["accepted"]:
+                    self._discard(f"Rollback of batch {bid} (WCAG {crit}): {bv['reason']}", "rollback")
+                    for iid in todo:
+                        if self.store.issue(iid)["status"] in (VALIDATED, FIXED_PENDING):
+                            set_status(iid, REJECTED, "orchestrator", f"Batch rolled back: {bv['reason']}")
+                    continue
+
+            validated = [i for i in todo if self.store.issue(i)["status"] == VALIDATED]
+            if validated and self.git("status", "--porcelain"):
+                self._commit(b, validated)
+            elif self.git("status", "--porcelain") and not validated:
+                self._discard(f"No fix verified in batch {bid}; unverified changes discarded")
+
+        remaining = [i["id"] for i in self.store.issues() if i["id"] in b["issue_ids"] and i["status"] in TODO_STATUSES]
+        for iid in remaining:
+            last = next((h["note"] for h in reversed(self.store.issue(iid)["history"]) if h["status"] == REJECTED), "")
+            note = f"Not verified after {b['attempt']} attempts. Last tester feedback: {last}"
+            set_status(iid, NEEDS_HUMAN, "orchestrator", note, human_action="Front-end developer: " + note)
+        if self.git("status", "--porcelain"):
+            self._discard("Discarded unverified changes left by the batch")
+        b["status"] = BATCH_ESCALATED if remaining else BATCH_DONE
+        self._save_batch(b)
+        CTX.attempt = 0
+        log(f"Batch {bid} {'escalated to a human' if remaining else 'done'}", "err" if remaining else "ok",
+            "orchestrator")
+
+    def _commit(self, b: dict, validated: list[str]) -> None:
+        titles = "; ".join(self.store.issue(i)["title"] for i in validated)
+        message = f"fix(a11y): WCAG {b['criterion']} — {titles}"
+        if len(message) > 120:
+            message = message[:119] + "…"
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", message)
+        sha = self.git("rev-parse", "--short=7", "HEAD")
+        files = self.git("show", "--name-only", "--format=", "HEAD").splitlines()
+        b["commits"].append(sha)
+        self._save_batch(b)
+        emit("commit.created", {"sha": sha, "criterion": b["criterion"], "message": message, "files": files})
+        log(f"Committed {sha} {message}", "commit", "orchestrator")
+
+    def _developer_prompt(self, b: dict, issues: list[dict]) -> str:
+        brief = [{k: i[k] for k in ("id", "title", "impact", "evidence", "selector", "pages", "severity")}
+                 for i in issues]
+        rejections = []
+        for i in issues:
+            for h in i["history"]:
+                if h["status"] == REJECTED:
+                    rejections.append(f"- {i['id']} (attempt {h.get('attempt', '?')}, {h['by']}): {h['note']}")
+        out = (f"Batch {b['id']} · WCAG {b['criterion']} {wcag.name(b['criterion'])} · attempt {b['attempt']}.\n"
+               f"The store is served from your working directory at {self.base_url} "
+               f"(page \"/\" is index.html).\n\nIssues:\n{json.dumps(brief, ensure_ascii=False, indent=1)}\n")
+        if rejections:
+            out += "\nPREVIOUS TESTER REJECTIONS (fix exactly these):\n" + "\n".join(rejections) + "\n"
+        return out
+
+    def _tester_prompt(self, b: dict, pending: list[str]) -> str:
+        items = []
+        for iid in pending:
+            i = self.store.issue(iid)
+            items.append({k: i[k] for k in ("id", "title", "wcag", "selector", "pages", "evidence", "fix_note", "files")})
+        pages = sorted({p for it in items for p in it["pages"]})
+        return (f"Verify batch {b['id']} · WCAG {b['criterion']} {wcag.name(b['criterion'])} · attempt {b['attempt']}.\n"
+                f"Store: {self.base_url}. Pages to check: {', '.join(pages)}.\n"
+                f"Issues declared fixed (original evidence = the code before the fix):\n"
+                f"{json.dumps(items, ensure_ascii=False, indent=1)}\n"
+                "Give a verdict for every issue, then a batch_verdict.")
 
 
 # ---------------------------------------------------------------------- log helpers

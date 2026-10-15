@@ -116,7 +116,8 @@ class Store:
                 continue
             if source == "axe" and rule and i["source"] == "axe" and i["rule"] == rule:
                 return i
-            if _key(i["selector"]) == _key(selector) and (i["rule"] == rule or _key(i["title"]) == _key(title)):
+            same_sel = _key(selector) in {_key(i["selector"])} | {_key(x) for x in i["selector"].split(",")}
+            if same_sel and (i["rule"] == rule or _key(i["title"]) == _key(title)):
                 return i
         return None
 
@@ -136,6 +137,15 @@ class Store:
                 for p in pages:
                     if p not in dup["pages"]:
                         dup["pages"].append(p)
+                # keep every occurrence visible to the developer: selectors and evidence accumulate
+                known = [x.strip() for x in dup["selector"].split(",")]
+                seen = {_key(x) for x in known}
+                extra = [x.strip() for x in selector.split(",") if x.strip() and _key(x) not in seen]
+                if extra:
+                    dup["selector"] = ", ".join(known + extra)
+                ev = (f.get("evidence") or "").strip()
+                if ev and ev not in dup["evidence"] and len(dup["evidence"]) < 1200:
+                    dup["evidence"] = (dup["evidence"] + "\n" + ev)[:1200]
                 if SEVERITIES.index(severity) < SEVERITIES.index(dup["severity"]):
                     dup["severity"] = severity
                 self._save()
@@ -147,7 +157,7 @@ class Store:
                 "criterion_name": f.get("criterion_name") or wcag.name(wcag_),
                 "level": f.get("level") or wcag.level(wcag_),
                 "principle": scoring.principle(wcag_), "en301549": "9." + wcag_,
-                "title": title, "impact": f.get("impact", ""), "evidence": (f.get("evidence") or "")[:600],
+                "title": title, "impact": f.get("impact", ""), "evidence": (f.get("evidence") or "").strip()[:600],
                 "severity": severity, "source": source, "selector": selector, "rule": rule,
                 "pages": list(dict.fromkeys(pages)), "status": DETECTED, "attempts": 0,
                 "files": [], "fix_diff": "", "fix_note": "", "human_action": "",

@@ -45,12 +45,16 @@ def test_duplicate_merges_pages(store):
 
 def test_scanner_issues_merge_by_rule(store):
     a, _ = store.add_issue(wcag="1.4.3", selector=".hero p", rule="color-contrast", source="axe",
-                           title="Hero text too pale", pages=["/"])
+                           title="Hero text too pale", pages=["/"], evidence="<p>hero</p>")
     b, merged = store.add_issue(wcag="1.4.3", selector=".site-footer", rule="color-contrast", source="axe",
-                                title="Footer too light", pages=["/cart.html"])
+                                title="Footer too light", pages=["/cart.html"], evidence="<footer>")
     assert merged and b["id"] == a["id"] and b["pages"] == ["/", "/cart.html"]
+    assert b["selector"] == ".hero p, .site-footer" and b["evidence"] == "<p>hero</p>\n<footer>"
     c, merged = store.add_issue(wcag="1.4.3", selector=".promo", rule="", source="agent", title="Promo pale")
     assert not merged
+    d, merged = store.add_issue(wcag="1.4.3", selector=".promo-2", source="agent", title="promo pale")
+    e, merged = store.add_issue(wcag="1.4.3", selector=".promo-2", source="agent", title="Other words")
+    assert merged and e["id"] == d["id"] != c["id"]
 
 
 def test_issue_enrichment(store):

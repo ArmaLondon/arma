@@ -58,6 +58,7 @@ def main() -> int:
     ap.add_argument("--chaos", action="store_true", help="inject one transient audit_page failure")
     ap.add_argument("--budget", type=float, help="stop cleanly above this cost (USD)")
     ap.add_argument("--until", choices=PHASES, help="stop after this phase")
+    ap.add_argument("--only-batch", help="fix only this batch (criterion like 2.1.1, or id like B03)")
     args = ap.parse_args()
     load_env()
 
@@ -91,7 +92,8 @@ def main() -> int:
     print(f"recording → {rec.relative_to(ROOT)}", file=sys.stderr)
 
     orch = Orchestrator(store=store, bus=bus, site_dir=site, base_url=url, work_dir=STATE,
-                        model=args.model, chaos=args.chaos, budget=args.budget, until=args.until)
+                        model=args.model, chaos=args.chaos, budget=args.budget, until=args.until,
+                        only_batch=args.only_batch)
     started = time.monotonic()
     try:
         asyncio.run(orch.run())

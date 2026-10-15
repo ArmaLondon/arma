@@ -32,6 +32,7 @@ class Ctx:
     baseline: dict = field(default_factory=dict)    # url -> {"keys": [[rule, target]], "shot": path}
     ref_shots: dict = field(default_factory=dict)   # url -> screenshot of the committed code at batch start
     compare_n: int = 0
+    last_score: dict | None = None
 
 
 CTX = Ctx()
@@ -89,12 +90,16 @@ def auditor_name(url_or_page: str) -> str:
     return CTX.current_agent
 
 
-def emit_score() -> None:
+def emit_score(force: bool = False) -> None:
+    """Emit the backend-computed score (once the audit froze the total), only when it changes."""
     st = CTX.store
     if st and st.get("frozen_total"):
         sc = st.score()
-        emit("score", {"value": sc["value"], "baseline": st.get("meta").get("baseline_score", sc["value"]),
-                       "by_principle": sc["by_principle"], "eaa": sc["eaa"]})
+        data = {"value": sc["value"], "baseline": st.get("meta").get("baseline_score", sc["value"]),
+                "by_principle": sc["by_principle"], "eaa": sc["eaa"]}
+        if force or data != CTX.last_score:
+            CTX.last_score = data
+            emit("score", data)
 
 
 def set_status(issue_id: str, status: str, by: str, note: str = "", **fields: Any) -> dict:
@@ -250,6 +255,7 @@ async def mark_fixed(args):
     files = [str(f).lstrip("./") for f in (args.get("files") or [])]
     set_status(iid, FIXED_PENDING, "developer", args.get("explanation", ""),
                files=files, fix_note=args.get("explanation", ""))
+    log(f"{iid} fixed in {', '.join(files) or '?'}: {args.get('explanation', '')}", "msg", "developer")
     return _ok({"id": iid, "status": FIXED_PENDING})
 
 
@@ -263,6 +269,7 @@ async def cannot_fix(args):
         return _err(f"unknown issue {iid}")
     reason = args.get("reason", "")
     set_status(iid, NEEDS_HUMAN, CTX.current_agent, reason, human_action=reason)
+    log(f"Escalated {iid} to a human: {reason}", "msg", CTX.current_agent)
     return _ok({"id": iid, "status": NEEDS_HUMAN})
 
 
