@@ -13,6 +13,32 @@ const OUTCOME = {satisfied:["Satisfied","p-ok"], needs_revision:["Needs revision
 const METRIC_NAMES = {recall_all:"Recall, all defects", recall_agent_only:"Recall, defects scanners miss", precision:"Precision",
                       verified_fix_rate:"Verified fix rate", false_fix:"False fixes", regressions:"Regressions", honesty:"Honest escalations"};
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const DEMO_SITE = "maison-lumiere.fr";
+
+/* problem types in plain language, for the compliance team (WCAG criterion → type) */
+const CATS = [
+  {k: "keyboard", n: "Can't be used without a mouse", d: "Buttons, choices or menus that keyboard and switch users cannot reach.", w: ["2.1.1", "2.1.2", "2.4.3", "2.4.1"]},
+  {k: "focus", n: "Keyboard position is invisible", d: "Keyboard users cannot see which element they are on.", w: ["2.4.7"]},
+  {k: "names", n: "Buttons without a clear name", d: "Screen readers announce icons or symbols instead of what the button does.", w: ["4.1.2", "2.5.3"]},
+  {k: "forms", n: "Forms hard to fill in", d: "Missing labels, unclear errors or no autofill hints at checkout.", w: ["3.3.1", "3.3.2", "3.3.3", "3.3.4", "1.3.5"]},
+  {k: "contrast", n: "Text too faint to read", d: "Low contrast or meaning carried by colour alone.", w: ["1.4.3", "1.4.11", "1.4.1"]},
+  {k: "images", n: "Images not described", d: "Blind shoppers get no description of products and pictures.", w: ["1.1.1"]},
+  {k: "structure", n: "Confusing page structure", d: "Headings, tables or embedded widgets that assistive technology cannot follow.", w: ["1.3.1", "2.4.6", "1.3.2"]},
+  {k: "links", n: "Links that don't say where they go", d: "Repeated \u201cLearn more\u201d links with no context.", w: ["2.4.4"]},
+  {k: "lang", n: "Page language or title missing", d: "Wrong voice or vague tab titles for screen reader users.", w: ["3.1.1", "3.1.2", "2.4.2"]},
+  {k: "status", n: "Updates not announced", d: "Cart or error messages that appear silently.", w: ["4.1.3"]},
+];
+const CAT_OF = Object.fromEntries(CATS.flatMap((c) => c.w.map((w) => [w, c])));
+const OTHER = {k: "other", n: "Other WCAG problems", d: "Other WCAG 2.1 AA criteria."};
+const catOf = (wcag) => CAT_OF[wcag] || OTHER;
+/* page path or auditor label → page key ("/" and "home" → "home", "/cart.html" → "cart") */
+function pageKey(p) {
+  const s = String(p || "").replace(/^https?:\/\/[^/]+/, "").replace(/[?#].*$/, "");
+  if (s === "" || s === "/" || /\/index\.html?$/.test(s) || s === "home" || s === "index") return "home";
+  return s.replace(/^.*\//, "").replace(/\.html?$/, "") || "home";
+}
+const PAGE_NAME = {home: "Home", product: "Product page", cart: "Cart", checkout: "Checkout", category: "Category"};
+const pageName = (k) => PAGE_NAME[k] || k.charAt(0).toUpperCase() + k.slice(1);
 
 /* agent labels: hosted team (lead, auditor·page, developer, tester, writer) + older SDK recordings */
 function teamKey(a) {
@@ -34,7 +60,8 @@ function initial() {
   return {t: 0, site: "maison-lumiere.fr", repo: "", branch: "", session: "", phase: null, agents: {}, act: {}, subagents: [],
           logs: [], issues: {}, order: [], score: null, scoreHist: [], rejects: [], commits: [], docs: {}, pr: null, prSent: null,
           baselineMetrics: null, reauditMetrics: null, outcomes: [], evalRes: null, finished: false, cost: 0,
-          counts: {fixes: 0, rejected: 0, validated: 0, rollbacks: 0, human: 0, batches: 0}, now: null, fresh: new Set()};
+          counts: {fixes: 0, rejected: 0, validated: 0, rollbacks: 0, human: 0, batches: 0}, now: null, fresh: new Set(),
+          scanned: new Set(), scanning: new Set(), pages: []};
 }
 
 function apply(S, ev) {
@@ -61,6 +88,18 @@ function apply(S, ev) {
       if (k && d.kind !== "tool") S.act[k] = d.text;
       if (d.kind !== "tool") S.now = {a, text: d.text, kind: d.kind};
       if (d.kind === "rollback") S.counts.rollbacks++;
+      if (a.startsWith("auditor·")) {
+        const pk = pageKey(a.slice(8));
+        if (/\bfinished\b|\bfailed\b/.test(d.text)) { S.scanning.delete(pk); S.scanned.add(pk); }
+        else if (!S.scanned.has(pk)) S.scanning.add(pk);
+        if (!S.pages.includes(pk)) S.pages.push(pk);
+      }
+      // pages announced at mapping time (hosted: "register_page /cart.html (cart)"; SDK: "Registered /cart.html as …")
+      const reg = /^(?:register_page|Registered)\s+(\S+)/.exec(d.text || "");
+      if (reg && !S.pages.includes(pageKey(reg[1]))) S.pages.push(pageKey(reg[1]));
+      // the lead logs "auditor·cart finished" when a thread ends
+      const fin = /^(auditor·\S+) (finished|failed)/.exec(d.text || "");
+      if (fin) { const pk = pageKey(fin[1].slice(8)); S.scanning.delete(pk); S.scanned.add(pk); }
       break;
     }
     case "baseline": S.baselineMetrics = d; break;
@@ -68,10 +107,12 @@ function apply(S, ev) {
       if (!S.issues[d.id]) S.order.push(d.id);
       S.issues[d.id] = {pages: [], history: [], files: [], fix_diff: "", human_action: "", attempts: 0, ...d};
       S.fresh.add(d.id);
+      for (const pg of d.pages || []) if (!S.pages.includes(pageKey(pg))) S.pages.push(pageKey(pg));
       break;
     case "issue.merged": {
       const i = S.issues[d.id];
       if (i && !i.pages.includes(d.page)) i.pages = [...i.pages, d.page];
+      if (!S.pages.includes(pageKey(d.page))) S.pages.push(pageKey(d.page));
       break;
     }
     case "issue.status": {
@@ -144,7 +185,7 @@ function onEvent(ev) {
 function schedule() { if (dirty) return; dirty = true; requestAnimationFrame(() => { dirty = false; render(); }); }
 
 function resetView() {
-  S = initial(); logRendered = 0; $("log").innerHTML = ""; expanded.clear();
+  S = initial(); logRendered = 0; $("log").innerHTML = ""; expanded.clear(); drawGauge.prev = null; tilesKey = catsKey = "";
   $("p-pr").dataset.ready = ""; $("p-stmt").dataset.ready = ""; selectTab("findings");
 }
 
@@ -153,11 +194,12 @@ function toast(msg) {
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 4500);
 }
 
-async function runAudit() {
+async function runAudit(target) {
   if (running) return stopRun();
   if (mode === "live") {
     try {
-      const r = await fetch("/api/run", {method: "POST"});
+      const r = await fetch("/api/run", {method: "POST", headers: {"Content-Type": "application/json"},
+                                         body: JSON.stringify(target ? {url: target} : {demo: true})});
       if (!r.ok && r.status !== 409) throw new Error(String(r.status));
       resetView(); running = true; updButtons();
       source = new LiveSource();
@@ -165,7 +207,10 @@ async function runAudit() {
         running = false; toast("Live connection lost. Showing the recorded run instead."); mode = "replay"; runAudit();
       });
       return;
-    } catch (e) { toast("Live backend unavailable. Replaying the recorded run."); mode = "replay"; }
+    } catch (e) {
+      if (target) { $("targetMsg").textContent = `Could not start an audit of ${target}: the Arma backend did not answer. Nothing was audited.`; return; }
+      toast("Live backend unavailable. Replaying the recorded run."); mode = "replay";
+    }
   }
   if (!recording || !recording.events.length) { toast("No recorded run available."); return; }
   resetView(); running = true; updButtons(); render();
@@ -181,7 +226,7 @@ function stopRun() {
 }
 
 function restAt(events) {
-  S = initial(); logRendered = 0; $("log").innerHTML = "";
+  S = initial(); logRendered = 0; $("log").innerHTML = ""; drawGauge.prev = null; tilesKey = catsKey = "";
   $("p-pr").dataset.ready = ""; $("p-stmt").dataset.ready = "";
   for (const ev of events) if (ev.type !== "pr.sent") apply(S, ev);
   S.fresh.clear();
@@ -190,7 +235,7 @@ function restAt(events) {
 /* ------------------------------------------------------------------ render */
 function render() {
   const ae = document.activeElement, focusedRow = ae && ae.matches && ae.matches(".rowbtn") ? ae.dataset.id : null;
-  renderHeader(); renderFlow(); renderScore(); renderProof(); renderLog(); renderRows(); renderPR(); renderStmt(); updButtons();
+  renderHeader(); renderFlow(); renderProgress(); renderTiles(); renderScore(); renderCats(); renderProof(); renderLog(); renderRows(); renderPR(); renderStmt(); updButtons();
   S.fresh.clear();
   if (focusedRow) { const r = document.querySelector(`.rowbtn[data-id="${CSS.escape(focusedRow)}"]`); if (r) r.focus({preventScroll: true}); }
 }
@@ -366,11 +411,82 @@ function fx(ev) {
   else if (ev.type === "pr.ready") pulse("writer-pr", "ok");
 }
 
-/* ------------------------------------------------------------------ score: gauge, POUR bars, timeline (D3) */
+/* ------------------------------------------------------------------ overall progress */
+const PHASE_SPAN = {crawl: [0, 5], baseline: [5, 10], audit: [10, 30], plan: [30, 33], fix: [33, 86], reaudit: [86, 91], report: [91, 97], pr: [97, 100]};
+const PHASE_TXT = {crawl: "Mapping the store", baseline: "Measuring the starting point", audit: "Auditing every page in parallel",
+                   plan: "Planning the fixes", fix: "Fixing and verifying, one WCAG rule at a time", reaudit: "Re-measuring the store",
+                   report: "Writing the pull request and the accessibility statement", pr: "Preparing the pull request"};
+function progressPct() {
+  if (S.finished) return 100;
+  const span = PHASE_SPAN[S.phase]; if (!span) return 0;
+  let k = 0.5;
+  if (S.phase === "audit" && S.subagents.length) k = S.subagents.filter((x) => x === "done").length / S.subagents.length;
+  if (S.phase === "fix") { const its = issuesList(); k = its.length ? its.filter((i) => ["validated", "needs_human"].includes(i.status)).length / its.length : 0; }
+  return Math.round(span[0] + (span[1] - span[0]) * Math.min(1, k));
+}
+function renderProgress() {
+  const pct = progressPct();
+  $("progFill").style.width = pct + "%";
+  $("progBar").setAttribute("aria-valuenow", pct);
+  $("progPct").textContent = pct + "%";
+  $("progTxt").textContent = S.finished ? "Done: pull request ready for compliance sign-off" : PHASE_TXT[S.phase] || "Not started";
+  $("progress").classList.toggle("on", running);
+}
+
+/* ------------------------------------------------------------------ store map: one tile per page, one dot per problem */
+let tilesKey = "";
+function renderTiles() {
+  const auditing = S.phase === "audit" && S.agents.auditors !== "done" && !S.finished;
+  const fixing = new Set(issuesList().filter((i) => ["fixing", "fixed_pending"].includes(i.status)).flatMap((i) => i.pages.map(pageKey)));
+  const rows = S.pages.map((pk) => {
+    const its = issuesList().filter((i) => i.pages.some((p) => pageKey(p) === pk));
+    const scan = auditing && !S.scanned.has(pk) && (S.scanning.has(pk) || S.subagents.includes("working"));
+    return {pk, its, scan, fix: fixing.has(pk)};
+  });
+  const key = JSON.stringify(rows.map((r) => [r.pk, r.scan, r.fix, r.its.map((i) => i.id + i.status)]));
+  if (key === tilesKey) return; tilesKey = key;
+  if (!rows.length) { $("tiles").innerHTML = `<li class="tile empty-tile">Pages appear here once the lead agent has mapped the store.</li>`; return; }
+  const word = {detected: "open", rejected: "open", fixing: "being fixed", fixed_pending: "being fixed", validated: "fixed", needs_human: "need a decision"};
+  $("tiles").innerHTML = rows.map(({pk, its, scan, fix}) => {
+    const by = {}; its.forEach((i) => { const w = word[i.status] || "open"; by[w] = (by[w] || 0) + 1; });
+    const sum = its.length ? `${its.length} problem${its.length > 1 ? "s" : ""}: ` + Object.entries(by).map(([w, n]) => `${n} ${w}`).join(", ") : scan ? "being audited" : "no problem recorded yet";
+    const state = scan ? `<span class="tstate scan">Auditing…</span>` : fix ? `<span class="tstate fix">Fixing…</span>`
+      : its.length && its.every((i) => ["validated", "needs_human"].includes(i.status)) ? `<span class="tstate done">✓ Done</span>` : "";
+    return `<li class="tile${scan ? " scanning" : ""}${fix ? " fixing" : ""}"><div class="thead"><b>${esc(pageName(pk))}</b>${state}</div>
+      <div class="dots" aria-hidden="true">${its.map((i) => `<i class="d ${esc(i.status)}${S.fresh.has(i.id) ? " pop" : ""}" title="${esc(i.id)} ${esc(i.title)}"></i>`).join("")}</div>
+      <p class="tsum">${esc(sum)}</p></li>`;
+  }).join("");
+}
+
+/* ------------------------------------------------------------------ what was wrong: problems per plain-language type */
+let catsKey = "";
+function renderCats() {
+  const its = issuesList();
+  const key = its.map((i) => i.id + i.status).join(",");
+  if (key === catsKey) return; catsKey = key;
+  if (!its.length) { $("cats").innerHTML = `<li class="empty">The breakdown appears as the auditors record problems.</li>`; return; }
+  const groups = new Map();
+  for (const i of its) { const c = catOf(i.wcag); if (!groups.has(c.k)) groups.set(c.k, {c, its: []}); groups.get(c.k).its.push(i); }
+  const list = [...groups.values()].sort((a, b) => b.its.length - a.its.length || CATS.indexOf(a.c) - CATS.indexOf(b.c));
+  const max = Math.max(...list.map((g) => g.its.length));
+  const seg = (g, cls, test) => { const n = g.its.filter(test).length; return n ? `<span class="seg ${cls}" style="width:${100 * n / max}%"></span>` : ""; };
+  const isOpen = (i) => !["validated", "needs_human", "fixing", "fixed_pending"].includes(i.status);
+  $("cats").innerHTML = list.map((g) => {
+    const n = g.its.length, f = g.its.filter((i) => i.status === "validated").length, h = g.its.filter((i) => i.status === "needs_human").length;
+    const w = g.its.filter((i) => ["fixing", "fixed_pending"].includes(i.status)).length, o = n - f - h - w;
+    const parts = [f && `${f} fixed`, w && `${w} being fixed`, h && `${h} need${h > 1 ? "" : "s"} a decision`, o && `${o} open`].filter(Boolean).join(", ");
+    const blockers = g.its.filter((i) => i.severity === "critical").length;
+    return `<li class="cat"><p class="cat-txt"><span class="cat-n">${n}</span><b>${esc(g.c.n)}</b>${blockers ? `<span class="cat-crit">${blockers} block${blockers > 1 ? "" : "s"} a purchase</span>` : ""}</p>
+      <div class="cat-bar" role="img" aria-label="${esc(g.c.n)}: ${n} problem${n > 1 ? "s" : ""}, ${esc(parts)}">${seg(g, "ok", (i) => i.status === "validated")}${seg(g, "info", (i) => ["fixing", "fixed_pending"].includes(i.status))}${seg(g, "warn", (i) => i.status === "needs_human")}${seg(g, "bad", isOpen)}</div>
+      <p class="cat-parts"><span class="cat-state">${esc(parts)}</span> · ${esc(g.c.d)}</p></li>`;
+  }).join("");
+}
+
+/* ------------------------------------------------------------------ score: gauge, timeline (D3) */
 let chartKey = "";
 function renderScore() {
   const sc = S.score ? S.score.value : null, base = S.score ? S.score.baseline : null;
-  $("gVal").textContent = sc == null ? "–" : sc;
+  if (sc == null) $("gVal").textContent = "–";
   $("gaugeBox").setAttribute("aria-label", sc == null ? "Compliance score not measured yet" : `Compliance score ${sc} out of 100, baseline ${base}`);
   const its = issuesList();
   const nh = its.filter((i) => i.status === "needs_human").length;
@@ -382,15 +498,50 @@ function renderScore() {
   else if (eaaKey === "partially_compliant") eaa = `<span class="pill p-warn">${EAA[eaaKey]}</span><span>${nh} item${nh > 1 ? "s" : ""} need${nh > 1 ? "" : "s"} review, baseline ${base}</span>`;
   else eaa = `<span class="pill p-ok">${EAA[eaaKey] || eaaKey}</span><span>baseline ${base}</span>`;
   $("eaa").innerHTML = eaa;
-  $("kFound").textContent = its.length || "–";
-  $("kHidden").textContent = its.length ? its.filter((i) => i.source !== "axe").length : "–";
-  $("kFixed").textContent = its.length ? its.filter((i) => i.status === "validated").length : "–";
-  $("kHuman").textContent = its.length ? nh : "–";
+  const fixedN = its.filter((i) => i.status === "validated").length, hiddenN = its.filter((i) => i.source !== "axe").length;
+  countTo("kFound", its.length ? its.length : null);
+  countTo("kHidden", its.length ? hiddenN : null);
+  countTo("kFixed", its.length ? fixedN : null);
+  countTo("kHuman", its.length ? nh : null);
   $("nFind").textContent = its.length;
-  const key = [S.scoreHist.length, S.rejects.length, $("timeline").clientWidth, $("pour").clientWidth, sc].join("|");
+  $("verdict").innerHTML = verdictText(its, sc, base, fixedN, hiddenN, nh, open);
+  const key = [S.scoreHist.length, S.rejects.length, $("timeline").clientWidth, sc].join("|");
   if (key === chartKey) return;
   chartKey = key;
-  drawGauge(sc, base); drawPour(sc == null ? null : S.score.by_principle || {}); drawTimeline();
+  drawGauge(sc, base); drawTimeline();
+}
+
+/* one plain-language paragraph for a non-technical reader */
+function verdictText(its, sc, base, fixedN, hiddenN, nh, open) {
+  if (!its.length) return S.phase ? "The agents are mapping and auditing the store. Problems will appear as they are found."
+    : "No audit yet. Try the demo store to see the agent team at work.";
+  const types = new Set(its.map((i) => catOf(i.wcag).k)).size;
+  let t = `The audit found <b>${its.length} accessibility problems</b> of ${types} different types`;
+  t += hiddenN ? `, and <b>${hiddenN}</b> of them would have been missed by an automated scanner. ` : ". ";
+  if (sc == null) return t + "The audit is still running.";
+  if (!fixedN && !nh) return t + `Starting score: ${base} out of 100. The agents are about to fix them.`;
+  t += `<b>${fixedN}</b> ${fixedN === 1 ? "is" : "are"} now fixed in the code and checked by an independent tester`;
+  t += open ? `, ${open} still in progress. ` : ". ";
+  if (nh) t += `<b>${nh}</b> need${nh === 1 ? "s" : ""} a human decision (see “Needs review”). `;
+  t += `Score: ${base} → <b>${sc}</b> out of 100.`;
+  return t;
+}
+
+/* KPI numbers count up/down to their new value */
+function countTo(id, v) {
+  const el = $(id), from = parseInt(el.dataset.v ?? "", 10);
+  if (v == null) { el.textContent = "–"; el.dataset.v = ""; return; }
+  if (from === v) return;
+  el.dataset.v = v;
+  if (REDUCED || isNaN(from) || !running) { el.textContent = v; return; }
+  const t0 = performance.now(), dur = 500;
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / dur), x = Math.round(from + (v - from) * (1 - Math.pow(1 - k, 3)));
+    if (el.dataset.v == v) el.textContent = x;
+    if (k < 1 && el.dataset.v == v) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+  el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
 }
 
 function drawGauge(v, base) {
@@ -399,31 +550,21 @@ function drawGauge(v, base) {
   const arc = d3.arc().innerRadius(r - 16).outerRadius(r).cornerRadius(4);
   const a = (x) => -Math.PI / 2 + Math.PI * x / 100;
   svg.selectAll("path.g-track").data([0]).join("path").attr("class", "g-track").attr("transform", `translate(${cx},${cy})`).attr("d", arc({startAngle: a(0), endAngle: a(100)}));
-  svg.selectAll("path.g-fill").data(v == null ? [] : [v]).join("path").attr("transform", `translate(${cx},${cy})`)
-    .attr("class", (d) => "g-fill " + (d >= 85 ? "ok" : d >= 60 ? "warn" : "bad")).attr("d", (d) => arc({startAngle: a(0), endAngle: a(Math.max(d, 1))}));
+  const fill = svg.selectAll("path.g-fill").data(v == null ? [] : [v]).join("path").attr("transform", `translate(${cx},${cy})`)
+    .attr("class", (d) => "g-fill " + (d >= 85 ? "ok" : d >= 60 ? "warn" : "bad"));
+  const prev = drawGauge.prev ?? v;
+  drawGauge.prev = v;
+  if (v != null && running && !REDUCED && prev != null && prev !== v) {
+    fill.transition().duration(700).ease(d3.easeCubicOut)
+      .attrTween("d", () => { const i = d3.interpolate(prev, v); return (k) => arc({startAngle: a(0), endAngle: a(Math.max(i(k), 1))}); });
+    const num = $("gVal"); d3.select(num).transition().duration(700).tween("text", () => { const i = d3.interpolateRound(prev, v); return (k) => { num.textContent = i(k); }; });
+  } else {
+    fill.attr("d", (d) => arc({startAngle: a(0), endAngle: a(Math.max(d, 1))}));
+    if (v != null) $("gVal").textContent = v;
+  }
   svg.selectAll("line.g-base").data(base == null ? [] : [base]).join("line").attr("class", "g-base")
     .attr("x1", (d) => cx + (r - 22) * Math.sin(a(d))).attr("y1", (d) => cy - (r - 22) * Math.cos(a(d)))
     .attr("x2", (d) => cx + (r + 6) * Math.sin(a(d))).attr("y2", (d) => cy - (r + 6) * Math.cos(a(d)));
-}
-
-function drawPour(by) {
-  const el = $("pour"), w = Math.max(220, el.clientWidth || 300), rowH = 30, h = rowH * 4, nameW = 118, valW = 44;
-  const data = Object.entries(PRIN).map(([k, n]) => ({k, n, v: by == null ? null : (by[k] ?? 100)}));
-  const x = d3.scaleLinear().domain([0, 100]).range([0, w - nameW - valW - 8]);
-  const svg = d3.select(el).selectAll("svg").data([0]).join("svg").attr("viewBox", `0 0 ${w} ${h}`).attr("role", "img")
-    .attr("aria-label", by == null ? "Not measured yet" : data.map((d) => `${d.n} ${d.v}% resolved`).join(", "));
-  const g = svg.selectAll("g.row").data(data).join((en) => {
-    const r = en.append("g").attr("class", "row");
-    r.append("text").attr("class", "bar-name").attr("y", 14);
-    r.append("rect").attr("class", "bar-track").attr("x", nameW).attr("y", 5).attr("height", 10).attr("rx", 4);
-    r.append("rect").attr("class", "bar-fill").attr("x", nameW).attr("y", 5).attr("height", 10).attr("rx", 4);
-    r.append("text").attr("class", "bar-val").attr("text-anchor", "end").attr("y", 14);
-    return r;
-  }).attr("transform", (_, i) => `translate(0,${i * rowH})`);
-  g.select(".bar-name").text((d) => d.n);
-  g.select(".bar-track").attr("width", x(100));
-  g.select(".bar-fill").attr("width", (d) => x(d.v || 0));
-  g.select(".bar-val").attr("x", w).text((d) => d.v == null ? "–" : d.v + "%");
 }
 
 function drawTimeline() {
@@ -543,7 +684,7 @@ function renderRows() {
     let row = `<tr class="row${S.fresh.has(i.id) ? " fresh" : ""}" data-id="${esc(i.id)}">
       <td><button type="button" class="rowbtn" data-id="${esc(i.id)}" aria-expanded="${ex}" aria-controls="d-${esc(i.id)}">${esc(i.id)}<span class="vh"> details</span></button></td>
       <td><div class="crit"><span class="num">${esc(i.wcag)}</span><span class="lvl">${esc(i.level)}</span></div><div class="src">${esc(i.criterion_name)}</div></td>
-      <td>${esc(i.title)}<div class="src">${esc(pagesLabel(i))}</div></td>
+      <td>${esc(i.title)}<div class="src">${esc(catOf(i.wcag).n)} · ${esc(pagesLabel(i))}</div></td>
       <td><span class="sev ${esc(sev)}" aria-hidden="true"></span>${esc(sev[0].toUpperCase() + sev.slice(1))}</td>
       <td class="src ${i.source !== "axe" ? "agent" : ""}">${i.source === "axe" ? "Scanner (axe)" : i.source === "keyboard" ? "Keyboard test" : "Agent review"}</td>
       <td><span class="pill ${scl}">${sl}</span>${att > 1 ? `<div class="src">attempt ${att}</div>` : ""}</td></tr>`;
@@ -708,21 +849,65 @@ function wire() {
     speed = +b.dataset.speed; if (source instanceof ReplaySource) source.speed = speed;
     document.querySelectorAll("[data-speed]").forEach((x) => x.setAttribute("aria-pressed", x === b));
   }));
-  $("runBtn").addEventListener("click", runAudit);
+  $("runBtn").addEventListener("click", () => runAudit());
   $("prBtn").addEventListener("click", () => {
     selectTab("pr"); $("p-pr").scrollIntoView({behavior: REDUCED ? "auto" : "smooth", block: "start"});
     const s = $("sendPr"); if (s) s.focus({preventScroll: true});
   });
   $("copyLog").addEventListener("click", () => copyText(S.logs.map((l) => `${mmss(l.t)} [${l.a}] ${l.text}`).join("\n"), $("copyLog")));
   $("aboutBtn").addEventListener("click", () => $("about").showModal());
+  $("themeBtn").addEventListener("click", () => setTheme(isDark() ? "light" : "dark", true));
+  $("demoBtn").addEventListener("click", () => {
+    $("domain").value = "";
+    $("targetMsg").textContent = "Replaying a real recorded run of the agent team on the demo store, Maison Lumière.";
+    if (running) stopRun();
+    runAudit();
+    $("flowH").scrollIntoView({behavior: REDUCED ? "auto" : "smooth", block: "start"});
+  });
+  $("targetForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const raw = $("domain").value.trim(), dom = raw.replace(/^https?:\/\//i, "").replace(/\/.*$/, "").toLowerCase();
+    const msg = $("targetMsg");
+    $("domain").removeAttribute("aria-invalid");
+    if (!/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(dom)) {
+      $("domain").setAttribute("aria-invalid", "true");
+      msg.textContent = "Enter a domain such as yourstore.eu, or try the demo store.";
+      $("domain").focus(); return;
+    }
+    if (mode === "live") {
+      msg.textContent = `Starting a read-only audit of ${dom}…`;
+      return runAudit(dom);
+    }
+    // static hosting: never pretend an audit of their domain happened
+    msg.innerHTML = `Auditing <b>${esc(dom)}</b> needs the Arma agent backend, which this hosted demo does not run: nothing was sent anywhere. ` +
+      `<button type="button" class="linkbtn" id="demoInline">Watch the demo store instead</button>`;
+    $("demoInline").addEventListener("click", () => $("demoBtn").click());
+  });
   $("about").addEventListener("close", () => { if (location.hash === "#about") history.replaceState(null, "", location.pathname + location.search); });
   const openHash = () => { if (location.hash === "#about" && !$("about").open) $("about").showModal(); };
   addEventListener("hashchange", openHash); openHash();
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { chartKey = ""; proofKey = ""; render(); }, 150); });
 }
 
+/* light/dark: follows the system until the user picks one, then remembered */
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function setTheme(t, save) {
+  document.documentElement.dataset.theme = t;
+  if (save) try { localStorage.setItem("arma-theme", t); } catch (e) { /* private mode */ }
+  const dark = t === "dark";
+  $("themeBtn").setAttribute("aria-pressed", dark);
+  $("themeIcon").textContent = dark ? "☀" : "☾";
+  chartKey = ""; proofKey = ""; tilesKey = ""; schedule();
+}
+
 async function init() {
   const q = new URLSearchParams(location.search);
+  let saved = null; try { saved = localStorage.getItem("arma-theme"); } catch (e) { /* private mode */ }
+  if (saved === "light" || saved === "dark") setTheme(saved);
+  else { $("themeBtn").setAttribute("aria-pressed", isDark()); $("themeIcon").textContent = isDark() ? "☀" : "☾"; }
   speed = [1, 2, 4].includes(+q.get("speed")) ? +q.get("speed") : 2;
   document.querySelectorAll("[data-speed]").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.speed === speed));
   wire();

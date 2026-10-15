@@ -30,20 +30,43 @@
   </div>
   <button class="btn" id="runBtn" type="button">▶ Run audit</button>
   <button class="btn primary" id="prBtn" type="button" disabled>Send PR to engineering</button>
+  <button class="btn ghost icon" id="themeBtn" type="button" aria-pressed="false"><span aria-hidden="true" id="themeIcon">☾</span><span class="vh">Dark mode</span></button>
   <button class="btn ghost" id="aboutBtn" type="button" aria-haspopup="dialog">About</button>
 </header>
 
 <main id="main">
+  <section class="target" aria-labelledby="targetH">
+    <h2 id="targetH" class="vh">Choose the store to audit</h2>
+    <form id="targetForm" class="target-form" novalidate>
+      <label for="domain">Your store's domain</label>
+      <div class="target-row">
+        <input id="domain" name="domain" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yourstore.eu" aria-describedby="targetMsg">
+        <button class="btn" type="submit">Audit my store</button>
+        <span class="or" aria-hidden="true">or</span>
+        <button class="btn primary" type="button" id="demoBtn">▶ Try the demo store <span class="muted-ink">Maison Lumière</span></button>
+      </div>
+      <p class="target-msg" id="targetMsg" role="status" aria-live="polite">The demo replays a real recorded run of the agent team on a French fashion store.</p>
+    </form>
+  </section>
+
   <section class="flow" aria-labelledby="flowH">
     <div class="flow-head">
       <h1 id="flowH">Agent workflow</h1>
       <p class="flow-now" id="flowNow" aria-live="polite">Run an audit to watch the agents work.</p>
       <span class="clock" id="clock">Idle</span>
     </div>
+    <div class="progress" id="progress">
+      <div class="progress-bar" role="progressbar" aria-labelledby="progLbl" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progBar"><span id="progFill"></span></div>
+      <p class="progress-lbl" id="progLbl"><b id="progPct">0%</b> <span id="progTxt">Not started</span></p>
+    </div>
     <div class="flow-scroll" tabindex="0" role="region" aria-label="Agent workflow diagram, scrollable">
       <svg id="flow" role="img" aria-labelledby="flowDesc"><desc id="flowDesc">Agent workflow</desc></svg>
     </div>
     <ul class="vh" id="agentList" aria-label="Agent status"></ul>
+    <div class="storemap">
+      <h2 id="mapH">Pages of the store <span class="legend" aria-hidden="true"><i class="d detected"></i>problem <i class="d fixing"></i>being fixed <i class="d validated"></i>fixed and verified <i class="d needs_human"></i>needs a decision</span></h2>
+      <ul class="tiles" id="tiles" aria-labelledby="mapH"><li class="tile empty-tile">Pages appear here once the lead agent has mapped the store.</li></ul>
+    </div>
   </section>
 
   <div class="grid">
@@ -62,21 +85,27 @@
           <div id="timeline" class="timeline"></div>
           <table class="vh" id="timelineTable"><caption>Score during the run</caption><thead><tr><th scope="col">Time</th><th scope="col">Score</th></tr></thead><tbody></tbody></table>
         </figure>
-        <figure class="chart">
-          <figcaption>Resolved by WCAG principle</figcaption>
-          <div id="pour" class="pour"></div>
-        </figure>
+        <div class="verdict-box">
+          <h2>In plain words</h2>
+          <p id="verdict" class="verdict-txt">No audit yet. Try the demo store to see the agent team at work.</p>
+        </div>
       </section>
 
       <dl class="kpis">
-        <div><dt>issues found</dt><dd id="kFound">–</dd></div>
+        <div><dt>problems found</dt><dd id="kFound">–</dd></div>
         <div><dt>missed by automated scanners</dt><dd id="kHidden">–</dd></div>
         <div><dt>fixed and verified</dt><dd id="kFixed">–</dd></div>
-        <div><dt>need human review</dt><dd id="kHuman">–</dd></div>
+        <div><dt>need a human decision</dt><dd id="kHuman">–</dd></div>
       </dl>
 
+      <section class="cats" aria-labelledby="catsH">
+        <div class="cats-head"><h2 id="catsH">What was wrong</h2><p class="muted">Problems grouped by type, and where each type stands now.</p></div>
+        <ul class="catlist" id="cats"><li class="empty">The breakdown appears as the auditors record problems.</li></ul>
+      </section>
+
+      <details class="proofwrap">
+        <summary><h2 id="proofH">Technical proof</h2><span class="muted">independent grader and eval against known defects</span></summary>
       <section class="proof" aria-labelledby="proofH">
-        <h2 id="proofH" class="vh">Proof</h2>
         <div class="grader" id="grader">
           <h3>Independent grader</h3>
           <div id="graderBody"><p class="muted">The outcome rubric is graded once the agents finish their work.</p></div>
@@ -86,6 +115,7 @@
           <div id="evalBody"><p class="muted">Recall, precision and fix rate are measured against the planted defects after the run.</p></div>
         </div>
       </section>
+      </details>
 
       <section class="work" aria-label="Compliance workspace">
         <div class="tabs" role="tablist" aria-label="Compliance workspace">
@@ -103,7 +133,7 @@
           </div>
           <div class="tablewrap" tabindex="0" role="region" aria-label="Findings table">
             <table class="findings">
-              <thead><tr><th scope="col">ID</th><th scope="col">Criterion</th><th scope="col">Issue</th><th scope="col">Severity</th><th scope="col">Found by</th><th scope="col">Status</th></tr></thead>
+              <thead><tr><th scope="col">ID</th><th scope="col">WCAG rule</th><th scope="col">Problem</th><th scope="col">Severity</th><th scope="col">Found by</th><th scope="col">Status</th></tr></thead>
               <tbody id="rows"></tbody>
             </table>
           </div>
