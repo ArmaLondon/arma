@@ -17,7 +17,7 @@ from pathlib import Path
 
 from arma.config import ROOT, load_env
 from arma.events import PHASES, EventBus, load_events
-from arma.orchestrator import BudgetExceeded, Orchestrator
+from arma.orchestrator import BudgetExceeded, InfraError, Orchestrator
 from arma.state import Store
 
 STATE = ROOT / "state"
@@ -100,6 +100,9 @@ def main() -> int:
     except BudgetExceeded as e:
         print(f"stopped: {e}", file=sys.stderr)
         return 2
+    except InfraError as e:
+        print(f"stopped: {e}\ncontinue with --resume once the API is reachable", file=sys.stderr)
+        return 3
     except KeyboardInterrupt:
         print("interrupted: continue with --resume", file=sys.stderr)
         return 130

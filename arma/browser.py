@@ -164,7 +164,10 @@ _FOCUS_JS = """() => {
   return {selector: sel, tag: el.tagName.toLowerCase(), role: el.getAttribute('role') || '',
           name, name_source: el.getAttribute('aria-label') ? 'aria-label' : label ? 'label'
             : el.innerText?.trim() ? 'text' : el.getAttribute('placeholder') ? 'placeholder' : 'none',
-          focus_visible: outline || shadow, on_screen: r.width > 0 && r.height > 0};
+          // focus inside an embedded frame is drawn by the frame's own document: not measurable here
+          focus_visible: el.tagName === 'IFRAME' ? null : (outline || shadow),
+          ...(el.tagName === 'IFRAME' ? {note: 'focus is inside an embedded frame (third-party content); its focus style cannot be measured from this page'} : {}),
+          on_screen: r.width > 0 && r.height > 0};
 }""" % _SELECTOR_JS
 
 _UNREACHABLE_JS = """() => [...document.querySelectorAll('[onclick], .btn, [role=button]')]
@@ -194,9 +197,10 @@ async def keyboard_walk(url: str, max_tabs: int = 40) -> dict:
                 continue                # tabbing inside an iframe keeps the same host element
             stops.append(info)
         unreachable = await page.evaluate(_UNREACHABLE_JS)
-    visible = sum(1 for s in stops if s["focus_visible"])
+    measurable = [s for s in stops if s["focus_visible"] is not None]
+    visible = sum(1 for s in measurable if s["focus_visible"])
     return {"url": url, "stops": stops, "cycle_complete": cycle,
-            "focus_visible": [visible, len(stops)], "unreachable": unreachable}
+            "focus_visible": [visible, len(measurable)], "unreachable": unreachable}
 
 
 # ---------------------------------------------------------------- html / screenshots

@@ -8,6 +8,7 @@ import asyncio
 import json
 import os
 import re
+import shutil
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -17,6 +18,7 @@ from claude_agent_sdk import (TERMINAL_TASK_STATUSES, AgentDefinition, Assistant
                               TaskUpdatedMessage, TextBlock, ToolResultBlock, ToolUseBlock, UserMessage, query)
 
 from . import agents, browser, tools, wcag
+from .templates import TEMPLATES
 from .events import PHASES, EventBus
 from .state import (BATCH_DONE, BATCH_ESCALATED, BATCH_IN_PROGRESS, BATCH_TODO, FIXED_PENDING, FIXING,
                     NEEDS_HUMAN, REJECTED, SEVERITIES, TODO_STATUSES, VALIDATED, Store)
@@ -29,6 +31,15 @@ AGENT_STATUS_NAME = {"lead-auditor": "auditors"}
 
 class BudgetExceeded(RuntimeError):
     pass
+
+
+class InfraError(RuntimeError):
+    """API unreachable: stop the run (resumable) rather than blame the agents or escalate issues."""
+
+
+TRANSIENT = ("unable to connect", "ssl", "certificate", "overloaded", "529", "rate limit", "rate_limit",
+             "econnreset", "timed out", "timeout", "502", "503", "504", "500 ", "connection")
+BACKOFF = (5, 15, 30, 60)
 
 
 class Orchestrator:
@@ -71,7 +82,8 @@ class Orchestrator:
             if phase == self.until:
                 log(f"Stopped after phase {phase} (--until)", "phase", "orchestrator")
                 break
-        self._status("orchestrator", "done", f"cost ${self.cost:.2f}")
+        if not self.store.phase_done("pr"):         # phase_pr already closed the run with run.finished
+            self._status("orchestrator", "done", f"cost ${self.cost:.2f}")
 
     def _status(self, agent: str, status: str, activity: str = "") -> None:
         emit("agent.status", {"agent": AGENT_STATUS_NAME.get(agent, agent), "status": status,
@@ -119,7 +131,8 @@ class Orchestrator:
         attempt_prompt = prompt
         CTX.current_agent = role
         self._status(role, "working", activity or role)
-        for attempt in range(retries + 1):
+        attempt, infra_waits = 0, 0
+        while True:
             opts = ClaudeAgentOptions(
                 system_prompt=system, mcp_servers={"a11y": tools.server()},
                 tools=builtin, allowed_tools=allowed, disallowed_tools=disallowed,
@@ -172,9 +185,21 @@ class Orchestrator:
                 self._status(role, "done", activity or role)
                 return
             log(f"{role} session failed: {error}", "err", "orchestrator")
-            if attempt < retries:
-                log(f"Relaunching {role} once (resume from shared state)", "msg", "orchestrator")
-                attempt_prompt = RESUME_PREFIX + prompt
+            attempt_prompt = RESUME_PREFIX + prompt
+            if any(k in error.lower() for k in TRANSIENT):
+                if infra_waits >= len(BACKOFF):
+                    self._status(role, "done", "API unreachable")
+                    raise InfraError(f"API unreachable for {role}: {error}")
+                wait = BACKOFF[infra_waits]
+                infra_waits += 1
+                log(f"API unreachable, retrying {role} in {wait}s (does not count as an attempt)", "msg",
+                    "orchestrator")
+                await asyncio.sleep(wait)
+                continue
+            if attempt >= retries:
+                break
+            attempt += 1
+            log(f"Relaunching {role} once (resume from shared state)", "msg", "orchestrator")
         self._status(role, "done", "failed")
         raise RuntimeError(f"{role} failed after {retries + 1} attempts: {error}")
 
@@ -249,7 +274,7 @@ class Orchestrator:
             await self.run_agent("cartographer", agents.CARTOGRAPHER,
                                  f"Map the store at {self.base_url}. Register the pages to audit.",
                                  max_turns=20, activity="crawl_site")
-        except BudgetExceeded:
+        except (BudgetExceeded, InfraError):
             raise
         except Exception as e:
             log(f"Cartographer unavailable ({e}); falling back to a plain crawl", "err", "orchestrator")
@@ -375,7 +400,9 @@ class Orchestrator:
                 await self.run_agent("developer", agents.DEVELOPER, self._developer_prompt(b, issues),
                                      cwd=self.site_dir, write_root=self.site_dir, max_turns=40,
                                      activity=f"WCAG {crit}")
-            except BudgetExceeded:
+            except (BudgetExceeded, InfraError):
+                b["attempt"] -= 1           # interrupted attempt is replayed on --resume
+                self._save_batch(b)
                 raise
             except Exception as e:
                 log(f"Developer session lost: {e}", "err", "orchestrator")
@@ -395,7 +422,9 @@ class Orchestrator:
                     await self.run_agent("tester", agents.TESTER, self._tester_prompt(b, pending),
                                          cwd=self.site_dir, write_root=None, max_turns=40,
                                          activity=f"verifying WCAG {crit}")
-                except BudgetExceeded:
+                except (BudgetExceeded, InfraError):
+                    b["attempt"] -= 1           # interrupted attempt is replayed on --resume
+                    self._save_batch(b)
                     raise
                 except Exception as e:
                     log(f"Tester session lost: {e}", "err", "orchestrator")
@@ -469,6 +498,80 @@ class Orchestrator:
                 f"Issues declared fixed (original evidence = the code before the fix):\n"
                 f"{json.dumps(items, ensure_ascii=False, indent=1)}\n"
                 "Give a verdict for every issue, then a batch_verdict.")
+
+    # ------------------------------------------------------------------ reaudit / report / pr
+    async def phase_reaudit(self) -> None:
+        log("Re-audit: same measurements on the remediated store", "phase", "orchestrator")
+        self._status("orchestrator", "working", "final measurements")
+        m = await self.measure("after")
+        self.store.set("final", m)
+        emit("reaudit", m["totals"])
+        b, a = self.store.get("baseline")["totals"], m["totals"]
+        log(f"Scanner violations {b['axe_violations']} → {a['axe_violations']}, unreachable controls "
+            f"{b['unreachable']} → {a['unreachable']}, visible focus {b['focus_visible'][0]}/{b['focus_visible'][1]} → "
+            f"{a['focus_visible'][0]}/{a['focus_visible'][1]}", "ok", "orchestrator")
+
+    def _summary(self) -> dict:
+        meta, sc = self.store.get("meta"), self.store.score()
+        commits = [{"sha": c.split(" ", 1)[0], "message": c.split(" ", 1)[1]}
+                   for c in self.git("log", "--format=%h %s", f"{meta['base']}..HEAD").splitlines()][::-1]
+        return {
+            "site": self.site_name, "repo": self.repo, "branch": meta.get("branch"), "base": meta.get("base"),
+            "date": date.today().isoformat(), "pages": [p["url"] for p in self.store.pages()],
+            "score": {"before": meta.get("baseline_score"), "after": sc["value"], "eaa_status": sc["eaa"]},
+            "metrics": {"before": self.store.get("baseline").get("totals"),
+                        "after": self.store.get("final").get("totals")},
+            "issues": [{k: i[k] for k in ("id", "wcag", "criterion_name", "level", "en301549", "title", "severity",
+                                          "source", "pages", "status", "fix_note", "human_action", "attempts")}
+                       for i in self.store.issues()],
+            "commits": commits,
+        }
+
+    async def phase_report(self) -> None:
+        log("Writing the pull request and the accessibility statement", "phase", "orchestrator")
+        out = self.work_dir / "out"
+        out.mkdir(parents=True, exist_ok=True)
+        summary = self._summary()
+        (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
+        names = ("pr-body.md", "accessibility-statement.md")
+        for n in names:
+            (out / n).unlink(missing_ok=True)
+        try:
+            await self.run_agent(
+                "writer", agents.WRITER,
+                f"Output directory: {out}\nWrite pr-body.md and accessibility-statement.md there.\n\n"
+                f"Run summary:\n{json.dumps(summary, ensure_ascii=False, indent=1)}",
+                cwd=out, write_root=out, max_turns=12, activity="writing")
+        except (BudgetExceeded, InfraError):
+            raise
+        except Exception as e:
+            log(f"Writer unavailable ({e})", "err", "orchestrator")
+        for n in names:
+            f = out / n
+            if not f.exists() or len(f.read_text(encoding="utf-8").strip()) < 200:
+                f.write_text(TEMPLATES[n](summary), encoding="utf-8")
+                log(f"{n} generated from the deterministic template (writer fallback)", "msg", "orchestrator")
+            emit("document.written", {"name": n, "path": f"state/out/{n}", "content": f.read_text(encoding="utf-8")},
+                 "writer")
+        log("Documents ready: pr-body.md, accessibility-statement.md", "ok", "writer")
+
+    async def phase_pr(self) -> None:
+        log("Preparing the pull request", "phase", "orchestrator")
+        meta, out = self.store.get("meta"), self.work_dir / "out"
+        rng = f"{meta['base']}..HEAD"
+        (out / "changes.diff").write_text(self.git("diff", rng) + "\n", encoding="utf-8")
+        patches = out / "patches"
+        shutil.rmtree(patches, ignore_errors=True)
+        self.git("format-patch", "-q", rng, "-o", str(patches))
+        commits = int(self.git("rev-list", "--count", rng))
+        files = self.git("diff", "--name-only", rng).splitlines()
+        body = (out / "pr-body.md").read_text(encoding="utf-8")
+        ev = self.bus.emit("pr.ready", {"repo": self.repo, "branch": meta["branch"], "base": meta["base"],
+                                        "commits": commits, "files": files, "body": body})
+        log(f"Pull request ready: {commits} commits on {meta['branch']}, {len(files)} files. "
+            "Waiting for compliance sign-off.", "ok", "orchestrator")
+        self._status("orchestrator", "done", "PR ready")
+        emit("run.finished", {"cost_usd": round(self.cost, 4), "duration_s": ev["t"]})
 
 
 # ---------------------------------------------------------------------- log helpers
