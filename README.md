@@ -3,6 +3,7 @@
 **Arma gives compliance teams a hosted AI agent team that audits, fixes and verifies their store's
 accessibility, proves it against a rubric, and hands engineering a ready-to-merge pull request.**
 
+- Demo video (1 min): https://youtu.be/w0FeMr0TNuQ
 - Live dashboard (replay of a real run): https://web-rosy-xi-65.vercel.app
 - Pitch / About: https://web-rosy-xi-65.vercel.app/#about
 
