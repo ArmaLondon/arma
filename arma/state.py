@@ -106,11 +106,17 @@ class Store:
         return self.get("pages")
 
     # ------------------------------------------------------------ issues
-    def _find_duplicate(self, wcag_: str, selector: str, rule: str, title: str) -> dict | None:
+    def _find_duplicate(self, wcag_: str, selector: str, rule: str, title: str, source: str) -> dict | None:
+        """Same component = same criterion + same selector + same rule (or same title).
+
+        Scanner issues merge by rule across the site: one stylesheet problem, one issue.
+        """
         for i in self.data["issues"]:
-            if i["wcag"] != wcag_ or _key(i["selector"]) != _key(selector):
+            if i["wcag"] != wcag_:
                 continue
-            if (rule and i["rule"] == rule) or _key(i["title"]) == _key(title):
+            if source == "axe" and rule and i["source"] == "axe" and i["rule"] == rule:
+                return i
+            if _key(i["selector"]) == _key(selector) and (i["rule"] == rule or _key(i["title"]) == _key(title)):
                 return i
         return None
 
@@ -122,17 +128,19 @@ class Store:
         wcag_ = str(f.get("wcag", "")).strip()
         selector, rule, title = f.get("selector", "") or "", f.get("rule", "") or "", f.get("title", "")
         pages = f.get("pages") or ([f["page"]] if f.get("page") else [])
+        severity = f.get("severity") if f.get("severity") in SEVERITIES else "major"
+        source = f.get("source") if f.get("source") in SOURCES else "agent"
         with self._lock:
-            dup = self._find_duplicate(wcag_, selector, rule, title)
+            dup = self._find_duplicate(wcag_, selector, rule, title, source)
             if dup:
                 for p in pages:
                     if p not in dup["pages"]:
                         dup["pages"].append(p)
+                if SEVERITIES.index(severity) < SEVERITIES.index(dup["severity"]):
+                    dup["severity"] = severity
                 self._save()
                 return copy.deepcopy(dup), True
             n = len(self.data["issues"]) + 1
-            severity = f.get("severity") if f.get("severity") in SEVERITIES else "major"
-            source = f.get("source") if f.get("source") in SOURCES else "agent"
             by = f.get("by", "auditor")
             issue = {
                 "id": f"A{n:02d}", "wcag": wcag_,

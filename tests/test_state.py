@@ -33,9 +33,24 @@ def test_duplicate_merges_pages(store):
     d, merged = store.add_issue(wcag="1.4.3", selector=".footer", rule="color-contrast", title="Other wording",
                                 pages=["cart"])
     assert merged and d["id"] == c["id"] and d["pages"] == ["home", "cart"]
-    e, merged = store.add_issue(wcag="4.1.2", selector=".icons button", title="Different problem", pages=["home"])
-    assert not merged and e["id"] == "A03"
+    # same component, different wording, no rule: still the same issue; severity escalates
+    e, merged = store.add_issue(wcag="4.1.2", selector=".icons button", title="Different wording",
+                                severity="critical", pages=["cart"])
+    assert merged and e["id"] == "A01" and e["severity"] == "critical"
+    # same selector but another criterion: a different issue
+    f, merged = store.add_issue(wcag="2.4.7", selector=".icons button", title="Icon buttons unnamed")
+    assert not merged and f["id"] == "A03"
     assert len(store.issues()) == 3
+
+
+def test_scanner_issues_merge_by_rule(store):
+    a, _ = store.add_issue(wcag="1.4.3", selector=".hero p", rule="color-contrast", source="axe",
+                           title="Hero text too pale", pages=["/"])
+    b, merged = store.add_issue(wcag="1.4.3", selector=".site-footer", rule="color-contrast", source="axe",
+                                title="Footer too light", pages=["/cart.html"])
+    assert merged and b["id"] == a["id"] and b["pages"] == ["/", "/cart.html"]
+    c, merged = store.add_issue(wcag="1.4.3", selector=".promo", rule="", source="agent", title="Promo pale")
+    assert not merged
 
 
 def test_issue_enrichment(store):
