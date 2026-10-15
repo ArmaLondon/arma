@@ -1,0 +1,6 @@
+claude-agent-sdk
+playwright
+pillow
+fastapi
+uvicorn[standard]
+markdown

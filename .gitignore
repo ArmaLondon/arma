@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.playwright-mcp/
+.env
+runs/
+state/
+recordings/*.jsonl
+!web/recordings/*.jsonl

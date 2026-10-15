@@ -1,0 +1,724 @@
+<title>Arma Compliance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap">
+<style>
+/* Layout: sticky command bar → phase rail → two columns: compliance view (score, findings, PR, statement) | agent team + live log */
+:root{
+  --ink:#141a24; --paper:#f6f7f9; --panel:#ffffff; --line:#dde2ea; --muted:#5b6575; --faint:#eef1f5;
+  --signal:#f4c20d; --signal-ink:#141a24;          /* tactile-paving yellow: brand + primary action only */
+  --ok:#17794a; --ok-bg:#e3f4ea; --warn:#a65a00; --warn-bg:#fdf0dc; --bad:#b4232c; --bad-bg:#fbe5e6; --info:#2a5bd7; --info-bg:#e6edfc;
+  --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Atkinson Hyperlegible Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ink:#e9edf3; --paper:#10141b; --panel:#171c25; --line:#2a3240; --muted:#9aa5b6; --faint:#1d2430;
+  --signal:#f4c20d; --signal-ink:#141a24;
+  --ok:#5fd394; --ok-bg:#16301f; --warn:#f2a54a; --warn-bg:#33240f; --bad:#ff7a80; --bad-bg:#3a1a1d; --info:#8fb0ff; --info-bg:#1a2442; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ink:#e9edf3; --paper:#10141b; --panel:#171c25; --line:#2a3240; --muted:#9aa5b6; --faint:#1d2430;
+  --signal:#f4c20d; --signal-ink:#141a24;
+  --ok:#5fd394; --ok-bg:#16301f; --warn:#f2a54a; --warn-bg:#33240f; --bad:#ff7a80; --bad-bg:#3a1a1d; --info:#8fb0ff; --info-bg:#1a2442; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--info);outline-offset:2px;border-radius:4px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1440px;margin:0 auto}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* command bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.01em}
+.mark{width:28px;height:28px;border-radius:7px;background:var(--signal);display:grid;place-items:center}
+.mark svg{display:block}
+.chip{font-size:12px;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--muted);white-space:nowrap}
+.site{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--faint);min-width:0}
+.site b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.live{background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:pulse 1.6s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px transparent}}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--signal);color:var(--signal-ink);border-color:var(--signal)}
+.btn.primary:hover{filter:brightness(.96)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.small{padding:5px 10px;font-size:13px}
+.speed{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.speed button{border:0;background:transparent;padding:6px 9px;font-size:13px;cursor:pointer}
+.speed button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* phase rail */
+.rail .wrap{position:relative;display:flex;gap:6px;overflow-x:auto;padding-block:12px}
+.ph{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap;padding:4px 10px 4px 6px;border-radius:99px;border:1px solid transparent}
+.ph i{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:11px}
+.ph.done{color:var(--ink)} .ph.done i{background:var(--ok);border-color:var(--ok);color:var(--panel)}
+.ph.now{color:var(--ink);border-color:var(--line);background:var(--panel);font-weight:600} .ph.now i{border-color:var(--signal);background:var(--signal)}
+.ph + .ph::before{content:"";width:14px;height:1px;background:var(--line);margin-right:6px}
+
+/* grid */
+.main{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:16px;padding-block:4px 40px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.card h2{font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* score */
+.score{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;padding:20px}
+@media (max-width:640px){.score{grid-template-columns:minmax(0,1fr)}}
+.gauge{width:230px;max-width:100%}
+.gauge .val{font-size:52px;font-weight:800;letter-spacing:-.03em;fill:var(--ink)}
+.gauge .sub{font-size:12px;fill:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.status-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:99px;padding:2px 10px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-ok{color:var(--ok);background:var(--ok-bg)} .p-warn{color:var(--warn);background:var(--warn-bg)}
+.p-bad{color:var(--bad);background:var(--bad-bg)} .p-info{color:var(--info);background:var(--info-bg)}
+.p-mute{color:var(--muted);background:var(--faint)}
+.pour{display:flex;flex-direction:column;gap:10px}
+.pour-row{display:grid;grid-template-columns:120px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:14px}
+.track{height:8px;border-radius:99px;background:var(--faint);overflow:hidden;position:relative}
+.track span{position:absolute;inset:0 auto 0 0;background:var(--ink);border-radius:99px;transition:width .6s}
+.track span.base{background:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line);border-radius:0 0 var(--r) var(--r);overflow:hidden}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--panel);padding:12px 16px}
+.kpi b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.kpi span{font-size:13px;color:var(--muted)}
+.spark{margin-top:4px}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 12px;overflow-x:auto}
+.tab{border:0;background:none;padding:12px 10px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--signal)}
+.tab .n{font-family:var(--mono);font-size:12px;background:var(--faint);border-radius:99px;padding:1px 7px;margin-left:4px}
+.pane{padding:16px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.fbtn{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:4px 11px;font-size:13px;cursor:pointer}
+.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.row{cursor:pointer} tr.row:hover td{background:var(--faint)}
+tr.row.fresh td{animation:flash 1.6s}
+@keyframes flash{from{background:var(--warn-bg)}}
+.crit{display:flex;gap:8px;align-items:baseline}
+.crit .num{font-family:var(--mono);font-weight:600}
+.lvl{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--muted)}
+.sev{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.sev.critical{background:var(--bad)} .sev.major{background:var(--warn)} .sev.minor{background:var(--muted)}
+.src{font-size:12.5px;color:var(--muted)}
+.src.agent{color:var(--info);font-weight:600}
+.detail td{background:var(--faint);padding:16px}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:720px){.dgrid{grid-template-columns:minmax(0,1fr)}}
+.dgrid>div{min-width:0}
+.dgrid h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+pre{margin:0;font:12.5px/1.55 var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;white-space:pre}
+.add{color:var(--ok)} .del{color:var(--bad)}
+.hist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.hist li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:8px}
+.hist .who{font-weight:600}
+.empty{padding:32px 16px;text-align:center;color:var(--muted)}
+
+/* agents */
+.agents{padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.ag{position:relative;display:grid;grid-template-columns:22px 104px minmax(0,1fr);gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.ag:last-child{border-bottom:0}
+.ag .st{width:10px;height:10px;border-radius:50%;background:var(--line);margin:auto}
+.ag.working .st{background:var(--signal);box-shadow:0 0 0 3px color-mix(in srgb,var(--signal) 30%,transparent)}
+.ag.done .st{background:var(--ok)}
+.ag .nm{font-weight:600}
+.ag .act{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)}
+.subdots{display:inline-flex;gap:3px;margin-left:4px;vertical-align:middle}
+.subdots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.subdots i.on{background:var(--signal)} .subdots i.ok{background:var(--ok)}
+
+/* log */
+.loghead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;gap:8px}
+.log{height:440px;overflow-y:auto;padding:0 16px 14px;font:12.5px/1.6 var(--mono)}
+@media (max-width:980px){.log{height:340px}}
+.ln{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;padding:1px 0}
+.ln .t{color:var(--muted)}
+.ln .a{font-weight:600}
+.ln.k-tool .x{color:var(--muted)}
+.ln.k-err .x,.ln.k-reject .x,.ln.k-rollback .x{color:var(--bad)}
+.ln.k-ok .x,.ln.k-commit .x{color:var(--ok)}
+.ln.k-phase{margin-top:8px}
+.ln.k-phase .x{font-weight:600;color:var(--ink)}
+.a-orch{color:#8b5cf6}.a-cart{color:#0e8fa8}.a-chief{color:var(--info)}.a-aud{color:#4b74e0}.a-dev{color:var(--warn)}.a-test{color:var(--ok)}.a-writer{color:#0e8fa8}.a-sys{color:var(--bad)}
+
+/* PR */
+.prgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.prgrid{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.commits{list-style:none;padding:0;margin:8px 0 0;font-size:13.5px}
+.commits li{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.commits .h{font-family:var(--mono);color:var(--muted)}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 12px}
+legend{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 4px}
+.opt{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:14px}
+textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel);resize:vertical}
+label.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.steps{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.steps li{display:flex;gap:8px;align-items:center;color:var(--muted)}
+.steps li.ok{color:var(--ink)} .steps li.ok::before{content:"✓";color:var(--ok);font-weight:800}
+.steps li.run::before{content:"";width:10px;height:10px;border:2px solid var(--signal);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sent{border:1px solid var(--ok);background:var(--ok-bg);border-radius:8px;padding:12px 14px;margin-top:12px}
+.sent b{display:block}
+.statement{max-width:72ch;font-size:15px}
+.statement h3{font-size:18px;margin:18px 0 6px}
+.statement .todo{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:0 4px}
+.foot{font-size:12.5px;color:var(--muted);padding-block:0 32px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 14h5l4-6h5" fill="none" stroke="#141a24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      Arma
+    </div>
+    <span class="chip">Demo workspace</span>
+    <div class="site" title="Audited site"><span class="dot" id="liveDot"></span><b>maison-lumiere.fr</b><span class="muted mono" style="font-size:12px">storefront · main</span></div>
+    <span class="spacer"></span>
+    <div class="speed" role="group" aria-label="Replay speed">
+      <button type="button" data-speed="1" aria-pressed="false">1×</button>
+      <button type="button" data-speed="2" aria-pressed="true">2×</button>
+      <button type="button" data-speed="4" aria-pressed="false">4×</button>
+    </div>
+    <button class="btn" id="runBtn" type="button">▶ Run audit</button>
+    <button class="btn primary" id="prBtn" type="button">Send PR to engineering</button>
+  </div>
+</header>
+
+<nav class="rail" aria-label="Run phases"><div class="wrap" id="rail"></div></nav>
+
+<div class="wrap">
+  <div class="main">
+    <div class="col">
+      <section class="card" aria-labelledby="scoreH">
+        <div class="score">
+          <div>
+            <h2 id="scoreH">Compliance score</h2>
+            <svg class="gauge" viewBox="0 0 230 156" role="img" aria-labelledby="gaugeLbl">
+              <title id="gaugeLbl">Compliance score</title>
+              <path d="M20 125 A95 95 0 0 1 210 125" fill="none" stroke="var(--faint)" stroke-width="16" stroke-linecap="round"/>
+              <path id="gArc" d="M20 125 A95 95 0 0 1 210 125" fill="none" stroke="var(--ink)" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" style="transition:stroke-dasharray .6s"/>
+              <line id="gBase" x1="0" y1="0" x2="0" y2="0" stroke="var(--bad)" stroke-width="3"/>
+              <text id="gVal" class="val" x="115" y="112" text-anchor="middle">–</text>
+              <text id="gSub" class="sub" x="115" y="152" text-anchor="middle">WCAG 2.1 AA · EN 301 549</text>
+            </svg>
+            <div class="status-line" id="eaa"></div>
+          </div>
+          <div style="min-width:0">
+            <h2>By WCAG principle</h2>
+            <div class="pour" id="pour" style="margin-top:12px"></div>
+            <svg class="spark" id="spark" viewBox="0 0 300 54" width="100%" height="54" preserveAspectRatio="none" role="img" aria-label="Score during the run"></svg>
+            <div class="muted" style="font-size:12.5px" id="sparkLbl">Score over the run</div>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><b id="kFound">–</b><span>issues found</span></div>
+          <div class="kpi"><b id="kHidden">–</b><span>missed by automated scanners</span></div>
+          <div class="kpi"><b id="kFixed">–</b><span>fixed and verified</span></div>
+          <div class="kpi"><b id="kHuman">–</b><span>need human review</span></div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="Compliance workspace">
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="t-findings" aria-controls="p-findings" aria-selected="true">Findings <span class="n" id="nFind">0</span></button>
+          <button class="tab" role="tab" id="t-pr" aria-controls="p-pr" aria-selected="false">Pull request</button>
+          <button class="tab" role="tab" id="t-stmt" aria-controls="p-stmt" aria-selected="false">Accessibility statement</button>
+        </div>
+        <div class="pane" role="tabpanel" id="p-findings" aria-labelledby="t-findings">
+          <div class="filters" role="group" aria-label="Filter findings">
+            <button class="fbtn" data-f="all" aria-pressed="true">All</button>
+            <button class="fbtn" data-f="open" aria-pressed="false">Open</button>
+            <button class="fbtn" data-f="validated" aria-pressed="false">Fixed</button>
+            <button class="fbtn" data-f="needs_human" aria-pressed="false">Needs review</button>
+            <button class="fbtn" data-f="agent" aria-pressed="false">Missed by scanners</button>
+          </div>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th scope="col">ID</th><th scope="col">Criterion</th><th scope="col">Issue</th><th scope="col">Severity</th><th scope="col">Found by</th><th scope="col">Status</th></tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pane" role="tabpanel" id="p-pr" aria-labelledby="t-pr" hidden></div>
+        <div class="pane" role="tabpanel" id="p-stmt" aria-labelledby="t-stmt" hidden></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card" aria-labelledby="teamH">
+        <div class="loghead"><h2 id="teamH">Agent team</h2><span class="muted" style="font-size:13px" id="clock">–</span></div>
+        <div class="agents" id="agents"></div>
+      </section>
+      <section class="card" aria-labelledby="logH">
+        <div class="loghead"><h2 id="logH">Live agent log</h2><button class="btn small" id="copyLog" type="button">Copy log</button></div>
+        <div class="log" id="log" role="log" aria-live="off"></div>
+      </section>
+    </div>
+  </div>
+  <p class="foot">Arma runs a team of Claude agents (Claude Agent SDK) that map, audit, fix and independently verify a storefront against WCAG 2.1 AA, the standard behind the European Accessibility Act. Automated tools cover only part of WCAG: items marked “needs review” and testing with disabled users remain required.</p>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ data */
+const PAGES = {home:"/", product:"/products/leather-sneakers", cart:"/cart", checkout:"/checkout"};
+const PRIN = {P:"Perceivable", O:"Operable", U:"Understandable", R:"Robust"};
+const PEN = {critical:10, major:6, minor:3};
+const CRIT = {
+ "1.1.1":["Non-text Content","A","P"], "1.3.1":["Info and Relationships","A","P"], "1.4.3":["Contrast (Minimum)","AA","P"],
+ "2.1.1":["Keyboard","A","O"], "2.4.2":["Page Titled","A","O"], "2.4.4":["Link Purpose","A","O"], "2.4.7":["Focus Visible","AA","O"],
+ "3.1.1":["Language of Page","A","U"], "3.3.1":["Error Identification","A","U"], "3.3.2":["Labels or Instructions","A","U"],
+ "4.1.2":["Name, Role, Value","A","R"]
+};
+const ISSUES = [
+ {id:"A01",wcag:"1.4.3",sev:"major",src:"axe",pages:["home","product","cart","checkout"],title:"Low-contrast secondary text (hero, price notes, footer)",
+  impact:"Grey #c8c8c8 on white has a 1.7:1 ratio. Low-vision shoppers cannot read VAT notes, delivery promises or legal links.",
+  evidence:`.price-note { color: #c8c8c8; }\n.footer     { color: #c4c4c4; }\n.hero p     { color: #b5b5b5; }`,
+  fix:`- .price-note { color: #c8c8c8; }\n+ .price-note { color: #6b6b6b; }  /* 5.3:1 */\n- .footer     { color: #c4c4c4; }\n+ .footer     { color: #666666; }  /* 5.7:1 */\n- .hero p     { color: #b5b5b5; }\n+ .hero p     { color: #5f5a52; }  /* 6.4:1 on #faf7f2 */`,
+  files:["styles.css"], final:"validated"},
+ {id:"A02",wcag:"3.1.1",sev:"minor",src:"axe",pages:["home"],title:"Page language not declared",
+  impact:"Screen readers read French content with an English voice, making product names unintelligible.",
+  evidence:`<html>`, fix:`- <html>\n+ <html lang="fr">`, files:["index.html"], final:"validated"},
+ {id:"A03",wcag:"1.1.1",sev:"major",src:"axe",pages:["home","cart"],title:"Product images have no text alternative",
+  impact:"Blind shoppers hear “image” or the file name for every product in the grid and the cart.",
+  evidence:`<img src="img/tshirt.svg">`, fix:`- <img src="img/tshirt.svg">\n+ <img src="img/tshirt.svg" alt="Organic cotton T-shirt">`, files:["index.html","cart.html"], final:"validated"},
+ {id:"A04",wcag:"1.1.1",sev:"minor",src:"agent",pages:["product"],title:"Product photo alt text says only “image”",
+  impact:"The main product photo is described as “image”. Shoppers miss colour and material, which drive the purchase.",
+  evidence:`<img src="img/sneakers.svg" alt="image">`,
+  fix:`- alt="image"\n+ alt="Leather sneakers"   /* draft: colour and material to confirm */`, files:["product.html"], final:"needs_human",
+  human:"Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts."},
+ {id:"A05",wcag:"2.4.7",sev:"critical",src:"agent",pages:["home","product","cart","checkout"],title:"Keyboard focus is invisible on every page",
+  impact:"A global rule removes the focus ring. Keyboard users cannot see where they are, so checkout is effectively impossible.",
+  evidence:`*:focus { outline: none; }`,
+  fix:`- *:focus { outline: none; }\n+ :focus-visible {\n+   outline: 3px solid #141a24;\n+   outline-offset: 3px;\n+ }`, files:["styles.css"], final:"validated"},
+ {id:"A06",wcag:"4.1.2",sev:"major",src:"agent",pages:["home","product","cart","checkout"],title:"Header icon buttons are announced as emoji",
+  impact:"Search, wishlist and bag buttons are read as “magnifying glass tilted left”, “heart suit”, “shopping cart”. Their purpose is unclear.",
+  evidence:`<button class="icon-btn">🔍</button>\n<button class="icon-btn">♡</button>`,
+  fix:`- <button class="icon-btn">🔍</button>\n+ <button class="icon-btn" aria-label="Search">\n+   <span aria-hidden="true">🔍</span>\n+ </button>`, files:["index.html","product.html","cart.html","checkout.html"], final:"validated"},
+ {id:"A07",wcag:"2.1.1",sev:"critical",src:"agent",pages:["product"],title:"“Add to bag” cannot be reached with the keyboard",
+  impact:"The main call to action is a clickable div. Keyboard and switch users cannot add anything to their bag.",
+  evidence:`<div class="btn" onclick="addToCart()">Add to bag</div>`,
+  fix:`- <div class="btn" onclick="addToCart()">Add to bag</div>\n+ <button type="button" class="btn" onclick="addToCart()">\n+   Add to bag\n+ </button>`, files:["product.html","styles.css"], final:"validated", reject:true},
+ {id:"A08",wcag:"2.1.1",sev:"critical",src:"agent",pages:["product"],title:"Size selector is mouse-only and has no state",
+  impact:"Sizes are clickable divs with no role or selected state. Screen reader users cannot choose or confirm a size.",
+  evidence:`<div class="size" onclick="pick(this)">41</div>`,
+  fix:`+ <fieldset class="sizes"><legend>Size</legend>\n+   <label><input type="radio" name="size" value="41"> 41</label>\n- <div class="size" onclick="pick(this)">41</div>`, files:["product.html","styles.css"], final:"validated"},
+ {id:"A09",wcag:"2.1.1",sev:"critical",src:"agent",pages:["cart","checkout"],title:"“Checkout” and “Pay” are not keyboard operable",
+  impact:"Both steps that complete a purchase are clickable divs. A keyboard user is blocked at the end of the funnel.",
+  evidence:`<div class="btn" onclick="…requestSubmit()">Pay €119</div>`,
+  fix:`- <div class="btn" onclick="…">Pay €119</div>\n+ <button type="submit" class="btn">Pay €119</button>`, files:["cart.html","checkout.html"], final:"validated"},
+ {id:"A10",wcag:"3.3.2",sev:"critical",src:"agent",pages:["checkout"],title:"Payment fields use placeholders instead of labels",
+  impact:"Labels disappear while typing and are not reliably announced. Card number, expiry and CVC are easy to confuse.",
+  evidence:`<input id="card" placeholder="Card number">`,
+  fix:`+ <label for="card">Card number</label>\n- <input id="card" placeholder="Card number">\n+ <input id="card" autocomplete="cc-number" inputmode="numeric">`, files:["checkout.html"], final:"validated"},
+ {id:"A11",wcag:"3.3.1",sev:"major",src:"agent",pages:["checkout"],title:"Form errors are shown only by a red border",
+  impact:"Colour-blind and screen reader users are not told which field failed or why.",
+  evidence:`i.classList.toggle('input-error', !i.value)`,
+  fix:`+ i.setAttribute('aria-invalid', !i.value);\n+ err.textContent = 'Enter your card number';\n+ i.setAttribute('aria-describedby', err.id);`, files:["checkout.html"], final:"validated"},
+ {id:"A12",wcag:"2.4.4",sev:"minor",src:"agent",pages:["home"],title:"Four identical “Learn more” links",
+  impact:"Listed out of context by a screen reader, the links are indistinguishable.",
+  evidence:`<a class="more" href="product.html">Learn more</a>`,
+  fix:`+ <a class="more" href="product.html">Learn more\n+   <span class="vh"> about Leather sneakers</span></a>`, files:["index.html","styles.css"], final:"validated"},
+ {id:"A13",wcag:"1.3.1",sev:"major",src:"agent",pages:["home"],title:"Home page has no h1 and skips heading levels",
+  impact:"The visual title is a styled div and sections jump to h3. Heading navigation gives no outline of the page.",
+  evidence:`<div style="font-size:32px">Autumn collection</div>\n<h3>Best sellers</h3>`,
+  fix:`- <div style="font-size:32px">Autumn collection</div>\n+ <h1>Autumn collection</h1>\n- <h3>Best sellers</h3>\n+ <h2>Best sellers</h2>`, files:["index.html"], final:"validated"},
+ {id:"A14",wcag:"2.4.2",sev:"minor",src:"agent",pages:["checkout"],title:"Checkout page title is vague",
+  impact:"The tab reads “Payment” with no shop name or step, which is confusing with several tabs open.",
+  evidence:`<title>Payment</title>`, fix:`- <title>Payment</title>\n+ <title>Payment · Checkout · Maison Lumière</title>`, files:["checkout.html"], final:"validated"},
+ {id:"A15",wcag:"4.1.2",sev:"major",src:"agent",pages:["cart"],title:"Quantity and remove buttons have no accessible name",
+  impact:"Buttons are read as “minus”, “plus”, “wastebasket” with no product named. Users risk removing the wrong item.",
+  evidence:`<button class="icon-btn">🗑</button>`,
+  fix:`- <button class="icon-btn">🗑</button>\n+ <button class="icon-btn" aria-label="Remove Leather sneakers, size 41">`, files:["cart.html"], final:"validated"},
+ {id:"A16",wcag:"1.3.1",sev:"major",src:"agent",pages:["checkout"],title:"Third-party card widget not verifiable",
+  impact:"The payment provider's embedded field cannot be audited from the storefront code. It may block keyboard or screen reader users.",
+  evidence:`<iframe src="https://pay.provider.example/field">`,
+  fix:`No code change possible in this repository.`, files:[], final:"needs_human",
+  human:"Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility."}
+];
+const TOTAL_PEN = ISSUES.reduce((s,i)=>s+PEN[i.sev],0) * 1.6;
+const BATCHES = [
+ ["2.4.7",["A05"],"3f2a9c1","focus visible on all interactive elements"],
+ ["2.1.1",["A07","A08","A09"],"8c41d07","native buttons and radio group for keyboard access"],
+ ["3.3.2",["A10"],"b19e6a4","labels and autocomplete on payment form"],
+ ["4.1.2",["A06","A15"],"e07d3f8","accessible names for icon buttons"],
+ ["1.4.3",["A01"],"5ad21c9","brand-safe contrast for secondary text"],
+ ["3.3.1",["A11"],"c6f0b82","text error messages linked to fields"],
+ ["1.1.1",["A03","A04"],"71be4d0","text alternatives for product images"],
+ ["1.3.1",["A13","A16"],"0d9c5ea","heading structure on home page"],
+ ["2.4.4",["A12"],"a4e83f1","descriptive product links"],
+ ["2.4.2",["A14"],"2bf9e07","descriptive checkout title"],
+ ["3.1.1",["A02"],"96c1d3b","declare page language"]
+];
+const PHASES = [["crawl","Map site"],["baseline","Baseline"],["audit","Audit"],["plan","Plan"],["fix","Fix & verify"],["reaudit","Re-audit"],["report","Report"],["pr","Pull request"]];
+const AGENTS = [["orch","Orchestrator"],["cart","Cartographer"],["aud","Auditors"],["dev","Developer"],["test","Tester"],["writer","Writer"]];
+const ACLS = {orch:"a-orch",cart:"a-cart",chief:"a-chief",aud:"a-aud",dev:"a-dev",test:"a-test",writer:"a-writer",sys:"a-sys"};
+const ANAME = {orch:"orchestrator",cart:"cartographer",chief:"lead-auditor",dev:"developer",test:"tester",writer:"writer",sys:"system"};
+
+/* ----------------------------------------------------------------- state */
+let S;
+function fresh(){
+  return {t:0, phase:null, done:[], status:{}, hist:{}, attempts:{}, logs:[], agents:{}, subs:[0,0,0,0],
+          act:{}, commits:[], baseline:null, scoreHist:[], fresh:new Set(), finished:false, axe:null};
+}
+
+/* --------------------------------------------------------------- script */
+function buildScript(){
+  const ev=[]; let T=0;
+  const at=(dt,fn)=>{T+=dt; ev.push([T,fn]);};
+  const L=(a,x,k="msg",sub)=>()=>log(a,x,k,sub);
+  const ag=(a,st,act)=>()=>setAgent(a,st,act);
+  const ph=p=>()=>setPhase(p);
+  const st=(id,s,who,note)=>()=>setStatus(id,s,who,note);
+
+  at(0, ph("crawl")); at(0, ag("orch","working","coordinating run"));
+  at(.2,L("orch","Run started on https://maison-lumiere.fr · source repo storefront@main","phase"));
+  at(.6,ag("cart","working","crawl_site")); at(0,L("cart","→ crawl_site max_pages=30","tool"));
+  at(1.6,L("cart","Found 4 pages. /checkout is only reachable through an onclick redirect (noted)."));
+  ["home:Home","product:Product page","cart:Cart","checkout:Checkout"].forEach(s=>{const [k,n]=s.split(":");
+    at(.35,L("cart",`→ register_page ${PAGES[k]} template="${n}"`,"tool"));});
+  at(.6,L("cart","Purchase funnel fully covered: home → product → cart → checkout.","ok")); at(0,ag("cart","done","4 pages mapped"));
+
+  at(.8, ph("baseline")); at(0,ag("orch","working","measuring baseline"));
+  at(.3,L("orch","Branch created: a11y/eaa-remediation-2026-10-15","tool"));
+  at(1.2,L("orch","Baseline: 17 automated violations · 9 controls unreachable by keyboard · focus visible on 0 of 24 stops"));
+
+  at(.8, ph("audit")); at(0,ag("aud","working","dispatching page auditors"));
+  at(.3,L("chief","Dispatching 4 page auditors in parallel (axe + keyboard walk + expert review)"));
+  at(.2,()=>{S.subs=[1,1,1,1]});
+  const pa = {home:"auditor·home", product:"auditor·product", cart:"auditor·cart", checkout:"auditor·checkout"};
+  at(.5,L("aud","→ audit_page /","tool","auditor·home")); at(.1,L("aud","→ audit_page /products/leather-sneakers","tool","auditor·product"));
+  at(.1,L("aud","→ audit_page /cart","tool","auditor·cart")); at(.1,L("aud","→ audit_page /checkout","tool","auditor·checkout"));
+  at(.7,L("sys","Tool error: Chromium crashed during analysis (Target closed). Injected fault.","err"));
+  at(.6,L("aud","Transient browser crash, not a page error. Retrying once.","msg","auditor·checkout"));
+  at(.4,L("aud","→ audit_page /checkout (retry)","tool","auditor·checkout"));
+  at(.6,L("aud","Retry succeeded.","ok","auditor·checkout"));
+  const order=[["A02","home"],["A01","home"],["A03","home"],["A05","product"],["A07","product"],["A13","home"],["A08","product"],
+    ["A10","checkout"],["A06","home"],["A15","cart"],["A12","home"],["A09","cart"],["A11","checkout"],["A04","product"],["A14","checkout"],["A16","checkout"]];
+  order.forEach(([id,p])=>{
+    const i=ISSUES.find(x=>x.id===id);
+    if(i.src==="agent" && (id==="A05"||id==="A07"||id==="A08")) at(.4,L("aud",`→ keyboard_walk ${PAGES[p]}`,"tool",pa[p]));
+    else if(i.src==="agent") at(.4,L("aud",`→ get_page_html ${PAGES[p]}`,"tool",pa[p]));
+    at(.6,()=>{detect(id); log("aud",`add_issue ${id} [${i.wcag}] ${i.title}`,"msg",pa[p]);});
+    if(id==="A06") at(.3,L("aud","A06 merged: same component on 4 pages (shared header). One fix covers all.","msg",pa.product));
+  });
+  at(.5,()=>{S.subs=[2,2,2,2]});
+  at(.4,L("chief","16 issues · 13 missed by automated scanners · 5 block the purchase funnel","ok"));
+  at(0,()=>{S.baseline=score(); pushScore(); setAgent("aud","done","16 issues logged");});
+
+  at(.8, ph("plan")); at(0,ag("orch","working","planning batches"));
+  at(.4,L("orch",`Grouped into ${BATCHES.length} batches by WCAG criterion, purchase blockers first.`));
+  BATCHES.slice(0,4).forEach(b=>at(.15,L("orch",`Batch ${b[0]}: ${b[1].join(", ")}`,"tool")));
+  at(.15,L("orch",`… ${BATCHES.length-4} more batches queued`,"tool"));
+
+  at(.8, ph("fix"));
+  BATCHES.forEach(([crit,ids,sha,msg],bi)=>{
+    at(.6,L("orch",`Batch ${bi+1}/${BATCHES.length} · WCAG ${crit} ${CRIT[crit][0]} · attempt 1/3`,"phase"));
+    at(0,ag("dev","working",`WCAG ${crit}`)); at(0,ag("test","idle","waiting"));
+    ids.forEach(id=>at(.1,st(id,"fixing","orchestrator","Assigned to developer")));
+    const files=[...new Set(ids.flatMap(id=>ISSUES.find(x=>x.id===id).files))];
+    at(.5,L("dev",`→ Grep ${crit==="2.4.7"?"'outline: none'":crit==="1.4.3"?"'color: #c'":"'onclick=|<img|aria-'"}`,"tool"));
+    if(files.length) at(.5,L("dev",`→ Edit ${files.slice(0,2).join(", ")}${files.length>2?" +"+(files.length-2):""}`,"tool"));
+
+    if(crit==="1.4.3"){ // rejected for visual regression first
+      at(.6,()=>{setStatus("A01","fixed_pending","developer","Darkened text and hero background for 4.5:1."); log("dev","mark_fixed A01: darkened secondary text and hero background");});
+      at(0,ag("dev","idle","waiting for review")); at(0,ag("test","working","compare_with_baseline"));
+      at(.5,L("test","→ compare_with_baseline / · changed_pixels_ratio=0.18","tool"));
+      at(.5,L("test","→ Read shots/home.diff.png","tool"));
+      at(.6,()=>{setStatus("A01","rejected","tester","Contrast passes, but the hero background changed colour (18% of pixels). Brand regression: keep #faf7f2 and adjust text colour only."); log("test","REJECTED A01: hero background changed (18% of pixels). Keep the brand background, adjust text only.","reject");});
+      at(.3,L("test","Batch verdict: regression, roll back.","reject"));
+      at(.4,L("orch","Rollback: git checkout -- . · retrying batch with tester feedback (attempt 2/3)","rollback"));
+      at(0,ag("dev","working","WCAG 1.4.3 · attempt 2")); at(0,ag("test","idle","waiting"));
+      at(.4,st("A01","fixing","orchestrator","Retry with tester feedback"));
+      at(.6,L("dev","Nearest compliant shades to the brand palette: #6b6b6b (5.3:1), #5f5a52 (6.4:1). Background untouched."));
+      at(.4,L("dev","→ Edit styles.css","tool"));
+      at(.4,()=>{setStatus("A01","fixed_pending","developer","Text colours only, nearest compliant shade."); log("dev","mark_fixed A01: text colours only, background unchanged");});
+      at(0,ag("dev","idle","")); at(0,ag("test","working","compare_with_baseline"));
+      at(.5,L("test","→ compare_with_baseline / · resolved 8 · regressions 0 · changed_pixels_ratio=0.01","tool"));
+      at(.5,()=>{setStatus("A01","validated","tester","All secondary text ≥ 4.5:1, design unchanged (1% pixel diff)."); log("test","A01 validated: all secondary text ≥ 4.5:1, design intact","ok");});
+    } else {
+      ids.forEach(id=>{
+        const i=ISSUES.find(x=>x.id===id);
+        if(i.final==="needs_human" && !i.files.length){
+          at(.5,()=>{setStatus(id,"needs_human","developer",i.human); log("dev",`cannot_fix ${id}: third-party widget outside this repository → escalated`,"reject");});
+          return;
+        }
+        if(i.reject){
+          at(.5,()=>{setStatus(id,"fixed_pending","developer","Added role=\"button\" and aria-label to the div."); log("dev",`mark_fixed ${id}: added role="button" and aria-label`);});
+        } else {
+          at(.45,()=>{setStatus(id,"fixed_pending","developer",shortFix(i)); log("dev",`mark_fixed ${id}: ${shortFix(i)}`);});
+        }
+      });
+      at(0,ag("dev","idle","waiting for review")); at(0,ag("test","working","verifying"));
+      const pg=[...new Set(ids.flatMap(id=>ISSUES.find(x=>x.id===id).pages))];
+      at(.5,L("test",`→ compare_with_baseline ${PAGES[pg[0]]}${pg.length>1?" +"+(pg.length-1)+" pages":""}`,"tool"));
+      if(["2.4.7","2.1.1","4.1.2"].includes(crit)) at(.4,L("test",`→ keyboard_walk ${PAGES[pg[0]]}`,"tool"));
+      ids.forEach(id=>{
+        const i=ISSUES.find(x=>x.id===id);
+        if(i.final==="needs_human" && !i.files.length) return;
+        if(i.reject){
+          at(.5,()=>{setStatus(id,"rejected","tester","Cosmetic fix: the div has a role but is still not focusable, and Enter does nothing. Use a native <button>."); log("test",`REJECTED ${id}: still not focusable, Enter does nothing. Use a native <button>.`,"reject");});
+        } else if(i.final==="needs_human"){
+          at(.5,()=>{setStatus(id,"needs_human","tester",i.human); log("test",`${id} needs human review: draft alt text cannot confirm colour or material`,"reject");});
+        } else {
+          at(.45,()=>{setStatus(id,"validated","tester",verifyNote(i)); log("test",`${id} validated: ${verifyNote(i)}`,"ok");});
+        }
+      });
+      if(ids.some(id=>ISSUES.find(x=>x.id===id).reject)){
+        at(.3,L("test","Batch verdict: no regression. Commit validated fixes, return A07.","msg"));
+        at(.4,()=>commit(crit,sha,"partial: "+msg));
+        at(.4,L("orch","Batch WCAG 2.1.1 · attempt 2/3 for A07 with tester feedback","phase"));
+        at(0,ag("dev","working","A07 · attempt 2")); at(0,ag("test","idle","waiting"));
+        at(.3,st("A07","fixing","orchestrator","Retry with tester feedback"));
+        at(.6,L("dev","→ Edit product.html (div → <button type=\"button\">)","tool"));
+        at(.4,()=>{setStatus("A07","fixed_pending","developer","Replaced div with native button; styles kept."); log("dev","mark_fixed A07: native <button>, same styling");});
+        at(0,ag("dev","idle","")); at(0,ag("test","working","keyboard_walk"));
+        at(.5,L("test","→ keyboard_walk /products/leather-sneakers · Tab reaches “Add to bag”, Enter adds item","tool"));
+        at(.5,()=>{setStatus("A07","validated","tester","Reachable by Tab, operable with Enter and Space, announced as button."); log("test","A07 validated: reachable by Tab, works with Enter and Space","ok");});
+        at(.4,()=>commit(crit,"d27a8f3","native button for Add to bag"));
+        return;
+      }
+    }
+    if(ids.some(id=>{const i=ISSUES.find(x=>x.id===id); return i.files.length && i.final==="validated";}))
+      at(.4,()=>commit(crit,sha,msg));
+  });
+  at(0,ag("dev","done","all batches processed")); at(0,ag("test","done",""));
+
+  at(.8, ph("reaudit")); at(0,ag("orch","working","independent re-audit"));
+  at(1.2,L("orch","Re-audit: automated violations 17 → 0 · unreachable controls 9 → 0 · focus visible 0 → 24 of 24 stops","ok"));
+  at(0,()=>{S.axe=[17,0]});
+  at(.8, ph("report")); at(0,ag("writer","working","writing"));
+  at(.8,L("writer","→ Write pr-body.md","tool")); at(.6,L("writer","→ Write accessibility-statement.md (status: partially compliant)","tool"));
+  at(.5,ag("writer","done","2 documents"));
+  at(.6, ph("pr"));
+  at(.4,()=>log("orch",`Branch ready: ${S.commits.length} commits, ${new Set(ISSUES.filter(i=>S.status[i.id]==="validated").flatMap(i=>i.files)).size} files changed. Waiting for compliance sign-off to send to engineering.`,"ok"));
+  at(0,()=>{setAgent("orch","done","awaiting sign-off"); S.finished=true; S.done.push("pr"); });
+  return ev;
+}
+function shortFix(i){return {A02:'lang="fr" on <html>',A03:"alt text from product names",A04:"draft alt text from product name",A05:"global :focus-visible ring",
+ A06:"aria-label on header icon buttons",A08:"radio group in a fieldset with legend",A09:"native submit buttons",A10:"visible labels + autocomplete",
+ A11:"text errors linked with aria-describedby",A12:"visually hidden product names in links",A13:"h1 + corrected heading levels",A14:"descriptive title",A15:"product-specific aria-labels"}[i.id]||"fixed";}
+function verifyNote(i){return {A02:"lang detected, French voice used",A03:"all product images announced by name",A05:"focus ring visible on 24 of 24 stops",
+ A06:"buttons announced as Search, Wishlist, Bag",A08:"sizes reachable with arrows, selection announced",A09:"funnel completes with keyboard only",
+ A10:"every field has a programmatic label",A11:"error text announced and tied to its field",A12:"each link names its product",
+ A13:"one h1, no skipped levels",A14:"title names page, step and shop",A15:"each button names its product"}[i.id]||"verified";}
+
+/* -------------------------------------------------------------- actions */
+const nowStr=()=>{const s=Math.floor(S.t); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
+function log(a,text,kind="msg",sub){S.logs.push({t:nowStr(),a,text,kind,sub}); if(kind!=="tool"&&a!=="sys"&&a!=="chief") S.act[a]=text;}
+function setAgent(a,st,act){S.agents[a]=st; if(act!==undefined) S.act[a]=act;}
+function setPhase(p){if(S.phase&&!S.done.includes(S.phase)) S.done.push(S.phase); S.phase=p;}
+function detect(id){S.status[id]="detected"; S.hist[id]=[{who:"auditor",note:"Detected",st:"detected"}]; S.fresh.add(id);}
+function setStatus(id,st,who,note){S.status[id]=st; (S.hist[id]=S.hist[id]||[]).push({who,note,st}); if(st==="fixing") S.attempts[id]=(S.attempts[id]||0)+1; if(S.baseline!=null) pushScore();}
+function commit(crit,sha,msg){S.commits.push({sha,crit,msg:`fix(a11y): WCAG ${crit} — ${msg}`}); log("orch",`Commit ${sha} · fix(a11y): WCAG ${crit} — ${msg}`,"commit");}
+function score(){const open=ISSUES.filter(i=>S.status[i.id]&&S.status[i.id]!=="validated").reduce((s,i)=>s+PEN[i.sev],0); return Math.round(100*(1-open/TOTAL_PEN));}
+function pushScore(){S.scoreHist.push(score());}
+
+/* --------------------------------------------------------------- player */
+let SCRIPT=[], idx=0, speed=2, timer=null;
+function reset(){S=fresh(); SCRIPT=buildScript(); idx=0; logRendered=0; document.getElementById("log").innerHTML=""; prState=null;}
+function step(dt){S.t+=dt; while(idx<SCRIPT.length && SCRIPT[idx][0]<=S.t){SCRIPT[idx][1](); idx++;} if(idx>=SCRIPT.length) stop();}
+function play(){reset(); render(); clearInterval(timer); running=true; timer=setInterval(()=>{step(.1*speed); render();},100); updButtons();}
+function stop(){clearInterval(timer); timer=null; running=false; updButtons();}
+function skipToEnd(){reset(); while(idx<SCRIPT.length){S.t=SCRIPT[idx][0]; SCRIPT[idx][1](); idx++;} S.fresh.clear(); render();}
+let running=false;
+
+/* --------------------------------------------------------------- render */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const STL={detected:["Detected","p-bad"],fixing:["Developer fixing","p-info"],fixed_pending:["Tester verifying","p-info"],rejected:["Rejected, retrying","p-warn"],validated:["Fixed and verified","p-ok"],needs_human:["Needs review","p-warn"]};
+let filter="all", expanded=new Set(), logRendered=0, prState=null, tab="findings";
+
+function render(){
+  // rail
+  $("rail").innerHTML=PHASES.map(([k,n],i)=>{const d=S.done.includes(k), now=S.phase===k&&!d;
+    return `<span class="ph ${d?"done":now?"now":""}"><i aria-hidden="true">${d?"✓":i+1}</i>${n}${d?'<span class="vh"> (done)</span>':now?'<span class="vh"> (in progress)</span>':""}</span>`;}).join("");
+  $("liveDot").className="dot"+(running?" live":"");
+  $("clock").textContent=running?`Running · ${nowStr()} elapsed`:(S.finished?`Last run · ${nowStr()} agent time`:"Idle");
+  // score
+  const sc=S.baseline==null?null:score();
+  $("gVal").textContent=sc==null?"–":sc;
+  $("gArc").setAttribute("stroke-dasharray",`${sc||0} 100`);
+  $("gArc").setAttribute("stroke",sc==null?"var(--faint)":sc>=85?"var(--ok)":sc>=60?"var(--warn)":"var(--bad)");
+  if(S.baseline!=null){const a=Math.PI*(1-S.baseline/100), cx=115, cy=125, r1=82, r2=108;
+    $("gBase").setAttribute("x1",cx+r1*Math.cos(a)); $("gBase").setAttribute("y1",cy-r1*Math.sin(a));
+    $("gBase").setAttribute("x2",cx+r2*Math.cos(a)); $("gBase").setAttribute("y2",cy-r2*Math.sin(a));} else {["x1","y1","x2","y2"].forEach(k=>$("gBase").setAttribute(k,0));}
+  const nh=ISSUES.filter(i=>S.status[i.id]==="needs_human").length, open=ISSUES.filter(i=>S.status[i.id]&&!["validated","needs_human"].includes(S.status[i.id])).length;
+  let eaa;
+  if(sc==null) eaa=`<span class="pill p-mute">${S.phase?"Audit in progress":"Not audited"}</span>`;
+  else if(open>0) eaa=`<span class="pill p-bad">EAA: non-compliant</span><span class="muted" style="font-size:13px">baseline ${S.baseline}</span>`;
+  else eaa=`<span class="pill p-warn">EAA: partially compliant</span><span class="muted" style="font-size:13px">${nh} item${nh>1?"s":""} need${nh>1?"":"s"} review · baseline ${S.baseline}</span>`;
+  $("eaa").innerHTML=eaa;
+  // POUR
+  $("pour").innerHTML=Object.entries(PRIN).map(([k,n])=>{
+    const its=ISSUES.filter(i=>CRIT[i.wcag][2]===k && S.status[i.id]); const tot=its.reduce((s,i)=>s+PEN[i.sev],0);
+    const ok=its.filter(i=>S.status[i.id]==="validated").reduce((s,i)=>s+PEN[i.sev],0);
+    const v=sc==null?null:(tot?Math.round(100*ok/tot):100);
+    return `<div class="pour-row"><span>${n}</span><div class="track" role="img" aria-label="${n}: ${v==null?"not measured":v+"% resolved"}"><span style="width:${v||0}%;background:${v==null?"var(--line)":v>=85?"var(--ok)":v>=50?"var(--warn)":"var(--bad)"}"></span></div><span class="mono" style="text-align:right">${v==null?"–":v+"%"}</span></div>`;}).join("");
+  // sparkline
+  const h=S.scoreHist; if(h.length>1){const w=300,H=54,p=4; const xs=i=>p+(w-2*p)*i/(h.length-1), ys=v=>H-p-(H-2*p)*v/100;
+    const d=h.map((v,i)=>(i?"L":"M")+xs(i).toFixed(1)+" "+ys(v).toFixed(1)).join(" ");
+    $("spark").innerHTML=`<line x1="0" x2="${w}" y1="${ys(85)}" y2="${ys(85)}" stroke="var(--line)" stroke-dasharray="3 3"/><path d="${d} L${xs(h.length-1)} ${H} L${xs(0)} ${H}Z" fill="var(--faint)"/><path d="${d}" fill="none" stroke="var(--ink)" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="${xs(h.length-1)}" cy="${ys(h[h.length-1])}" r="3" fill="var(--ink)"/>`;
+    $("sparkLbl").textContent=`Score over the run: ${h[0]} → ${h[h.length-1]} · dashed line = target 85`;} else {$("spark").innerHTML=""; $("sparkLbl").textContent="Score over the run";}
+  // KPIs
+  const found=ISSUES.filter(i=>S.status[i.id]);
+  $("kFound").textContent=found.length||"–";
+  $("kHidden").textContent=found.length?found.filter(i=>i.src==="agent").length:"–";
+  $("kFixed").textContent=found.length?found.filter(i=>S.status[i.id]==="validated").length:"–";
+  $("kHuman").textContent=found.length?nh:"–";
+  $("nFind").textContent=found.length;
+  // agents
+  $("agents").innerHTML=AGENTS.map(([k,n])=>{const st=S.agents[k]||"idle";
+    const sub=k==="aud"?`<span class="subdots" aria-hidden="true">${S.subs.map(v=>`<i class="${v===1?"on":v===2?"ok":""}"></i>`).join("")}</span>`:"";
+    return `<div class="ag ${st}"><span class="st" aria-hidden="true"></span><span class="nm">${n}${sub}</span><span class="act" title="${esc(S.act[k]||"")}">${esc(S.act[k]||(st==="idle"?"idle":""))}</span><span class="vh">${st}</span></div>`;}).join("");
+  // log (incremental)
+  const lg=$("log"), stick=lg.scrollTop+lg.clientHeight>=lg.scrollHeight-40;
+  if(S.logs.length>logRendered){
+    lg.insertAdjacentHTML("beforeend",S.logs.slice(logRendered).map(l=>`<div class="ln k-${l.kind}"><span class="t">${l.t}</span><span><span class="a ${ACLS[l.a]}">[${esc(l.sub||ANAME[l.a]||"auditor")}]</span> <span class="x">${esc(l.text)}</span></span></div>`).join(""));
+    logRendered=S.logs.length; if(stick||running) lg.scrollTop=lg.scrollHeight;
+  }
+  renderRows(); renderPR(); renderStmt(); updButtons();
+  S.fresh.clear();
+}
+
+function renderRows(){
+  let its=ISSUES.filter(i=>S.status[i.id]);
+  if(filter==="open") its=its.filter(i=>!["validated","needs_human"].includes(S.status[i.id]));
+  else if(filter==="agent") its=its.filter(i=>i.src==="agent");
+  else if(filter!=="all") its=its.filter(i=>S.status[i.id]===filter);
+  if(!its.length){$("rows").innerHTML=`<tr><td colspan="6" class="empty">${S.phase?"No findings in this view yet.":"Run an audit to see findings. Agents map the site, audit each page and record every WCAG issue here."}</td></tr>`; return;}
+  $("rows").innerHTML=its.map(i=>{
+    const [cn,lv]=CRIT[i.wcag], [sl,sc]=STL[S.status[i.id]], ex=expanded.has(i.id), att=S.attempts[i.id]||0;
+    let row=`<tr class="row${S.fresh.has(i.id)?" fresh":""}" data-id="${i.id}" tabindex="0" aria-expanded="${ex}">
+      <td class="mono">${i.id}</td>
+      <td><div class="crit"><span class="num">${i.wcag}</span><span class="lvl">${lv}</span></div><div class="src">${cn}</div></td>
+      <td>${esc(i.title)}<div class="src">${i.pages.length===4?"All pages":i.pages.map(p=>PAGES[p]).join(", ")}</div></td>
+      <td><span class="sev ${i.sev}" aria-hidden="true"></span>${i.sev[0].toUpperCase()+i.sev.slice(1)}</td>
+      <td class="src ${i.src==="agent"?"agent":""}">${i.src==="agent"?"Agent review":"Scanner (axe)"}</td>
+      <td><span class="pill ${sc}">${sl}</span>${att>1?`<div class="src">attempt ${att}</div>`:""}</td></tr>`;
+    if(ex){
+      const hist=(S.hist[i.id]||[]).map(h=>`<li><span class="who">${esc(h.who)}</span><span>${esc(h.note)}</span></li>`).join("");
+      const done=["validated","needs_human","fixed_pending","rejected"].includes(S.status[i.id]);
+      row+=`<tr class="detail"><td colspan="6"><div class="dgrid">
+        <div><h3>Specification</h3><p style="margin:0 0 8px">WCAG 2.1 · ${i.wcag} ${cn} (Level ${lv}) · EN 301 549 clause 9.${i.wcag} · ${PRIN[CRIT[i.wcag][2]]}</p>
+          <h3>User impact</h3><p style="margin:0 0 8px">${esc(i.impact)}</p><h3>Evidence</h3><pre>${esc(i.evidence)}</pre></div>
+        <div><h3>Fix applied in source</h3>${done?`<pre>${diffHtml(i.fix)}</pre><div class="src" style="margin-top:4px">${i.files.length?"Files: "+i.files.join(", "):"No file changed"}</div>`:`<p class="muted" style="margin:0">Not fixed yet.</p>`}
+          <h3 style="margin-top:12px">Verification trail</h3><ul class="hist">${hist}</ul></div></div></td></tr>`;
+    }
+    return row;}).join("");
+}
+function diffHtml(t){return t.split("\n").map(l=>l.startsWith("+")?`<span class="add">${esc(l)}</span>`:l.startsWith("-")?`<span class="del">${esc(l)}</span>`:esc(l)).join("\n");}
+
+function renderPR(){
+  const p=$("p-pr");
+  if(!S.done.includes("pr")){p.innerHTML=`<div class="empty">The pull request is assembled once every fix has been verified by the tester agent.${S.commits.length?` <br><span class="mono">${S.commits.length} commit${S.commits.length>1?"s":""} so far</span>`:""}</div>`; return;}
+  if(p.dataset.ready==="1" && prState!=="redraw") return;
+  p.dataset.ready="1";
+  const fixed=ISSUES.filter(i=>S.status[i.id]==="validated"), nh=ISSUES.filter(i=>S.status[i.id]==="needs_human");
+  const files=[...new Set(fixed.flatMap(i=>i.files))];
+  p.innerHTML=`<div class="prgrid">
+   <div>
+     <h2 style="margin-bottom:10px">a11y: EAA remediation, WCAG 2.1 AA</h2>
+     <dl class="kv"><dt>Repository</dt><dd class="mono">maison-lumiere/storefront</dd>
+       <dt>Branch</dt><dd class="mono">a11y/eaa-remediation-2026-10-15 → main</dd>
+       <dt>Changes</dt><dd>${S.commits.length} commits · ${files.length} files · ${fixed.length} issues fixed and verified</dd>
+       <dt>Open items</dt><dd>${nh.map(i=>`<span class="mono">${i.id}</span> ${esc(i.title)}`).join("<br>")}</dd>
+       <dt>Score</dt><dd>${S.baseline} → ${score()}</dd></dl>
+     <ul class="commits">${S.commits.map(c=>`<li><span class="h">${c.sha}</span><span>${esc(c.msg)}</span></li>`).join("")}</ul>
+   </div>
+   <form id="prForm" novalidate>
+     <fieldset><legend>Reviewers</legend>
+       <label class="opt"><input type="checkbox" id="rv1" checked> Frontend team</label>
+       <label class="opt"><input type="checkbox" id="rv2" checked> Léa Martin · tech lead</label>
+       <label class="opt"><input type="checkbox" id="rv3"> Tom Baker · QA</label></fieldset>
+     <fieldset><legend>Notify</legend>
+       <label class="opt"><input type="checkbox" id="nt1" checked> Slack · #eng-frontend</label>
+       <label class="opt"><input type="checkbox" id="nt2" checked> Create Jira ticket in A11Y</label>
+       <label class="opt"><input type="checkbox" id="nt3"> Email the compliance report to legal</label></fieldset>
+     <label class="lbl" for="prMsg">Message to engineering</label>
+     <textarea id="prMsg">Compliance has reviewed and approved these accessibility fixes. Each commit maps to one WCAG 2.1 AA criterion and was verified by an independent tester agent (diffs and verification trail in the description). Two items need a human decision: product alt text (merchandising) and the payment provider's conformance report. Target merge before the next release.</textarea>
+     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+       <button class="btn primary" type="submit" id="sendPr">Send pull request</button>
+       <span class="muted" style="font-size:13px">Sign-off is recorded in the audit trail.</span></div>
+     <div id="sendOut"></div>
+   </form></div>`;
+  $("prForm").addEventListener("submit",e=>{e.preventDefault(); sendPR();});
+}
+function sendPR(){
+  const btn=$("sendPr"); btn.disabled=true;
+  const steps=["Push branch a11y/eaa-remediation-2026-10-15","Open pull request on maison-lumiere/storefront"];
+  if($("rv1").checked||$("rv2").checked||$("rv3").checked) steps.push("Request reviews");
+  if($("nt1").checked) steps.push("Post to Slack #eng-frontend");
+  if($("nt2").checked) steps.push("Create Jira ticket A11Y-42");
+  if($("nt3").checked) steps.push("Email report to legal");
+  const out=$("sendOut"); let k=0;
+  const draw=()=>{out.innerHTML=`<ul class="steps">${steps.map((s,i)=>`<li class="${i<k?"ok":i===k?"run":""}">${s}</li>`).join("")}</ul>`;};
+  draw();
+  const iv=setInterval(()=>{k++; draw(); if(k>=steps.length){clearInterval(iv);
+    out.insertAdjacentHTML("beforeend",`<div class="sent" role="status"><b>Pull request #218 opened</b><span class="mono">maison-lumiere/storefront · a11y/eaa-remediation-2026-10-15</span><div class="src" style="margin-top:4px">Engineering notified. Demo workspace: no external system was contacted.</div></div>`);
+    btn.textContent="Sent"; }},650);
+}
+
+function renderStmt(){
+  const p=$("p-stmt");
+  if(!S.done.includes("report")){p.innerHTML=`<div class="empty">The writer agent drafts the accessibility statement required by the EAA once the re-audit is done.</div>`; return;}
+  if(p.dataset.ready==="1") return; p.dataset.ready="1";
+  const nh=ISSUES.filter(i=>S.status[i.id]==="needs_human");
+  p.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><span class="pill p-warn">Draft · partially compliant</span><button class="btn small" id="copyStmt" type="button">Copy statement</button></div>
+  <article class="statement" id="stmt">
+   <h3>Accessibility statement · Maison Lumière</h3>
+   <p>Maison Lumière is committed to making maison-lumiere.fr accessible, in line with the European Accessibility Act and the French law transposing it.</p>
+   <h3>Compliance status</h3><p>The website is <b>partially compliant</b> with EN 301 549 v3.2.1 and WCAG 2.1 level AA, due to the non-compliant content listed below.</p>
+   <h3>Non-accessible content</h3><ul>${nh.map(i=>`<li>${esc(i.title)} (WCAG ${i.wcag}). ${esc(i.human)}</li>`).join("")}</ul>
+   <h3>How this statement was prepared</h3><p>Audit of 4 page templates covering the full purchase funnel on 15 October 2026, combining automated testing (axe-core), keyboard testing and expert review by AI agents, with independent verification of every fix. Testing with disabled users is <span class="todo">[TO COMPLETE]</span>.</p>
+   <h3>Feedback and contact</h3><p>If you cannot access content or a service, contact <span class="todo">[accessibility contact email]</span>. We respond within <span class="todo">[time frame]</span>.</p>
+   <h3>Enforcement</h3><p>If you are not satisfied with our response, you can contact the market surveillance authority: <span class="todo">[national authority]</span>.</p>
+  </article>`;
+  $("copyStmt").addEventListener("click",()=>copyText($("stmt").innerText,$("copyStmt")));
+}
+
+/* ---------------------------------------------------------------- wiring */
+function updButtons(){
+  $("runBtn").textContent=running?"■ Stop":"▶ Run audit";
+  $("prBtn").disabled=!S.done.includes("pr");
+}
+function copyText(txt,btn){
+  const done=()=>{const o=btn.textContent; btn.textContent="Copied"; setTimeout(()=>btn.textContent=o,1400);};
+  try{navigator.clipboard.writeText(txt).then(done,()=>selectFallback(txt));}catch(e){selectFallback(txt);}
+}
+function selectFallback(){const r=document.createRange(); r.selectNodeContents($("log")); const s=getSelection(); s.removeAllRanges(); s.addRange(r);}
+function selectTab(name){
+  tab=name; ["findings","pr","stmt"].forEach(n=>{$("t-"+n).setAttribute("aria-selected",n===name); $("p-"+n).hidden=n!==name;});
+}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>selectTab(b.id.slice(2))));
+document.querySelector(".tabs").addEventListener("keydown",e=>{
+  const ts=[...document.querySelectorAll(".tab")], i=ts.indexOf(document.activeElement);
+  if(i<0) return; if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault(); const n=ts[(i+(e.key==="ArrowRight"?1:ts.length-1))%ts.length]; n.focus(); n.click();}
+});
+document.querySelectorAll(".fbtn").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.f; document.querySelectorAll(".fbtn").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderRows();}));
+$("rows").addEventListener("click",e=>{const tr=e.target.closest("tr.row"); if(!tr) return; const id=tr.dataset.id; expanded.has(id)?expanded.delete(id):expanded.add(id); renderRows();});
+$("rows").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("tr.row")){e.preventDefault(); const id=e.target.dataset.id; expanded.has(id)?expanded.delete(id):expanded.add(id); renderRows(); const r=document.querySelector(`tr.row[data-id="${id}"]`); r&&r.focus();}});
+document.querySelectorAll("[data-speed]").forEach(b=>b.addEventListener("click",()=>{speed=+b.dataset.speed; document.querySelectorAll("[data-speed]").forEach(x=>x.setAttribute("aria-pressed",x===b));}));
+$("runBtn").addEventListener("click",()=>{ if(running){stop(); render(); return;} $("p-pr").dataset.ready=""; $("p-stmt").dataset.ready=""; expanded.clear(); selectTab("findings"); play();});
+$("prBtn").addEventListener("click",()=>{selectTab("pr"); const s=$("sendPr"); s&&s.focus(); $("p-pr").scrollIntoView({behavior:"smooth",block:"start"});});
+$("copyLog").addEventListener("click",()=>copyText(S.logs.map(l=>`${l.t} [${l.sub||ANAME[l.a]||"auditor"}] ${l.text}`).join("\n"),$("copyLog")));
+
+/* open on the last completed run so the page is complete at rest */
+skipToEnd();
+</script>

@@ -1,7 +1,7 @@
 [project]
 name = "arma"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI agent team that audits, fixes and verifies e-commerce accessibility (EAA / WCAG 2.1 AA)"
 readme = "README.md"
 authors = [
     { name = "Arthur Dauchez", email = "adauchez08@gmail.com" }
@@ -9,11 +9,25 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "claude-agent-sdk>=0.2.167",
+    "fastapi>=0.143.1",
+    "markdown>=3.11.1",
+    "pillow>=12.3.0",
+    "playwright>=1.64.0",
+    "uvicorn[standard]>=0.54.0",
 ]
-
-[project.scripts]
-arma = "arma:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
