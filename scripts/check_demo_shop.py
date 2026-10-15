@@ -1,22 +1,23 @@
-"""Step 4 gate: serve demo-shop/, run axe on the 4 pages.
+"""Steps 4–5 gate: serve demo-shop/ and run the deterministic browser tools on it.
 
-axe must find the scanner defects (color-contrast, html-has-lang, image-alt) and must NOT find the
-"agent" defects (emoji buttons, placeholder labels, div buttons...): those are for the judgment layer.
+- crawl finds the 4 pages, checkout included (only reachable through an onclick)
+- axe finds the scanner defects (color-contrast, html-has-lang, image-alt) and NOT the "agent"
+  defects (emoji buttons, placeholder labels, div buttons...): those are for the judgment layer
+- keyboard_walk(product) sees no visible focus and unreachable div.size / div.btn
+- visual_diff of two identical screenshots is 0.0
 """
 import asyncio
 import functools
 import sys
+import tempfile
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from playwright.async_api import async_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from arma import browser  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
-SHOP = ROOT / "demo-shop"
-AXE = (ROOT / "vendor" / "axe.min.js").read_text()
-PAGES = ["index.html", "product.html", "cart.html", "checkout.html"]
-TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+SHOP = Path(__file__).resolve().parent.parent / "demo-shop"
 MUST = {"color-contrast", "html-has-lang", "image-alt"}
 MUST_NOT = {"button-name", "label", "frame-title", "link-name", "heading-order", "page-has-heading-one"}
 
@@ -29,41 +30,52 @@ class Quiet(SimpleHTTPRequestHandler):
 def serve():
     srv = ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Quiet, directory=str(SHOP)))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
-    return srv, f"http://127.0.0.1:{srv.server_address[1]}"
+    return srv, f"http://127.0.0.1:{srv.server_address[1]}/"
 
 
 async def main() -> int:
     srv, base = serve()
-    found: dict[str, set[str]] = {}
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        for name in PAGES:
-            page = await browser.new_page()
-            errors: list[str] = []
-            page.on("pageerror", lambda e: errors.append(str(e)))
-            await page.goto(f"{base}/{name}")
-            await page.add_script_tag(content=AXE)
-            res = await page.evaluate("t => axe.run({runOnly: {type: 'tag', values: t}})", TAGS)
-            rules = {v["id"]: len(v["nodes"]) for v in res["violations"]}
-            print(f"{name:14} {rules}  incomplete={[v['id'] for v in res['incomplete']]}")
-            if errors:
-                print("  JS errors:", errors)
-                return 1
-            for r in rules:
-                found.setdefault(r, set()).add(name)
-            await page.close()
-        await browser.close()
+    checks: list[tuple[bool, str]] = []
+
+    pages = await browser.crawl(base)
+    urls = [p["url"] for p in pages]
+    print("crawl:", [u.removeprefix(base) or "/" for u in urls])
+    checks.append((len(pages) == 4 and any(u.endswith("checkout.html") for u in urls),
+                   "crawl finds 4 pages incl. checkout"))
+
+    audits = await asyncio.gather(*(browser.axe_audit(u) for u in urls))
+    found: set[str] = set()
+    for a in audits:
+        rules = {v["rule"]: (v["wcag"], v["count"]) for v in a["violations"]}
+        print(f"axe {a['url'].removeprefix(base) or '/':14} {rules}")
+        found |= set(rules)
+    index = next(a for a in audits if a["url"] == base)
+    checks.append((MUST <= {v["rule"] for v in index["violations"]}, f"axe on index finds {sorted(MUST)}"))
+    checks.append((not (found & MUST_NOT), f"axe misses agent defects ({sorted(found & MUST_NOT) or 'none found'})"))
+
+    kb = await browser.keyboard_walk(base + "product.html")
+    print("keyboard product: focus_visible", kb["focus_visible"], "cycle", kb["cycle_complete"])
+    for s in kb["stops"]:
+        print(f"   stop {s['selector']:40} name={s['name']!r} ({s['name_source']})")
+    for u in kb["unreachable"]:
+        print(f"   unreachable {u['selector']:34} {u['text']!r}")
+    checks.append((kb["focus_visible"][0] == 0 and kb["stops"], "no visible focus on product"))
+    checks.append((all(any(c in u["selector"] for u in kb["unreachable"]) for c in ("div.size", "div.btn")), "div.size and div.btn unreachable"))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        a = await browser.screenshot(base, Path(tmp) / "a.png")
+        b = await browser.screenshot(base, Path(tmp) / "b.png")
+        ratio = await browser.visual_diff(a, b, Path(tmp) / "diff.png")
+    print("visual_diff identical:", ratio)
+    checks.append((ratio == 0.0, "visual_diff of identical shots is 0.0"))
+
+    html = await browser.page_html(base + "checkout.html", max_chars=500)
+    checks.append(("truncated" in html, "page_html truncates"))
     srv.shutdown()
 
-    ok = True
-    for r in sorted(MUST):
-        hit = r in found
-        ok &= hit
-        print(f"{'OK' if hit else 'KO'}  axe finds {r}: {sorted(found.get(r, []))}")
-    for r in sorted(MUST_NOT):
-        hit = r in found
-        ok &= not hit
-        print(f"{'KO' if hit else 'OK'}  axe misses {r}")
+    for ok, label in checks:
+        print(f"{'OK' if ok else 'KO'}  {label}")
+    ok = all(c[0] for c in checks)
     print("PASS" if ok else "FAIL")
     return 0 if ok else 1
 
