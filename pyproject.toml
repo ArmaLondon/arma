@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "anthropic>=1.14.0",
     "claude-agent-sdk>=0.2.167",
     "fastapi>=0.143.1",
     "markdown>=3.11.1",
