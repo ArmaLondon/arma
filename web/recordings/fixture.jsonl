@@ -1,24 +1,22 @@
-{"t": 0.0, "type": "run.started", "data": {"site": "maison-lumiere.fr", "repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15"}}
+{"t": 0.0, "type": "run.started", "data": {"site": "maison-lumiere.fr", "repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15", "session_id": "sesn_fixture_0000demo"}}
 {"t": 0.0, "type": "phase.changed", "data": {"phase": "crawl"}}
-{"t": 0.0, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "coordinating run"}}
-{"t": 0.2, "type": "log", "agent": "orchestrator", "data": {"text": "Run started on http://localhost:8765 · source repo storefront@main", "kind": "phase"}}
-{"t": 0.8, "type": "agent.status", "data": {"agent": "cartographer", "status": "working", "activity": "crawl_site"}}
-{"t": 0.8, "type": "log", "agent": "cartographer", "data": {"text": "→ crawl_site max_pages=30", "kind": "tool"}}
-{"t": 2.4, "type": "log", "agent": "cartographer", "data": {"text": "Found 4 pages. /checkout.html is only reachable through an onclick redirect (noted).", "kind": "msg"}}
-{"t": 2.75, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page / template=\"Home\"", "kind": "tool"}}
-{"t": 3.1, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page /product.html template=\"Product page\"", "kind": "tool"}}
-{"t": 3.45, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page /cart.html template=\"Cart\"", "kind": "tool"}}
-{"t": 3.8, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page /checkout.html template=\"Checkout\"", "kind": "tool"}}
-{"t": 4.4, "type": "log", "agent": "cartographer", "data": {"text": "Purchase funnel fully covered: home → product → cart → checkout.", "kind": "ok"}}
-{"t": 4.4, "type": "agent.status", "data": {"agent": "cartographer", "status": "done", "activity": "4 pages mapped"}}
+{"t": 0.0, "type": "agent.status", "data": {"agent": "lead", "status": "working", "activity": "coordinating run"}}
+{"t": 0.2, "type": "log", "agent": "lead", "data": {"text": "Session started on Claude Managed Agents. Site served in the sandbox at http://127.0.0.1:8765", "kind": "phase"}}
+{"t": 0.8, "type": "log", "agent": "lead", "data": {"text": "→ bash python tools/crawl.py http://127.0.0.1:8765/index.html", "kind": "tool"}}
+{"t": 2.4, "type": "log", "agent": "lead", "data": {"text": "Found 4 pages. /checkout.html is only reachable through an onclick redirect (noted).", "kind": "msg"}}
+{"t": 2.75, "type": "log", "agent": "lead", "data": {"text": "→ register_page / template=\"Home\"", "kind": "tool"}}
+{"t": 3.1, "type": "log", "agent": "lead", "data": {"text": "→ register_page /product.html template=\"Product page\"", "kind": "tool"}}
+{"t": 3.45, "type": "log", "agent": "lead", "data": {"text": "→ register_page /cart.html template=\"Cart\"", "kind": "tool"}}
+{"t": 3.8, "type": "log", "agent": "lead", "data": {"text": "→ register_page /checkout.html template=\"Checkout\"", "kind": "tool"}}
+{"t": 4.4, "type": "log", "agent": "lead", "data": {"text": "Purchase funnel fully covered: home → product → cart → checkout.", "kind": "ok"}}
 {"t": 5.2, "type": "phase.changed", "data": {"phase": "baseline"}}
-{"t": 5.2, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "measuring baseline"}}
-{"t": 5.5, "type": "log", "agent": "orchestrator", "data": {"text": "Branch created: a11y/eaa-remediation-2026-10-15", "kind": "tool"}}
+{"t": 5.2, "type": "agent.status", "data": {"agent": "lead", "status": "working", "activity": "measuring baseline"}}
+{"t": 5.5, "type": "log", "agent": "lead", "data": {"text": "Branch created: a11y/eaa-remediation-2026-10-15", "kind": "tool"}}
 {"t": 6.7, "type": "baseline", "data": {"axe_violations": 17, "unreachable": 9, "focus_visible": [0, 24]}}
-{"t": 6.7, "type": "log", "agent": "orchestrator", "data": {"text": "Baseline: 17 automated violations · 9 controls unreachable by keyboard · focus visible on 0 of 24 stops", "kind": "msg"}}
+{"t": 6.7, "type": "log", "agent": "lead", "data": {"text": "Baseline: 17 automated violations · 9 controls unreachable by keyboard · focus visible on 0 of 24 stops", "kind": "msg"}}
 {"t": 7.5, "type": "phase.changed", "data": {"phase": "audit"}}
-{"t": 7.5, "type": "agent.status", "data": {"agent": "auditors", "status": "working", "activity": "dispatching page auditors"}}
-{"t": 7.8, "type": "log", "agent": "lead-auditor", "data": {"text": "Dispatching 4 page auditors in parallel (axe + keyboard walk + expert review)", "kind": "msg"}}
+{"t": 7.5, "type": "agent.status", "data": {"agent": "auditors", "status": "working", "activity": "4 threads auditing"}}
+{"t": 7.8, "type": "log", "agent": "lead", "data": {"text": "Delegating 4 page auditors in parallel, one thread per page (axe + keyboard walk + expert review)", "kind": "msg"}}
 {"t": 8.0, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "working", "working", "working"]}}
 {"t": 8.5, "type": "log", "agent": "auditor·home", "data": {"text": "→ audit_page /", "kind": "tool"}}
 {"t": 8.6, "type": "log", "agent": "auditor·product", "data": {"text": "→ audit_page /product.html", "kind": "tool"}}
@@ -81,23 +79,23 @@
 {"t": 26.7, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A16", "wcag": "1.3.1", "criterion_name": "Info and Relationships", "level": "A", "principle": "P", "en301549": "9.1.3.1", "title": "Third-party card widget not verifiable", "impact": "The payment provider's embedded field cannot be audited from the storefront code. It may block keyboard or screen reader users.", "evidence": "<iframe title=\"\" src=\"about:blank\" class=\"card-field\">", "severity": "major", "source": "agent", "selector": "iframe.card-field", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 26.1, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
 {"t": 26.7, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue A16 [1.3.1] Third-party card widget not verifiable", "kind": "msg"}}
 {"t": 27.2, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "done", "done", "done"]}}
-{"t": 27.6, "type": "log", "agent": "lead-auditor", "data": {"text": "16 issues · 13 missed by automated scanners · 5 block the purchase funnel", "kind": "ok"}}
+{"t": 27.6, "type": "log", "agent": "lead", "data": {"text": "16 issues · 13 missed by automated scanners · 5 block the purchase funnel", "kind": "ok"}}
 {"t": 27.6, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 27.6, "type": "agent.status", "data": {"agent": "auditors", "status": "done", "activity": "16 issues logged"}}
 {"t": 28.4, "type": "phase.changed", "data": {"phase": "plan"}}
-{"t": 28.4, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "planning batches"}}
-{"t": 28.8, "type": "log", "agent": "orchestrator", "data": {"text": "Grouped into 11 batches by WCAG criterion, purchase blockers first.", "kind": "msg"}}
-{"t": 28.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 2.4.7: A05", "kind": "tool"}}
-{"t": 29.1, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 2.1.1: A07, A08, A09", "kind": "tool"}}
-{"t": 29.25, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 3.3.2: A10", "kind": "tool"}}
-{"t": 29.4, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 4.1.2: A06, A15", "kind": "tool"}}
-{"t": 29.55, "type": "log", "agent": "orchestrator", "data": {"text": "… 7 more batches queued", "kind": "tool"}}
+{"t": 28.4, "type": "agent.status", "data": {"agent": "lead", "status": "working", "activity": "planning batches"}}
+{"t": 28.8, "type": "log", "agent": "lead", "data": {"text": "Grouped into 11 batches by WCAG criterion, purchase blockers first.", "kind": "msg"}}
+{"t": 28.95, "type": "log", "agent": "lead", "data": {"text": "Batch 2.4.7: A05", "kind": "tool"}}
+{"t": 29.1, "type": "log", "agent": "lead", "data": {"text": "Batch 2.1.1: A07, A08, A09", "kind": "tool"}}
+{"t": 29.25, "type": "log", "agent": "lead", "data": {"text": "Batch 3.3.2: A10", "kind": "tool"}}
+{"t": 29.4, "type": "log", "agent": "lead", "data": {"text": "Batch 4.1.2: A06, A15", "kind": "tool"}}
+{"t": 29.55, "type": "log", "agent": "lead", "data": {"text": "… 7 more batches queued", "kind": "tool"}}
 {"t": 30.35, "type": "phase.changed", "data": {"phase": "fix"}}
 {"t": 30.95, "type": "batch.started", "data": {"id": "B01", "criterion": "2.4.7", "issue_ids": ["A05"], "attempt": 1}}
-{"t": 30.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 1/11 · WCAG 2.4.7 Focus Visible · attempt 1/3", "kind": "phase"}}
+{"t": 30.95, "type": "log", "agent": "lead", "data": {"text": "Batch 1/11 · WCAG 2.4.7 Focus Visible · attempt 1/3", "kind": "phase"}}
 {"t": 30.95, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.7"}}
 {"t": 30.95, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 31.05, "type": "issue.status", "data": {"id": "A05", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 31.05, "type": "issue.status", "data": {"id": "A05", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 31.05, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 31.55, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'outline: none'", "kind": "tool"}}
 {"t": 32.05, "type": "log", "agent": "developer", "data": {"text": "→ Edit styles.css", "kind": "tool"}}
@@ -112,16 +110,16 @@
 {"t": 33.85, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 33.85, "type": "log", "agent": "tester", "data": {"text": "A05 validated: focus ring visible on 24 of 24 stops", "kind": "ok"}}
 {"t": 34.25, "type": "commit.created", "data": {"sha": "3f2a9c1", "criterion": "2.4.7", "message": "fix(a11y): WCAG 2.4.7 — focus visible on all interactive elements", "files": ["styles.css"]}}
-{"t": 34.25, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 3f2a9c1 · fix(a11y): WCAG 2.4.7 — focus visible on all interactive elements", "kind": "commit"}}
+{"t": 34.25, "type": "log", "agent": "lead", "data": {"text": "Commit 3f2a9c1 · fix(a11y): WCAG 2.4.7 — focus visible on all interactive elements", "kind": "commit"}}
 {"t": 34.85, "type": "batch.started", "data": {"id": "B02", "criterion": "2.1.1", "issue_ids": ["A07", "A08", "A09"], "attempt": 1}}
-{"t": 34.85, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 2/11 · WCAG 2.1.1 Keyboard · attempt 1/3", "kind": "phase"}}
+{"t": 34.85, "type": "log", "agent": "lead", "data": {"text": "Batch 2/11 · WCAG 2.1.1 Keyboard · attempt 1/3", "kind": "phase"}}
 {"t": 34.85, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.1.1"}}
 {"t": 34.85, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 34.95, "type": "issue.status", "data": {"id": "A07", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 34.95, "type": "issue.status", "data": {"id": "A07", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 34.95, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 35.05, "type": "issue.status", "data": {"id": "A08", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 35.05, "type": "issue.status", "data": {"id": "A08", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 35.05, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 35.15, "type": "issue.status", "data": {"id": "A09", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 35.15, "type": "issue.status", "data": {"id": "A09", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 35.15, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 35.65, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 36.15, "type": "log", "agent": "developer", "data": {"text": "→ Edit cart.html, checkout.html +2", "kind": "tool"}}
@@ -149,12 +147,12 @@
 {"t": 39.85, "type": "log", "agent": "tester", "data": {"text": "A09 validated: funnel completes with keyboard only", "kind": "ok"}}
 {"t": 40.15, "type": "log", "agent": "tester", "data": {"text": "Batch verdict: no regression. Commit validated fixes, return A07.", "kind": "msg"}}
 {"t": 40.55, "type": "commit.created", "data": {"sha": "8c41d07", "criterion": "2.1.1", "message": "fix(a11y): WCAG 2.1.1 — partial: native buttons and radio group for keyboard access", "files": ["product.html", "styles.css", "cart.html", "checkout.html"]}}
-{"t": 40.55, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 8c41d07 · fix(a11y): WCAG 2.1.1 — partial: native buttons and radio group for keyboard access", "kind": "commit"}}
+{"t": 40.55, "type": "log", "agent": "lead", "data": {"text": "Commit 8c41d07 · fix(a11y): WCAG 2.1.1 — partial: native buttons and radio group for keyboard access", "kind": "commit"}}
 {"t": 40.95, "type": "batch.started", "data": {"id": "B02", "criterion": "2.1.1", "issue_ids": ["A07"], "attempt": 2}}
-{"t": 40.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch WCAG 2.1.1 · attempt 2/3 for A07 with tester feedback", "kind": "phase"}}
+{"t": 40.95, "type": "log", "agent": "lead", "data": {"text": "Batch WCAG 2.1.1 · attempt 2/3 for A07 with tester feedback", "kind": "phase"}}
 {"t": 40.95, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "A07 · attempt 2"}}
 {"t": 40.95, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 41.25, "type": "issue.status", "data": {"id": "A07", "status": "fixing", "by": "orchestrator", "note": "Retry with tester feedback", "attempt": 2}}
+{"t": 41.25, "type": "issue.status", "data": {"id": "A07", "status": "fixing", "by": "lead", "note": "Retry with tester feedback", "attempt": 2}}
 {"t": 41.25, "type": "score", "data": {"value": 56, "baseline": 38, "by_principle": {"P": 0, "O": 65, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 41.85, "type": "log", "agent": "developer", "data": {"text": "→ Edit product.html (div → <button type=\"button\">)", "kind": "tool"}}
 {"t": 42.25, "type": "issue.status", "data": {"id": "A07", "status": "fixed_pending", "by": "developer", "note": "Replaced div with native button; styles kept.", "attempt": 2, "files": ["product.html", "styles.css"], "fix_diff": "- <div class=\"btn\" onclick=\"addToCart()\">Ajouter au panier</div>\n+ <button type=\"button\" class=\"btn\" onclick=\"addToCart()\">\n+   Ajouter au panier\n+ </button>"}}
@@ -167,12 +165,12 @@
 {"t": 43.25, "type": "score", "data": {"value": 62, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 43.25, "type": "log", "agent": "tester", "data": {"text": "A07 validated: reachable by Tab, works with Enter and Space", "kind": "ok"}}
 {"t": 43.65, "type": "commit.created", "data": {"sha": "d27a8f3", "criterion": "2.1.1", "message": "fix(a11y): WCAG 2.1.1 — native button for Ajouter au panier", "files": ["product.html"]}}
-{"t": 43.65, "type": "log", "agent": "orchestrator", "data": {"text": "Commit d27a8f3 · fix(a11y): WCAG 2.1.1 — native button for Ajouter au panier", "kind": "commit"}}
+{"t": 43.65, "type": "log", "agent": "lead", "data": {"text": "Commit d27a8f3 · fix(a11y): WCAG 2.1.1 — native button for Ajouter au panier", "kind": "commit"}}
 {"t": 44.25, "type": "batch.started", "data": {"id": "B03", "criterion": "3.3.2", "issue_ids": ["A10"], "attempt": 1}}
-{"t": 44.25, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 3/11 · WCAG 3.3.2 Labels or Instructions · attempt 1/3", "kind": "phase"}}
+{"t": 44.25, "type": "log", "agent": "lead", "data": {"text": "Batch 3/11 · WCAG 3.3.2 Labels or Instructions · attempt 1/3", "kind": "phase"}}
 {"t": 44.25, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.3.2"}}
 {"t": 44.25, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 44.35, "type": "issue.status", "data": {"id": "A10", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 44.35, "type": "issue.status", "data": {"id": "A10", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 44.35, "type": "score", "data": {"value": 62, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 0, "R": 0}, "eaa": "non_compliant"}}
 {"t": 44.85, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 45.35, "type": "log", "agent": "developer", "data": {"text": "→ Edit checkout.html", "kind": "tool"}}
@@ -186,14 +184,14 @@
 {"t": 46.75, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
 {"t": 46.75, "type": "log", "agent": "tester", "data": {"text": "A10 validated: every field has a programmatic label", "kind": "ok"}}
 {"t": 47.15, "type": "commit.created", "data": {"sha": "b19e6a4", "criterion": "3.3.2", "message": "fix(a11y): WCAG 3.3.2 — labels and autocomplete on checkout form", "files": ["checkout.html"]}}
-{"t": 47.15, "type": "log", "agent": "orchestrator", "data": {"text": "Commit b19e6a4 · fix(a11y): WCAG 3.3.2 — labels and autocomplete on checkout form", "kind": "commit"}}
+{"t": 47.15, "type": "log", "agent": "lead", "data": {"text": "Commit b19e6a4 · fix(a11y): WCAG 3.3.2 — labels and autocomplete on checkout form", "kind": "commit"}}
 {"t": 47.75, "type": "batch.started", "data": {"id": "B04", "criterion": "4.1.2", "issue_ids": ["A06", "A15"], "attempt": 1}}
-{"t": 47.75, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 4/11 · WCAG 4.1.2 Name, Role, Value · attempt 1/3", "kind": "phase"}}
+{"t": 47.75, "type": "log", "agent": "lead", "data": {"text": "Batch 4/11 · WCAG 4.1.2 Name, Role, Value · attempt 1/3", "kind": "phase"}}
 {"t": 47.75, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 4.1.2"}}
 {"t": 47.75, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 47.85, "type": "issue.status", "data": {"id": "A06", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 47.85, "type": "issue.status", "data": {"id": "A06", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 47.85, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
-{"t": 47.95, "type": "issue.status", "data": {"id": "A15", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 47.95, "type": "issue.status", "data": {"id": "A15", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 47.95, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
 {"t": 48.45, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 48.95, "type": "log", "agent": "developer", "data": {"text": "→ Edit cart.html, checkout.html +2", "kind": "tool"}}
@@ -214,12 +212,12 @@
 {"t": 51.65, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
 {"t": 51.65, "type": "log", "agent": "tester", "data": {"text": "A15 validated: each button names its product", "kind": "ok"}}
 {"t": 52.05, "type": "commit.created", "data": {"sha": "e07d3f8", "criterion": "4.1.2", "message": "fix(a11y): WCAG 4.1.2 — accessible names for icon buttons", "files": ["cart.html", "checkout.html", "index.html", "product.html"]}}
-{"t": 52.05, "type": "log", "agent": "orchestrator", "data": {"text": "Commit e07d3f8 · fix(a11y): WCAG 4.1.2 — accessible names for icon buttons", "kind": "commit"}}
+{"t": 52.05, "type": "log", "agent": "lead", "data": {"text": "Commit e07d3f8 · fix(a11y): WCAG 4.1.2 — accessible names for icon buttons", "kind": "commit"}}
 {"t": 52.65, "type": "batch.started", "data": {"id": "B05", "criterion": "1.4.3", "issue_ids": ["A01"], "attempt": 1}}
-{"t": 52.65, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 5/11 · WCAG 1.4.3 Contrast (Minimum) · attempt 1/3", "kind": "phase"}}
+{"t": 52.65, "type": "log", "agent": "lead", "data": {"text": "Batch 5/11 · WCAG 1.4.3 Contrast (Minimum) · attempt 1/3", "kind": "phase"}}
 {"t": 52.65, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.4.3"}}
 {"t": 52.65, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 52.75, "type": "issue.status", "data": {"id": "A01", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 52.75, "type": "issue.status", "data": {"id": "A01", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 52.75, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
 {"t": 53.25, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'color: #'", "kind": "tool"}}
 {"t": 53.75, "type": "log", "agent": "developer", "data": {"text": "→ Edit styles.css", "kind": "tool"}}
@@ -234,11 +232,11 @@
 {"t": 55.95, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
 {"t": 55.95, "type": "log", "agent": "tester", "data": {"text": "REJECTED A01: hero background changed (18% of pixels). Keep the brand background, adjust text only.", "kind": "reject"}}
 {"t": 56.25, "type": "log", "agent": "tester", "data": {"text": "Batch verdict: regression, roll back.", "kind": "reject"}}
-{"t": 56.65, "type": "log", "agent": "orchestrator", "data": {"text": "Rollback: git checkout -- . · retrying batch with tester feedback (attempt 2/3)", "kind": "rollback"}}
+{"t": 56.65, "type": "log", "agent": "lead", "data": {"text": "Rollback: git checkout -- . · retrying batch with tester feedback (attempt 2/3)", "kind": "rollback"}}
 {"t": 56.65, "type": "batch.started", "data": {"id": "B05", "criterion": "1.4.3", "issue_ids": ["A01"], "attempt": 2}}
 {"t": 56.65, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.4.3 · attempt 2"}}
 {"t": 56.65, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 57.05, "type": "issue.status", "data": {"id": "A01", "status": "fixing", "by": "orchestrator", "note": "Retry with tester feedback", "attempt": 2}}
+{"t": 57.05, "type": "issue.status", "data": {"id": "A01", "status": "fixing", "by": "lead", "note": "Retry with tester feedback", "attempt": 2}}
 {"t": 57.05, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
 {"t": 57.65, "type": "log", "agent": "developer", "data": {"text": "Nearest compliant shades to the brand palette: #6b6b6b (5.3:1), #5f5a52 (6.4:1). Background untouched.", "kind": "msg"}}
 {"t": 58.05, "type": "log", "agent": "developer", "data": {"text": "→ Edit styles.css", "kind": "tool"}}
@@ -252,12 +250,12 @@
 {"t": 59.45, "type": "score", "data": {"value": 78, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
 {"t": 59.45, "type": "log", "agent": "tester", "data": {"text": "A01 validated: all secondary text ≥ 4.5:1, design intact", "kind": "ok"}}
 {"t": 59.85, "type": "commit.created", "data": {"sha": "5ad21c9", "criterion": "1.4.3", "message": "fix(a11y): WCAG 1.4.3 — brand-safe contrast for secondary text", "files": ["styles.css"]}}
-{"t": 59.85, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 5ad21c9 · fix(a11y): WCAG 1.4.3 — brand-safe contrast for secondary text", "kind": "commit"}}
+{"t": 59.85, "type": "log", "agent": "lead", "data": {"text": "Commit 5ad21c9 · fix(a11y): WCAG 1.4.3 — brand-safe contrast for secondary text", "kind": "commit"}}
 {"t": 60.45, "type": "batch.started", "data": {"id": "B06", "criterion": "3.3.1", "issue_ids": ["A11"], "attempt": 1}}
-{"t": 60.45, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 6/11 · WCAG 3.3.1 Error Identification · attempt 1/3", "kind": "phase"}}
+{"t": 60.45, "type": "log", "agent": "lead", "data": {"text": "Batch 6/11 · WCAG 3.3.1 Error Identification · attempt 1/3", "kind": "phase"}}
 {"t": 60.45, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.3.1"}}
 {"t": 60.45, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 60.55, "type": "issue.status", "data": {"id": "A11", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 60.55, "type": "issue.status", "data": {"id": "A11", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 60.55, "type": "score", "data": {"value": 78, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
 {"t": 61.05, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 61.55, "type": "log", "agent": "developer", "data": {"text": "→ Edit checkout.html", "kind": "tool"}}
@@ -271,14 +269,14 @@
 {"t": 62.95, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 62.95, "type": "log", "agent": "tester", "data": {"text": "A11 validated: error text announced and tied to its field", "kind": "ok"}}
 {"t": 63.35, "type": "commit.created", "data": {"sha": "c6f0b82", "criterion": "3.3.1", "message": "fix(a11y): WCAG 3.3.1 — text error messages linked to fields", "files": ["checkout.html"]}}
-{"t": 63.35, "type": "log", "agent": "orchestrator", "data": {"text": "Commit c6f0b82 · fix(a11y): WCAG 3.3.1 — text error messages linked to fields", "kind": "commit"}}
+{"t": 63.35, "type": "log", "agent": "lead", "data": {"text": "Commit c6f0b82 · fix(a11y): WCAG 3.3.1 — text error messages linked to fields", "kind": "commit"}}
 {"t": 63.95, "type": "batch.started", "data": {"id": "B07", "criterion": "1.1.1", "issue_ids": ["A03", "A04"], "attempt": 1}}
-{"t": 63.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 7/11 · WCAG 1.1.1 Non-text Content · attempt 1/3", "kind": "phase"}}
+{"t": 63.95, "type": "log", "agent": "lead", "data": {"text": "Batch 7/11 · WCAG 1.1.1 Non-text Content · attempt 1/3", "kind": "phase"}}
 {"t": 63.95, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.1.1"}}
 {"t": 63.95, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 64.05, "type": "issue.status", "data": {"id": "A03", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 64.05, "type": "issue.status", "data": {"id": "A03", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 64.05, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 64.15, "type": "issue.status", "data": {"id": "A04", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 64.15, "type": "issue.status", "data": {"id": "A04", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 64.15, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 64.65, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 65.15, "type": "log", "agent": "developer", "data": {"text": "→ Edit cart.html, index.html +1", "kind": "tool"}}
@@ -298,14 +296,14 @@
 {"t": 67.5, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 67.5, "type": "log", "agent": "tester", "data": {"text": "A04 needs human review: draft alt text cannot confirm colour or material", "kind": "reject"}}
 {"t": 67.9, "type": "commit.created", "data": {"sha": "71be4d0", "criterion": "1.1.1", "message": "fix(a11y): WCAG 1.1.1 — text alternatives for product images", "files": ["cart.html", "index.html", "product.html"]}}
-{"t": 67.9, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 71be4d0 · fix(a11y): WCAG 1.1.1 — text alternatives for product images", "kind": "commit"}}
+{"t": 67.9, "type": "log", "agent": "lead", "data": {"text": "Commit 71be4d0 · fix(a11y): WCAG 1.1.1 — text alternatives for product images", "kind": "commit"}}
 {"t": 68.5, "type": "batch.started", "data": {"id": "B08", "criterion": "1.3.1", "issue_ids": ["A13", "A16"], "attempt": 1}}
-{"t": 68.5, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 8/11 · WCAG 1.3.1 Info and Relationships · attempt 1/3", "kind": "phase"}}
+{"t": 68.5, "type": "log", "agent": "lead", "data": {"text": "Batch 8/11 · WCAG 1.3.1 Info and Relationships · attempt 1/3", "kind": "phase"}}
 {"t": 68.5, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.3.1"}}
 {"t": 68.5, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 68.6, "type": "issue.status", "data": {"id": "A13", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 68.6, "type": "issue.status", "data": {"id": "A13", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 68.6, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 68.7, "type": "issue.status", "data": {"id": "A16", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 68.7, "type": "issue.status", "data": {"id": "A16", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 68.7, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 69.2, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 69.7, "type": "log", "agent": "developer", "data": {"text": "→ Edit index.html", "kind": "tool"}}
@@ -322,12 +320,12 @@
 {"t": 71.6, "type": "score", "data": {"value": 89, "baseline": 38, "by_principle": {"P": 67, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 71.6, "type": "log", "agent": "tester", "data": {"text": "A13 validated: one h1, no skipped levels", "kind": "ok"}}
 {"t": 72.0, "type": "commit.created", "data": {"sha": "0d9c5ea", "criterion": "1.3.1", "message": "fix(a11y): WCAG 1.3.1 — heading structure on home page", "files": ["index.html"]}}
-{"t": 72.0, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 0d9c5ea · fix(a11y): WCAG 1.3.1 — heading structure on home page", "kind": "commit"}}
+{"t": 72.0, "type": "log", "agent": "lead", "data": {"text": "Commit 0d9c5ea · fix(a11y): WCAG 1.3.1 — heading structure on home page", "kind": "commit"}}
 {"t": 72.6, "type": "batch.started", "data": {"id": "B09", "criterion": "2.4.4", "issue_ids": ["A12"], "attempt": 1}}
-{"t": 72.6, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 9/11 · WCAG 2.4.4 Link Purpose (In Context) · attempt 1/3", "kind": "phase"}}
+{"t": 72.6, "type": "log", "agent": "lead", "data": {"text": "Batch 9/11 · WCAG 2.4.4 Link Purpose (In Context) · attempt 1/3", "kind": "phase"}}
 {"t": 72.6, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.4"}}
 {"t": 72.6, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 72.7, "type": "issue.status", "data": {"id": "A12", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 72.7, "type": "issue.status", "data": {"id": "A12", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 72.7, "type": "score", "data": {"value": 89, "baseline": 38, "by_principle": {"P": 67, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 73.2, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 73.7, "type": "log", "agent": "developer", "data": {"text": "→ Edit index.html, styles.css", "kind": "tool"}}
@@ -341,12 +339,12 @@
 {"t": 75.1, "type": "score", "data": {"value": 91, "baseline": 38, "by_principle": {"P": 67, "O": 93, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 75.1, "type": "log", "agent": "tester", "data": {"text": "A12 validated: each link names its product", "kind": "ok"}}
 {"t": 75.5, "type": "commit.created", "data": {"sha": "a4e83f1", "criterion": "2.4.4", "message": "fix(a11y): WCAG 2.4.4 — descriptive product links", "files": ["index.html", "styles.css"]}}
-{"t": 75.5, "type": "log", "agent": "orchestrator", "data": {"text": "Commit a4e83f1 · fix(a11y): WCAG 2.4.4 — descriptive product links", "kind": "commit"}}
+{"t": 75.5, "type": "log", "agent": "lead", "data": {"text": "Commit a4e83f1 · fix(a11y): WCAG 2.4.4 — descriptive product links", "kind": "commit"}}
 {"t": 76.1, "type": "batch.started", "data": {"id": "B10", "criterion": "2.4.2", "issue_ids": ["A14"], "attempt": 1}}
-{"t": 76.1, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 10/11 · WCAG 2.4.2 Page Titled · attempt 1/3", "kind": "phase"}}
+{"t": 76.1, "type": "log", "agent": "lead", "data": {"text": "Batch 10/11 · WCAG 2.4.2 Page Titled · attempt 1/3", "kind": "phase"}}
 {"t": 76.1, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.2"}}
 {"t": 76.1, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 76.2, "type": "issue.status", "data": {"id": "A14", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 76.2, "type": "issue.status", "data": {"id": "A14", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 76.2, "type": "score", "data": {"value": 91, "baseline": 38, "by_principle": {"P": 67, "O": 93, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 76.7, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 77.2, "type": "log", "agent": "developer", "data": {"text": "→ Edit checkout.html", "kind": "tool"}}
@@ -360,12 +358,12 @@
 {"t": 78.6, "type": "score", "data": {"value": 93, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 78.6, "type": "log", "agent": "tester", "data": {"text": "A14 validated: title names page, step and shop", "kind": "ok"}}
 {"t": 79.0, "type": "commit.created", "data": {"sha": "2bf9e07", "criterion": "2.4.2", "message": "fix(a11y): WCAG 2.4.2 — descriptive checkout title", "files": ["checkout.html"]}}
-{"t": 79.0, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 2bf9e07 · fix(a11y): WCAG 2.4.2 — descriptive checkout title", "kind": "commit"}}
+{"t": 79.0, "type": "log", "agent": "lead", "data": {"text": "Commit 2bf9e07 · fix(a11y): WCAG 2.4.2 — descriptive checkout title", "kind": "commit"}}
 {"t": 79.6, "type": "batch.started", "data": {"id": "B11", "criterion": "3.1.1", "issue_ids": ["A02"], "attempt": 1}}
-{"t": 79.6, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 11/11 · WCAG 3.1.1 Language of Page · attempt 1/3", "kind": "phase"}}
+{"t": 79.6, "type": "log", "agent": "lead", "data": {"text": "Batch 11/11 · WCAG 3.1.1 Language of Page · attempt 1/3", "kind": "phase"}}
 {"t": 79.6, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.1.1"}}
 {"t": 79.6, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 79.7, "type": "issue.status", "data": {"id": "A02", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 79.7, "type": "issue.status", "data": {"id": "A02", "status": "fixing", "by": "lead", "note": "Assigned to developer", "attempt": 1}}
 {"t": 79.7, "type": "score", "data": {"value": 93, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 84, "R": 100}, "eaa": "non_compliant"}}
 {"t": 80.2, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
 {"t": 80.7, "type": "log", "agent": "developer", "data": {"text": "→ Edit index.html", "kind": "tool"}}
@@ -379,13 +377,13 @@
 {"t": 82.1, "type": "score", "data": {"value": 95, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 100, "R": 100}, "eaa": "partially_compliant"}}
 {"t": 82.1, "type": "log", "agent": "tester", "data": {"text": "A02 validated: lang detected, French voice used", "kind": "ok"}}
 {"t": 82.5, "type": "commit.created", "data": {"sha": "96c1d3b", "criterion": "3.1.1", "message": "fix(a11y): WCAG 3.1.1 — declare page language", "files": ["index.html"]}}
-{"t": 82.5, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 96c1d3b · fix(a11y): WCAG 3.1.1 — declare page language", "kind": "commit"}}
+{"t": 82.5, "type": "log", "agent": "lead", "data": {"text": "Commit 96c1d3b · fix(a11y): WCAG 3.1.1 — declare page language", "kind": "commit"}}
 {"t": 82.5, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "all batches processed"}}
 {"t": 82.5, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": ""}}
 {"t": 83.3, "type": "phase.changed", "data": {"phase": "reaudit"}}
-{"t": 83.3, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "independent re-audit"}}
+{"t": 83.3, "type": "agent.status", "data": {"agent": "lead", "status": "working", "activity": "independent re-audit"}}
 {"t": 84.5, "type": "reaudit", "data": {"axe_violations": 0, "unreachable": 0, "focus_visible": [24, 24]}}
-{"t": 84.5, "type": "log", "agent": "orchestrator", "data": {"text": "Re-audit: automated violations 17 → 0 · unreachable controls 9 → 0 · focus visible 0 → 24 of 24 stops", "kind": "ok"}}
+{"t": 84.5, "type": "log", "agent": "lead", "data": {"text": "Re-audit: automated violations 17 → 0 · unreachable controls 9 → 0 · focus visible 0 → 24 of 24 stops", "kind": "ok"}}
 {"t": 85.3, "type": "phase.changed", "data": {"phase": "report"}}
 {"t": 85.3, "type": "agent.status", "data": {"agent": "writer", "status": "working", "activity": "writing"}}
 {"t": 86.1, "type": "log", "agent": "writer", "data": {"text": "→ Write pr-body.md", "kind": "tool"}}
@@ -393,9 +391,20 @@
 {"t": 86.7, "type": "log", "agent": "writer", "data": {"text": "→ Write accessibility-statement.md (status: partially compliant)", "kind": "tool"}}
 {"t": 86.7, "type": "document.written", "agent": "writer", "data": {"name": "accessibility-statement.md", "path": "state/out/accessibility-statement.md", "content": "# Accessibility statement · Maison Lumière\n\nMaison Lumière is committed to making maison-lumiere.fr accessible, in line with the European Accessibility Act and the French law transposing it.\n\n## Compliance status\n\nThe website is **partially compliant** with EN 301 549 v3.2.1 and WCAG 2.1 level AA, due to the non-compliant content listed below.\n\n## Non-accessible content\n\n- Product photo alt text says only “image” (WCAG 1.1.1). Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.\n- Third-party card widget not verifiable (WCAG 1.3.1). Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.\n\n## How this statement was prepared\n\nAudit of 4 page templates covering the full purchase funnel on 15 October 2026, combining automated testing (axe-core), keyboard testing and expert review by AI agents, with independent verification of every fix. Testing with disabled users: [TO COMPLETE].\n\n## Feedback and contact\n\nIf you cannot access content or a service, contact [TO COMPLETE: accessibility contact email]. We respond within [TO COMPLETE: time frame].\n\n## Enforcement\n\nIf you are not satisfied with our response, you can contact the market surveillance authority: [TO COMPLETE: national authority].\n"}}
 {"t": 87.2, "type": "agent.status", "data": {"agent": "writer", "status": "done", "activity": "2 documents"}}
-{"t": 87.8, "type": "phase.changed", "data": {"phase": "pr"}}
-{"t": 88.2, "type": "pr.ready", "data": {"repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15", "base": "main", "commits": 12, "files": ["cart.html", "checkout.html", "index.html", "product.html", "styles.css"], "body": "## Summary\n\nThis PR remediates 14 WCAG 2.1 AA issues found by the Arma audit of maison-lumiere.fr (4 page templates covering the full purchase funnel). Each commit maps to one WCAG criterion and every fix was verified by an independent tester agent.\n\n- Score: 38 → 95\n- Automated violations: 17 → 0\n- Controls unreachable by keyboard: 9 → 0\n\n## Changes by criterion\n\n### WCAG 2.4.7 Focus Visible\n- A05: Keyboard focus is invisible on every page\n\n### WCAG 2.1.1 Keyboard\n- A07: “Ajouter au panier” cannot be reached with the keyboard\n- A08: Size selector is mouse-only and has no state\n- A09: “Commander” and “Payer” are not keyboard operable\n\n### WCAG 3.3.2 Labels or Instructions\n- A10: Checkout fields use placeholders instead of labels\n\n### WCAG 4.1.2 Name, Role, Value\n- A06: Header icon buttons are announced as emoji\n- A15: Quantity and remove buttons have no accessible name\n\n### WCAG 1.4.3 Contrast (Minimum)\n- A01: Low-contrast secondary text (hero, price notes, footer)\n\n### WCAG 3.3.1 Error Identification\n- A11: Form errors are shown only by a red border\n\n### WCAG 1.1.1 Non-text Content\n- A03: Product images have no text alternative\n\n### WCAG 1.3.1 Info and Relationships\n- A13: Home page has no h1 and skips heading levels\n\n### WCAG 2.4.4 Link Purpose (In Context)\n- A12: Four identical “En savoir plus” links\n\n### WCAG 2.4.2 Page Titled\n- A14: Checkout page title is vague\n\n### WCAG 3.1.1 Language of Page\n- A02: Page language not declared\n\n## Needs human review\n\n- **A04** (1.1.1) Product photo alt text says only “image”: Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.\n- **A16** (1.3.1) Third-party card widget not verifiable: Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.\n"}}
-{"t": 88.2, "type": "log", "agent": "orchestrator", "data": {"text": "Branch ready: 12 commits, 5 files changed. Waiting for compliance sign-off to send to engineering.", "kind": "ok"}}
-{"t": 88.2, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "awaiting sign-off"}}
-{"t": 88.4, "type": "run.finished", "data": {"cost_usd": 0.0, "duration_s": 88.2}}
-{"t": 89.4, "type": "pr.sent", "data": {"number": 218, "url": "", "simulated": true, "by": "compliance", "notified": ["Slack #eng-frontend", "Jira A11Y-42"]}}
+{"t": 87.6, "type": "log", "agent": "lead", "data": {"text": "→ bash git format-patch baseline..HEAD -o /mnt/session/outputs/patches", "kind": "tool"}}
+{"t": 87.9, "type": "log", "agent": "lead", "data": {"text": "Wrote patches/, changes.diff and report.json to /mnt/session/outputs. Ending turn for grading.", "kind": "ok"}}
+{"t": 88.2, "type": "log", "agent": "system", "data": {"text": "Independent grader: evaluating the outcome rubric (iteration 0)", "kind": "phase"}}
+{"t": 89.7, "type": "outcome", "data": {"iteration": 0, "result": "needs_revision", "explanation": "report.json lacks before/after metrics for /cart.html, so the no-regression criterion cannot be verified."}}
+{"t": 89.7, "type": "log", "agent": "system", "data": {"text": "Grader: needs revision. report.json lacks before/after metrics for /cart.html.", "kind": "reject"}}
+{"t": 90.3, "type": "log", "agent": "lead", "data": {"text": "→ bash python tools/reaudit.py --pages all", "kind": "tool"}}
+{"t": 91.1, "type": "log", "agent": "lead", "data": {"text": "report.json regenerated with metrics for all 4 pages.", "kind": "ok"}}
+{"t": 91.4, "type": "log", "agent": "system", "data": {"text": "Independent grader: evaluating the outcome rubric (iteration 1)", "kind": "phase"}}
+{"t": 92.9, "type": "outcome", "data": {"iteration": 1, "result": "satisfied", "explanation": "All funnel pages audited; every validated fix was re-checked with compare.py; zero regressions; the two vendor and merchandising items are escalated with concrete actions; the statement says partially compliant; all deliverables present."}}
+{"t": 92.9, "type": "log", "agent": "system", "data": {"text": "Grader: satisfied.", "kind": "ok"}}
+{"t": 93.5, "type": "phase.changed", "data": {"phase": "pr"}}
+{"t": 93.9, "type": "pr.ready", "data": {"repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15", "base": "main", "commits": 12, "files": ["cart.html", "checkout.html", "index.html", "product.html", "styles.css"], "body": "## Summary\n\nThis PR remediates 14 WCAG 2.1 AA issues found by the Arma audit of maison-lumiere.fr (4 page templates covering the full purchase funnel). Each commit maps to one WCAG criterion and every fix was verified by an independent tester agent.\n\n- Score: 38 → 95\n- Automated violations: 17 → 0\n- Controls unreachable by keyboard: 9 → 0\n\n## Changes by criterion\n\n### WCAG 2.4.7 Focus Visible\n- A05: Keyboard focus is invisible on every page\n\n### WCAG 2.1.1 Keyboard\n- A07: “Ajouter au panier” cannot be reached with the keyboard\n- A08: Size selector is mouse-only and has no state\n- A09: “Commander” and “Payer” are not keyboard operable\n\n### WCAG 3.3.2 Labels or Instructions\n- A10: Checkout fields use placeholders instead of labels\n\n### WCAG 4.1.2 Name, Role, Value\n- A06: Header icon buttons are announced as emoji\n- A15: Quantity and remove buttons have no accessible name\n\n### WCAG 1.4.3 Contrast (Minimum)\n- A01: Low-contrast secondary text (hero, price notes, footer)\n\n### WCAG 3.3.1 Error Identification\n- A11: Form errors are shown only by a red border\n\n### WCAG 1.1.1 Non-text Content\n- A03: Product images have no text alternative\n\n### WCAG 1.3.1 Info and Relationships\n- A13: Home page has no h1 and skips heading levels\n\n### WCAG 2.4.4 Link Purpose (In Context)\n- A12: Four identical “En savoir plus” links\n\n### WCAG 2.4.2 Page Titled\n- A14: Checkout page title is vague\n\n### WCAG 3.1.1 Language of Page\n- A02: Page language not declared\n\n## Needs human review\n\n- **A04** (1.1.1) Product photo alt text says only “image”: Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.\n- **A16** (1.3.1) Third-party card widget not verifiable: Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.\n"}}
+{"t": 93.9, "type": "log", "agent": "lead", "data": {"text": "Branch ready: 12 commits, 5 files changed. Waiting for compliance sign-off to send to engineering.", "kind": "ok"}}
+{"t": 94.5, "type": "eval", "data": {"metrics": {"recall_all": 0.94, "recall_agent_only": 0.92, "precision": 0.94, "verified_fix_rate": 1.0, "false_fix": 0, "regressions": 0, "honesty": 1}, "thresholds": {"recall_all": {"op": ">=", "value": 0.9}, "recall_agent_only": {"op": ">=", "value": 0.8}, "precision": {"op": ">=", "value": 0.8}, "verified_fix_rate": {"op": ">=", "value": 0.85}, "false_fix": {"op": "=", "value": 0}, "regressions": {"op": "=", "value": 0}, "honesty": {"op": "=", "value": 1}}, "passed": true, "history": [{"version": "v1", "recall_agent_only": 0.69, "verified_fix_rate": 0.82}, {"version": "v2", "recall_agent_only": 0.85, "verified_fix_rate": 0.93}, {"version": "v3", "recall_agent_only": 0.92, "verified_fix_rate": 1.0}]}}
+{"t": 94.5, "type": "log", "agent": "system", "data": {"text": "Eval against ground truth: PASS (recall 0.94, agent-only recall 0.92, false fixes 0, regressions 0)", "kind": "ok"}}
+{"t": 94.7, "type": "run.finished", "data": {"cost_usd": 0.0, "duration_s": 94.5}}
+{"t": 95.7, "type": "pr.sent", "data": {"number": 218, "url": "", "simulated": true, "by": "compliance", "notified": ["Slack #eng-frontend", "Jira A11Y-42"]}}

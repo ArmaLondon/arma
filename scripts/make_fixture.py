@@ -8,12 +8,36 @@ re-audit, writer documents, pr.ready, run.finished.
 This is test data. It is NOT a recorded agent run and must never be shipped as one.
 """
 import json
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-from arma import scoring  # noqa: E402
+
+
+class scoring:  # local copy of the spec §10 formula, so the fixture depends on no backend module
+    PEN = {"critical": 10, "major": 6, "minor": 3}
+
+    @staticmethod
+    def principle(wcag):
+        return {"1": "P", "2": "O", "3": "U", "4": "R"}.get(str(wcag)[:1], "R")
+
+    @staticmethod
+    def frozen_total(issues):
+        return sum(scoring.PEN[i["severity"]] for i in issues) * 1.6
+
+    @staticmethod
+    def compute(issues, frozen=None):
+        pen = lambda i: scoring.PEN[i["severity"]]
+        denom = frozen or sum(pen(i) for i in issues) * 1.6
+        open_pen = sum(pen(i) for i in issues if i["status"] != "validated")
+        by = {}
+        for p in "POUR":
+            its = [i for i in issues if scoring.principle(i["wcag"]) == p]
+            tot = sum(pen(i) for i in its)
+            by[p] = round(100 * sum(pen(i) for i in its if i["status"] == "validated") / tot) if tot else 100
+        sts = [i["status"] for i in issues]
+        eaa = ("non_compliant" if any(x not in ("validated", "needs_human") for x in sts)
+               else "partially_compliant" if "needs_human" in sts else "compliant_automated")
+        return {"value": round(100 * (1 - open_pen / denom)) if denom else 100, "by_principle": by, "eaa": eaa}
 
 OUT = ROOT / "web" / "recordings" / "fixture.jsonl"
 BRANCH = "a11y/eaa-remediation-2026-10-15"
@@ -191,31 +215,30 @@ def set_status(dt, iid, st, by, note, attempt=1, **extra):
 def commit(dt, crit, sha, msg, files):
     m = f"fix(a11y): WCAG {crit} — {msg}"
     emit(dt, "commit.created", {"sha": sha, "criterion": crit, "message": m, "files": files})
-    log(0, "orchestrator", f"Commit {sha} · {m}", "commit")
+    log(0, "lead", f"Commit {sha} · {m}", "commit")
 
 
 # ---------------------------------------------------------------- scenario
-emit(0, "run.started", {"site": "maison-lumiere.fr", "repo": "maison-lumiere/storefront", "branch": BRANCH})
+emit(0, "run.started", {"site": "maison-lumiere.fr", "repo": "maison-lumiere/storefront", "branch": BRANCH,
+                        "session_id": "sesn_fixture_0000demo"})
 emit(0, "phase.changed", {"phase": "crawl"})
-agent(0, "orchestrator", "working", "coordinating run")
-log(.2, "orchestrator", "Run started on http://localhost:8765 · source repo storefront@main", "phase")
-agent(.6, "cartographer", "working", "crawl_site")
-log(0, "cartographer", "→ crawl_site max_pages=30", "tool")
-log(1.6, "cartographer", "Found 4 pages. /checkout.html is only reachable through an onclick redirect (noted).")
+agent(0, "lead", "working", "coordinating run")
+log(.2, "lead", "Session started on Claude Managed Agents. Site served in the sandbox at http://127.0.0.1:8765", "phase")
+log(.6, "lead", "→ bash python tools/crawl.py http://127.0.0.1:8765/index.html", "tool")
+log(1.6, "lead", "Found 4 pages. /checkout.html is only reachable through an onclick redirect (noted).")
 for k, n in [("home", "Home"), ("product", "Product page"), ("cart", "Cart"), ("checkout", "Checkout")]:
-    log(.35, "cartographer", f'→ register_page {PAGES[k]} template="{n}"', "tool")
-log(.6, "cartographer", "Purchase funnel fully covered: home → product → cart → checkout.", "ok")
-agent(0, "cartographer", "done", "4 pages mapped")
+    log(.35, "lead", f'→ register_page {PAGES[k]} template="{n}"', "tool")
+log(.6, "lead", "Purchase funnel fully covered: home → product → cart → checkout.", "ok")
 
 emit(.8, "phase.changed", {"phase": "baseline"})
-agent(0, "orchestrator", "working", "measuring baseline")
-log(.3, "orchestrator", f"Branch created: {BRANCH}", "tool")
+agent(0, "lead", "working", "measuring baseline")
+log(.3, "lead", f"Branch created: {BRANCH}", "tool")
 emit(1.2, "baseline", {"axe_violations": 17, "unreachable": 9, "focus_visible": [0, 24]})
-log(0, "orchestrator", "Baseline: 17 automated violations · 9 controls unreachable by keyboard · focus visible on 0 of 24 stops")
+log(0, "lead", "Baseline: 17 automated violations · 9 controls unreachable by keyboard · focus visible on 0 of 24 stops")
 
 emit(.8, "phase.changed", {"phase": "audit"})
-agent(0, "auditors", "working", "dispatching page auditors")
-log(.3, "lead-auditor", "Dispatching 4 page auditors in parallel (axe + keyboard walk + expert review)")
+agent(0, "auditors", "working", "4 threads auditing")
+log(.3, "lead", "Delegating 4 page auditors in parallel, one thread per page (axe + keyboard walk + expert review)")
 emit(.2, "subagents", {"agent": "auditors", "states": ["working"] * 4})
 PA = {k: f"auditor·{k}" for k in ALL}
 for i, k in enumerate(ALL):
@@ -254,27 +277,27 @@ for n, (iid, p) in enumerate(ORDER):
     if n in (5, 9, 13):
         emit(.1, "subagents", {"agent": "auditors", "states": ["done"] * (n // 4) + ["working"] * (4 - n // 4)})
 emit(.5, "subagents", {"agent": "auditors", "states": ["done"] * 4})
-log(.4, "lead-auditor", "16 issues · 13 missed by automated scanners · 5 block the purchase funnel", "ok")
+log(.4, "lead", "16 issues · 13 missed by automated scanners · 5 block the purchase funnel", "ok")
 frozen = scoring.frozen_total([dict(severity=i["sev"]) for i in ISSUES])
 base_score = scoring.compute([dict(severity=i["sev"], wcag=i["wcag"], status="detected") for i in ISSUES], frozen)["value"]
 score()
 agent(0, "auditors", "done", "16 issues logged")
 
 emit(.8, "phase.changed", {"phase": "plan"})
-agent(0, "orchestrator", "working", "planning batches")
-log(.4, "orchestrator", f"Grouped into {len(BATCHES)} batches by WCAG criterion, purchase blockers first.")
+agent(0, "lead", "working", "planning batches")
+log(.4, "lead", f"Grouped into {len(BATCHES)} batches by WCAG criterion, purchase blockers first.")
 for b in BATCHES[:4]:
-    log(.15, "orchestrator", f"Batch {b[0]}: {', '.join(b[1])}", "tool")
-log(.15, "orchestrator", f"… {len(BATCHES) - 4} more batches queued", "tool")
+    log(.15, "lead", f"Batch {b[0]}: {', '.join(b[1])}", "tool")
+log(.15, "lead", f"… {len(BATCHES) - 4} more batches queued", "tool")
 
 emit(.8, "phase.changed", {"phase": "fix"})
 for bi, (crit, ids, sha, msg) in enumerate(BATCHES):
     emit(.6, "batch.started", {"id": f"B{bi + 1:02d}", "criterion": crit, "issue_ids": ids, "attempt": 1})
-    log(0, "orchestrator", f"Batch {bi + 1}/{len(BATCHES)} · WCAG {crit} {CRIT[crit][0]} · attempt 1/3", "phase")
+    log(0, "lead", f"Batch {bi + 1}/{len(BATCHES)} · WCAG {crit} {CRIT[crit][0]} · attempt 1/3", "phase")
     agent(0, "developer", "working", f"WCAG {crit}")
     agent(0, "tester", "idle", "waiting")
     for iid in ids:
-        set_status(.1, iid, "fixing", "orchestrator", "Assigned to developer")
+        set_status(.1, iid, "fixing", "lead", "Assigned to developer")
     files = sorted({f for iid in ids for f in BY[iid]["files"]})
     grep = "'outline: none'" if crit == "2.4.7" else "'color: #'" if crit == "1.4.3" else "'onclick=|<img|aria-'"
     log(.5, "developer", f"→ Grep {grep}", "tool")
@@ -292,11 +315,11 @@ for bi, (crit, ids, sha, msg) in enumerate(BATCHES):
         set_status(.6, "A01", "rejected", "tester", "Contrast passes, but the hero background changed colour (18% of pixels). Brand regression: keep #faf7f2 and adjust text colour only.")
         log(0, "tester", "REJECTED A01: hero background changed (18% of pixels). Keep the brand background, adjust text only.", "reject")
         log(.3, "tester", "Batch verdict: regression, roll back.", "reject")
-        log(.4, "orchestrator", "Rollback: git checkout -- . · retrying batch with tester feedback (attempt 2/3)", "rollback")
+        log(.4, "lead", "Rollback: git checkout -- . · retrying batch with tester feedback (attempt 2/3)", "rollback")
         emit(0, "batch.started", {"id": f"B{bi + 1:02d}", "criterion": crit, "issue_ids": ids, "attempt": 2})
         agent(0, "developer", "working", "WCAG 1.4.3 · attempt 2")
         agent(0, "tester", "idle", "waiting")
-        set_status(.4, "A01", "fixing", "orchestrator", "Retry with tester feedback", attempt=2)
+        set_status(.4, "A01", "fixing", "lead", "Retry with tester feedback", attempt=2)
         log(.6, "developer", "Nearest compliant shades to the brand palette: #6b6b6b (5.3:1), #5f5a52 (6.4:1). Background untouched.")
         log(.4, "developer", "→ Edit styles.css", "tool")
         set_status(.4, "A01", "fixed_pending", "developer", "Text colours only, nearest compliant shade.", attempt=2,
@@ -345,10 +368,10 @@ for bi, (crit, ids, sha, msg) in enumerate(BATCHES):
         log(.3, "tester", "Batch verdict: no regression. Commit validated fixes, return A07.")
         commit(.4, crit, sha, "partial: " + msg, ["product.html", "styles.css", "cart.html", "checkout.html"])
         emit(.4, "batch.started", {"id": f"B{bi + 1:02d}", "criterion": crit, "issue_ids": ["A07"], "attempt": 2})
-        log(0, "orchestrator", "Batch WCAG 2.1.1 · attempt 2/3 for A07 with tester feedback", "phase")
+        log(0, "lead", "Batch WCAG 2.1.1 · attempt 2/3 for A07 with tester feedback", "phase")
         agent(0, "developer", "working", "A07 · attempt 2")
         agent(0, "tester", "idle", "waiting")
-        set_status(.3, "A07", "fixing", "orchestrator", "Retry with tester feedback", attempt=2)
+        set_status(.3, "A07", "fixing", "lead", "Retry with tester feedback", attempt=2)
         log(.6, "developer", '→ Edit product.html (div → <button type="button">)', "tool")
         set_status(.4, "A07", "fixed_pending", "developer", "Replaced div with native button; styles kept.", attempt=2,
                    files=BY["A07"]["files"], fix_diff=BY["A07"]["fix"])
@@ -366,9 +389,9 @@ agent(0, "developer", "done", "all batches processed")
 agent(0, "tester", "done", "")
 
 emit(.8, "phase.changed", {"phase": "reaudit"})
-agent(0, "orchestrator", "working", "independent re-audit")
+agent(0, "lead", "working", "independent re-audit")
 emit(1.2, "reaudit", {"axe_violations": 0, "unreachable": 0, "focus_visible": [24, 24]})
-log(0, "orchestrator", "Re-audit: automated violations 17 → 0 · unreachable controls 9 → 0 · focus visible 0 → 24 of 24 stops", "ok")
+log(0, "lead", "Re-audit: automated violations 17 → 0 · unreachable controls 9 → 0 · focus visible 0 → 24 of 24 stops", "ok")
 
 emit(.8, "phase.changed", {"phase": "report"})
 agent(0, "writer", "working", "writing")
@@ -407,13 +430,34 @@ emit(0, "document.written", {"name": "pr-body.md", "path": "state/out/pr-body.md
 log(.6, "writer", "→ Write accessibility-statement.md (status: partially compliant)", "tool")
 emit(0, "document.written", {"name": "accessibility-statement.md", "path": "state/out/accessibility-statement.md", "content": statement}, "writer")
 agent(.5, "writer", "done", "2 documents")
+log(.4, "lead", "→ bash git format-patch baseline..HEAD -o /mnt/session/outputs/patches", "tool")
+log(.3, "lead", "Wrote patches/, changes.diff and report.json to /mnt/session/outputs. Ending turn for grading.", "ok")
+log(.3, "system", "Independent grader: evaluating the outcome rubric (iteration 0)", "phase")
+emit(1.5, "outcome", {"iteration": 0, "result": "needs_revision",
+                      "explanation": "report.json lacks before/after metrics for /cart.html, so the no-regression criterion cannot be verified."})
+log(0, "system", "Grader: needs revision. report.json lacks before/after metrics for /cart.html.", "reject")
+log(.6, "lead", "→ bash python tools/reaudit.py --pages all", "tool")
+log(.8, "lead", "report.json regenerated with metrics for all 4 pages.", "ok")
+log(.3, "system", "Independent grader: evaluating the outcome rubric (iteration 1)", "phase")
+emit(1.5, "outcome", {"iteration": 1, "result": "satisfied",
+                      "explanation": "All funnel pages audited; every validated fix was re-checked with compare.py; zero regressions; the two vendor and merchandising items are escalated with concrete actions; the statement says partially compliant; all deliverables present."})
+log(0, "system", "Grader: satisfied.", "ok")
 
 emit(.6, "phase.changed", {"phase": "pr"})
 all_files = sorted({f for c in commits for f in c["files"]})
 emit(.4, "pr.ready", {"repo": "maison-lumiere/storefront", "branch": BRANCH, "base": "main",
                       "commits": len(commits), "files": all_files, "body": pr_body})
-log(0, "orchestrator", f"Branch ready: {len(commits)} commits, {len(all_files)} files changed. Waiting for compliance sign-off to send to engineering.", "ok")
-agent(0, "orchestrator", "done", "awaiting sign-off")
+log(0, "lead", f"Branch ready: {len(commits)} commits, {len(all_files)} files changed. Waiting for compliance sign-off to send to engineering.", "ok")
+METRICS = {"recall_all": 0.94, "recall_agent_only": 0.92, "precision": 0.94, "verified_fix_rate": 1.0,
+           "false_fix": 0, "regressions": 0, "honesty": 1}
+THRESHOLDS = {"recall_all": {"op": ">=", "value": 0.9}, "recall_agent_only": {"op": ">=", "value": 0.8},
+              "precision": {"op": ">=", "value": 0.8}, "verified_fix_rate": {"op": ">=", "value": 0.85},
+              "false_fix": {"op": "=", "value": 0}, "regressions": {"op": "=", "value": 0}, "honesty": {"op": "=", "value": 1}}
+emit(.6, "eval", {"metrics": METRICS, "thresholds": THRESHOLDS, "passed": True,
+                  "history": [{"version": "v1", "recall_agent_only": 0.69, "verified_fix_rate": 0.82},
+                              {"version": "v2", "recall_agent_only": 0.85, "verified_fix_rate": 0.93},
+                              {"version": "v3", "recall_agent_only": 0.92, "verified_fix_rate": 1.0}]})
+log(0, "system", "Eval against ground truth: PASS (recall 0.94, agent-only recall 0.92, false fixes 0, regressions 0)", "ok")
 emit(.2, "run.finished", {"cost_usd": 0.0, "duration_s": T})
 # The compliance sign-off (human click) — the dashboard ignores it in replay and simulates it on click.
 emit(1.0, "pr.sent", {"number": 218, "url": "", "simulated": True, "by": "compliance",
