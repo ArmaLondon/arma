@@ -13,3 +13,14 @@ recordings/*.jsonl
 # per-run eval outputs: only the shipped run is added explicitly (git add -f)
 eval/results/*
 !eval/results/.gitkeep
+
+# HyperFrames video project: heavy captures/renders stay local
+videos/arma-demo/capture/
+videos/arma-demo/renders/
+videos/arma-demo/assets/
+videos/arma-demo/node_modules/
+videos/arma-demo/.hyperframes/
+videos/arma-demo/.media/
+videos/arma-demo/.thumbnails/
+videos/arma-demo/.waveform-cache/
+videos/arma-demo/renders-log.txt
