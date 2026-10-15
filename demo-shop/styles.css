@@ -1,0 +1,48 @@
+/* Maison Lumière — boutique démo (défauts d'accessibilité volontaires, voir arma-spec.md §11) */
+* { box-sizing: border-box; }
+*:focus { outline: none; }
+body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #2b2622; background: #ffffff; }
+a { color: #6b3f22; }
+.container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+.site-header { border-bottom: 1px solid #eadfd2; background: #fffdf9; }
+.site-header .container { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+.logo { font-size: 1.5rem; letter-spacing: .12em; text-transform: uppercase; color: #2b2622; text-decoration: none; }
+.main-nav a { margin: 0 12px; color: #2b2622; text-decoration: none; }
+.icons button { background: none; border: 0; font-size: 1.25rem; cursor: pointer; padding: 6px; }
+.cart-count { font-size: .75rem; background: #6b3f22; color: #fff; border-radius: 999px; padding: 1px 6px; }
+
+.hero { background: #faf7f2; padding: 72px 0; }
+.hero .container { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.hero-art { height: 260px; background: url(img/hero.svg) center / cover no-repeat; }
+.hero h3 { font-size: 2.4rem; margin: 0 0 12px; font-weight: normal; }
+.hero p { color: #b5b5b5; font-size: 1.1rem; max-width: 420px; }
+.hero .cta { display: inline-block; margin-top: 12px; padding: 12px 22px; background: #2b2622; color: #fff; text-decoration: none; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; padding: 40px 0; }
+.card img { width: 100%; display: block; }
+.card h4 { margin: 12px 0 4px; font-weight: normal; font-size: 1.1rem; }
+.price { font-weight: bold; }
+.price-note { color: #aaaaaa; font-size: .85rem; }
+
+.product { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; padding: 40px 0; }
+.product img { width: 100%; }
+.sizes { display: flex; gap: 8px; margin: 16px 0; }
+.size { border: 1px solid #c9bba9; padding: 10px 14px; cursor: pointer; }
+.size.selected { background: #2b2622; color: #fff; }
+.btn { display: inline-block; background: #6b3f22; color: #fff; padding: 14px 28px; cursor: pointer; text-align: center; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: #2b2622; color: #fff; padding: 12px 18px; display: none; }
+
+.cart-table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+.cart-table td { padding: 14px 8px; border-bottom: 1px solid #eadfd2; vertical-align: middle; }
+.cart-table img { width: 90px; }
+.qty button { width: 32px; height: 32px; border: 1px solid #c9bba9; background: #fff; cursor: pointer; }
+.total { text-align: right; font-size: 1.2rem; margin-bottom: 20px; }
+
+.checkout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 30px 0; }
+.checkout input { display: block; width: 100%; padding: 12px; margin-bottom: 14px; border: 1px solid #c9bba9; font-size: 1rem; }
+.checkout input.error { border: 2px solid #d0021b; }
+.checkout iframe { width: 100%; height: 190px; border: 1px solid #eadfd2; }
+
+.site-footer { background: #f7f5f2; color: #b0b0b0; padding: 30px 0; margin-top: 40px; font-size: .9rem; }
+.site-footer a { color: #b0b0b0; }

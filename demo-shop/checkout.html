@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paiement</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="logo" href="index.html">Maison Lumière</a>
+    <nav class="main-nav">
+      <a href="index.html">Nouveautés</a>
+      <a href="index.html#femme">Femme</a>
+      <a href="index.html#homme">Homme</a>
+    </nav>
+    <div class="icons">
+      <button onclick="toggleSearch()">🔍</button>
+      <button onclick="showToast('Ajouté aux favoris')">♡</button>
+      <button onclick="location.href='cart.html'">🛒 <span class="cart-count">2</span></button>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <h1>Finaliser la commande</h1>
+  <div class="checkout">
+    <form id="checkout-form" onsubmit="return false">
+      <h2>Livraison</h2>
+      <input type="text" name="name" placeholder="Nom complet">
+      <input type="text" name="email" placeholder="Adresse e-mail" value="marie.dupont@" class="error">
+      <input type="text" name="address" placeholder="Adresse">
+      <input type="text" name="zip" placeholder="Code postal">
+      <input type="text" name="city" placeholder="Ville">
+    </form>
+    <div>
+      <h2>Paiement</h2>
+      <!-- Champ carte hébergé par le prestataire PayVite (widget tiers, code non modifiable par la boutique) -->
+      <iframe class="card-field" title="Paiement" srcdoc="<html lang='fr'><body style='font-family:sans-serif;margin:12px'><p style='margin:0 0 8px'>PayVite — paiement sécurisé</p><input placeholder='Numéro de carte' style='display:block;width:95%;padding:8px;margin-bottom:8px'><input placeholder='MM/AA' style='width:40%;padding:8px'> <input placeholder='CVC' style='width:40%;padding:8px'></body></html>"></iframe>
+      <p class="total">Total : <strong>268 €</strong></p>
+      <div class="btn" onclick="pay()">Payer 268 €</div>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <p>Maison Lumière — Maroquinerie et prêt-à-porter, Paris depuis 1987.</p>
+    <p><a href="index.html">Mentions légales</a> · <a href="index.html">CGV</a> · <a href="index.html">Contact</a></p>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+<script src="shop.js"></script>
+</body>
+</html>

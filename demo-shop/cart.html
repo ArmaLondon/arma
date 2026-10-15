@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Votre panier — Maison Lumière</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="logo" href="index.html">Maison Lumière</a>
+    <nav class="main-nav">
+      <a href="index.html">Nouveautés</a>
+      <a href="index.html#femme">Femme</a>
+      <a href="index.html#homme">Homme</a>
+    </nav>
+    <div class="icons">
+      <button onclick="toggleSearch()">🔍</button>
+      <button onclick="showToast('Ajouté aux favoris')">♡</button>
+      <button onclick="location.href='cart.html'">🛒 <span class="cart-count">2</span></button>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <h1>Votre panier</h1>
+  <table class="cart-table">
+    <tr>
+      <td><img src="img/sneaker.svg"></td>
+      <td>Baskets en cuir — taille 40</td>
+      <td class="qty"><button onclick="changeQty(this, -1)">−</button> <span>1</span> <button onclick="changeQty(this, 1)">+</button></td>
+      <td>189 €</td>
+      <td><button onclick="removeRow(this)">🗑</button></td>
+    </tr>
+    <tr>
+      <td><img src="img/scarf.svg"></td>
+      <td>Écharpe en laine — bordeaux</td>
+      <td class="qty"><button onclick="changeQty(this, -1)">−</button> <span>1</span> <button onclick="changeQty(this, 1)">+</button></td>
+      <td>79 €</td>
+      <td><button onclick="removeRow(this)">🗑</button></td>
+    </tr>
+  </table>
+  <p class="total">Total : <strong>268 €</strong></p>
+  <p class="price-note" style="text-align:right">Livraison offerte</p>
+  <p style="text-align:right"><span class="btn" onclick="location.href='checkout.html'">Commander</span></p>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <p>Maison Lumière — Maroquinerie et prêt-à-porter, Paris depuis 1987.</p>
+    <p><a href="index.html">Mentions légales</a> · <a href="index.html">CGV</a> · <a href="index.html">Contact</a></p>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+<script src="shop.js"></script>
+</body>
+</html>

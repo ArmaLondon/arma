@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baskets en cuir — Maison Lumière</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="logo" href="index.html">Maison Lumière</a>
+    <nav class="main-nav">
+      <a href="index.html">Nouveautés</a>
+      <a href="index.html#femme">Femme</a>
+      <a href="index.html#homme">Homme</a>
+    </nav>
+    <div class="icons">
+      <button onclick="toggleSearch()">🔍</button>
+      <button onclick="showToast('Ajouté aux favoris')">♡</button>
+      <button onclick="location.href='cart.html'">🛒 <span class="cart-count">2</span></button>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <div class="product">
+    <img class="product-photo" src="img/sneaker.svg" alt="image">
+    <div>
+      <h1>Baskets en cuir</h1>
+      <p class="price">189 €</p>
+      <p class="price-note">TVA incluse · Retours gratuits sous 30 jours</p>
+      <p>Cuir de veau pleine fleur tanné en France, semelle en caoutchouc naturel. Un classique intemporel, patiné par le temps.</p>
+      <p><strong>Taille</strong></p>
+      <div class="sizes">
+        <div class="size" onclick="selectSize(this)">38</div>
+        <div class="size" onclick="selectSize(this)">39</div>
+        <div class="size selected" onclick="selectSize(this)">40</div>
+        <div class="size" onclick="selectSize(this)">41</div>
+        <div class="size" onclick="selectSize(this)">42</div>
+      </div>
+      <div class="btn" onclick="addToCart()">Ajouter au panier</div>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <p>Maison Lumière — Maroquinerie et prêt-à-porter, Paris depuis 1987.</p>
+    <p><a href="index.html">Mentions légales</a> · <a href="index.html">CGV</a> · <a href="index.html">Contact</a></p>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+<script src="shop.js"></script>
+</body>
+</html>

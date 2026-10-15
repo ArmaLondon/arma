@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maison Lumière — Maroquinerie et prêt-à-porter</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="logo" href="index.html">Maison Lumière</a>
+    <nav class="main-nav">
+      <a href="index.html">Nouveautés</a>
+      <a href="index.html#femme">Femme</a>
+      <a href="index.html#homme">Homme</a>
+    </nav>
+    <div class="icons">
+      <button onclick="toggleSearch()">🔍</button>
+      <button onclick="showToast('Ajouté aux favoris')">♡</button>
+      <button onclick="location.href='cart.html'">🛒 <span class="cart-count">2</span></button>
+    </div>
+  </div>
+</header>
+<main>
+  <section class="hero">
+    <div class="container">
+      <div>
+      <h3>La collection automne</h3>
+      <p>Cuirs pleine fleur, laines douces et couleurs de saison. Fabriqué en France, livré en 48 h.</p>
+      <a class="cta" href="product.html">Découvrir</a>
+      </div>
+      <div class="hero-art"></div>
+    </div>
+  </section>
+  <div class="container">
+    <div class="grid" id="femme">
+      <div class="card">
+        <img src="img/sneaker.svg">
+        <h4>Baskets en cuir</h4>
+        <p class="price">189 €</p>
+        <p class="price-note">Livraison offerte dès 150 €</p>
+        <a href="product.html">En savoir plus</a>
+      </div>
+      <div class="card">
+        <img src="img/bag.svg">
+        <h4>Sac Alma</h4>
+        <p class="price">320 €</p>
+        <p class="price-note">Livraison offerte dès 150 €</p>
+        <a href="product.html">En savoir plus</a>
+      </div>
+      <div class="card" id="homme">
+        <img src="img/scarf.svg">
+        <h4>Écharpe en laine</h4>
+        <p class="price">79 €</p>
+        <p class="price-note">Livraison offerte dès 150 €</p>
+        <a href="product.html">En savoir plus</a>
+      </div>
+      <div class="card">
+        <img src="img/watch.svg">
+        <h4>Montre Aube</h4>
+        <p class="price">245 €</p>
+        <p class="price-note">Livraison offerte dès 150 €</p>
+        <a href="product.html">En savoir plus</a>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <p>Maison Lumière — Maroquinerie et prêt-à-porter, Paris depuis 1987.</p>
+    <p><a href="index.html">Mentions légales</a> · <a href="index.html">CGV</a> · <a href="index.html">Contact</a></p>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+<script src="shop.js"></script>
+</body>
+</html>
