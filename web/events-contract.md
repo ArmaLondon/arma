@@ -30,5 +30,4 @@ orchestrator computes the diff with `git diff`); `score` carries `eaa`
 (`non_compliant | partially_compliant | compliant_automated`).
 
 Agent labels (`agent` field of `log`): `lead`, `auditor·<page>`, `developer`, `tester`, `writer`,
-`system`. `agent.status` keys: `lead`, `auditors`, `developer`, `tester`, `writer`. Older
-claude-agent-sdk recordings (`orchestrator`, `cartographer`, `lead-auditor`) are shown as the lead.
+`system`. `agent.status` keys: `lead`, `auditors`, `developer`, `tester`, `writer`.

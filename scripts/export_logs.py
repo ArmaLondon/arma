@@ -65,7 +65,7 @@ def main():
         if e["type"] == "phase.changed":
             lines += ["", f"---- {PHASE_NAMES.get(e['data']['phase'], e['data']['phase'].upper())} " + "-" * 40]
         elif e["type"] == "log":
-            lines.append(f"{mmss(e['t'])} [{e.get('agent', 'orchestrator')}] {e['data'].get('text', '')}")
+            lines.append(f"{mmss(e['t'])} [{e.get('agent', 'lead')}] {e['data'].get('text', '')}")
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")

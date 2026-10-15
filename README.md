@@ -12,8 +12,7 @@ code batch by batch, has every fix checked by an independent tester agent (rejec
 rollback on regression, human escalation after three attempts), then writes the pull request and
 the accessibility statement. The dashboard is a pure function of the recorded event stream.
 
-Spec and plan: `arma-spec.md`, `arma-build-plan.md`. Commands: `CLAUDE.md`. Earlier
-claude-agent-sdk version: git tag `sdk-version`.
+Spec and plan: `arma-spec.md`, `arma-build-plan.md`. Commands: `CLAUDE.md`.
 
 The live dashboard replays a real Claude Managed Agents run (session sesn_016a2N5e3DNZHej9MrL4QxSo):
 22 issues (19 missed by scanners), 1 tester rejection + git rollback, 13 commits, score 38 → 98,

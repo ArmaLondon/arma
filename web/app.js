@@ -44,11 +44,9 @@ const pageName = (k) => PAGE_NAME[k] || k.charAt(0).toUpperCase() + k.slice(1);
 function teamKey(a) {
   if (!a) return "lead";
   if (a.startsWith("auditor")) return "auditors";
-  if (["lead", "orchestrator", "cartographer", "lead-auditor"].includes(a)) return "lead";
-  if (["developer", "tester", "writer"].includes(a)) return a;
+  if (["lead", "developer", "tester", "writer"].includes(a)) return a;
   return null;
 }
-function displayAgent(a) { return ["orchestrator", "cartographer", "lead-auditor"].includes(a) ? "lead" : a; }
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -82,7 +80,7 @@ function apply(S, ev) {
     }
     case "subagents": S.subagents = d.states || []; break;
     case "log": {
-      const a = displayAgent(ev.agent || "lead");
+      const a = ev.agent || "lead";
       S.logs.push({t: ev.t, a, text: d.text, kind: d.kind || "msg"});
       const k = teamKey(a);
       if (k && d.kind !== "tool") S.act[k] = d.text;
@@ -689,7 +687,7 @@ function renderRows() {
       <td class="src ${i.source !== "axe" ? "agent" : ""}">${i.source === "axe" ? "Scanner (axe)" : i.source === "keyboard" ? "Keyboard test" : "Agent review"}</td>
       <td><span class="pill ${scl}">${sl}</span>${att > 1 ? `<div class="src">attempt ${att}</div>` : ""}</td></tr>`;
     if (ex) {
-      const hist = (i.history || []).map((h) => `<li><time>${mmss(h.t)}</time><span class="who">${esc(displayAgent(h.by))}</span><span>${esc(h.note)}</span></li>`).join("");
+      const hist = (i.history || []).map((h) => `<li><time>${mmss(h.t)}</time><span class="who">${esc(h.by)}</span><span>${esc(h.note)}</span></li>`).join("");
       const fix = i.fix_diff ? `<pre>${diffHtml(i.fix_diff)}</pre><p class="src" style="margin-top:4px">${i.files && i.files.length ? "Files: " + i.files.map(esc).join(", ") : "No file changed"}</p>`
         : i.status === "needs_human" ? `<p>No code change possible in this repository.</p>` : `<p class="muted">Not fixed yet.</p>`;
       const human = i.human_action ? `<h3>Human action</h3><p>${esc(i.human_action)}</p>` : "";

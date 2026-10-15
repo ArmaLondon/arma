@@ -19,7 +19,7 @@ import os
 WEB = Path(os.environ.get("ARMA_WEB_DIR", ROOT / "web"))
 RUN = sys.argv[1] if len(sys.argv) > 1 else "recordings/fixture.jsonl"
 SHOTS = ROOT / "state" / "checks"
-AXE = (ROOT / "vendor" / "axe.min.js").read_text()
+AXE = (ROOT / "sandbox_tools" / "vendor" / "axe.min.js").read_text()
 fails: list[str] = []
 
 

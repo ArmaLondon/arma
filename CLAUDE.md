@@ -10,7 +10,6 @@ dashboard is a pure function of a JSONL event stream, rendered identically live 
 - Build plan (follow in order, commit per step): `arma-build-plan.md`
 - Progress: `TASKS.md`
 - Visual reference + test data: `reference/arma-dashboard-prototype.html`
-- Earlier claude-agent-sdk version: git tag `sdk-version`
 
 ## Layout
 - `bridge.py`: runs one Managed Agents session, answers the custom tools (ledger), records
@@ -31,7 +30,7 @@ uv run python bridge.py run [--until audit] [--budget-cents 3000] [--model-overr
 uv run python bridge.py resume <session_id> [--recording recordings/run-<date>.jsonl]
 uv run python eval/run_eval.py state/state.json state/out/final.json
 uv run python scripts/pick_demo_run.py recordings/run-<date>.jsonl
-uv run python scripts/check_web.py web/recordings/demo-run.jsonl
+uv run python scripts/check_web.py recordings/demo-run.jsonl   # path relative to web/
 uv run python scripts/export_logs.py web/recordings/demo-run.jsonl
 cd web && npx vercel --prod                            # static deploy (replay)
 uv run pytest -q
