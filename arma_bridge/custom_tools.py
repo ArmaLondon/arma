@@ -117,7 +117,7 @@ class Ledger:
         self.bus.emit("issue.status", {"id": i["id"], "status": i["status"], "by": by, "note": note, "attempt": attempt, **extra}, agent=by)
         if self.frozen:
             sc = self.store.score()
-            self.bus.emit("score", {"value": sc["value"], "baseline": self.store.get("baseline_score"),
+            self.bus.emit("score", {"value": sc["value"], "baseline": self.store.data.get("baseline_score"),
                                     "by_principle": sc["by_principle"], "eaa": sc["eaa"]})
 
     def set_phase(self, phase: str):
@@ -274,7 +274,7 @@ class Ledger:
         for iid in b["issue_ids"]:
             if self.store.issue(iid)["status"] == st.VALIDATED:
                 self.committed.add(iid)
-        commits = self.store.get("commits") or []
+        commits = self.store.data.get("commits") or []
         commits.append({"sha": d["sha"], "criterion": b["criterion"], "message": d["message"], "files": d.get("files", [])})
         self.store.set("commits", commits)
         self.bus.emit("commit.created", {"sha": d["sha"], "criterion": b["criterion"], "message": d["message"], "files": d.get("files", [])}, agent=who)

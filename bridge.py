@@ -252,7 +252,7 @@ def finish(client, run: Run, branch: str, t0: float):
         if hits:
             run.bus.emit("document.written", {"name": name, "path": f"state/out/{name}", "content": hits[0].read_text()}, agent="writer")
     run.bus.emit("phase.changed", {"phase": "pr"})
-    commits = run.store.get("commits") or []
+    commits = run.store.data.get("commits") or []
     body = next((p.read_text() for p in OUT.rglob("pr-body.md")), "")
     files_changed = sorted({f for c in commits for f in c.get("files", [])})
     if commits:
