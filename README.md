@@ -1,4 +1,4 @@
-#Arma
+# Arma
 
 **Arma gives compliance teams a hosted AI agent team that audits, fixes and verifies their store's
 accessibility, proves it against a rubric, and hands engineering a ready-to-merge pull request.**
