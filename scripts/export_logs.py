@@ -32,12 +32,22 @@ def main():
             status[e["data"]["id"]] = e["data"]["status"]
     scores = [e["data"] for e in events if e["type"] == "score"]
     commits = [e for e in events if e["type"] == "commit.created"]
+    outcomes = [e["data"] for e in events if e["type"] == "outcome"]
+    ev_res = next((e["data"] for e in reversed(events) if e["type"] == "eval"), None)
+    grader_txt = " -> ".join("%s (iteration %s)" % (o.get("result"), o.get("iteration")) for o in outcomes) or "not run"
+    if ev_res:
+        failed = [k for k, v in ev_res.get("metrics", {}).items() if k in ev_res.get("thresholds", {}) and not (
+            v == ev_res["thresholds"][k]["value"] if ev_res["thresholds"][k]["op"] == "=" else v >= ev_res["thresholds"][k]["value"])]
+        eval_txt = ("PASS" if ev_res.get("passed") else "FAIL") + "  " + ", ".join(f"{k}={v}" for k, v in ev_res.get("metrics", {}).items()) + (f"  (failing: {', '.join(failed)})" if failed else "")
+    else:
+        eval_txt = "not run"
     rejects = sum(1 for e in events if e["type"] == "issue.status" and e["data"]["status"] == "rejected")
     rollbacks = sum(1 for e in events if e["type"] == "log" and e["data"].get("kind") == "rollback")
     lines = [
         "ARMA: agent run log",
         "=" * 72,
-        "Project : Arma, EAA / WCAG 2.1 AA compliance by a Claude agent team (claude-agent-sdk)",
+        "Project : Arma, EAA / WCAG 2.1 AA compliance by a Claude agent team",
+        f"Runtime : {'Claude Managed Agents, session ' + start['session_id'] if start.get('session_id') else 'local Claude Agent SDK run (no hosted session)'}",
         f"Site    : {start.get('site', '')}   repo: {start.get('repo', '')}   branch: {start.get('branch', '')}",
         f"Model   : {a.model or 'see recording'}",
         f"Cost    : ${fin.get('cost_usd', 0):.2f}   Duration: {mmss(fin.get('duration_s', events[-1]['t'] if events else 0))} (agent time, recorded)",
@@ -45,6 +55,8 @@ def main():
         f"{sum(1 for s in status.values() if s == 'validated')} fixed and verified, {sum(1 for s in status.values() if s == 'needs_human')} need human review",
         f"Score   : {scores[0]['baseline'] if scores else '–'} → {scores[-1]['value'] if scores else '–'}   "
         f"Commits: {len(commits)}   Tester rejections: {rejects}   Rollbacks: {rollbacks}",
+        f"Grader  : {grader_txt}",
+        f"Eval    : {eval_txt}",
         f"Source  : {Path(a.run).name} (timestamps mm:ss since run start; idle gaps may be compressed)",
         "=" * 72,
     ]

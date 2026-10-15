@@ -1,0 +1,68 @@
+ARMA: AGENT DESIGN
+Arma gives compliance teams a hosted AI agent team that audits, fixes and verifies their store's
+accessibility, proves it against a rubric, and hands engineering a ready-to-merge pull request.
+Build it. Let it run. Prove it worked.
+
+1. HOSTED ARCHITECTURE
+One Claude Managed Agents session per run, in a cloud sandbox (Chromium, Playwright, git) with a
+shared filesystem: /workspace/site (the store, a git repo) and /workspace/arma (tools, baseline).
+- arma-lead (primary thread) runs the protocol and delegates to predefined sub-agents (one level).
+- arma-page-auditor x N: one thread per page, all delegated together, so they run in parallel.
+- arma-developer: a persistent thread. A tester rejection goes back to the SAME developer thread,
+  which keeps its context and fixes exactly what was rejected.
+- arma-tester: an isolated thread with no edit or write tool. It never sees the developer's diff;
+  it judges the result.
+- arma-writer: writes pr-body.md and accessibility-statement.md to /mnt/session/outputs.
+Deterministic tools (crawl, axe-core audit, keyboard walk, baseline/re-audit, visual compare) are
+Python scripts mounted in the sandbox and run with bash. No browser runs on our side.
+
+2. HANDOFFS THROUGH THE COMPLIANCE LEDGER
+The agents never talk to each other directly. Every finding and every status change is a custom
+tool call (report_issue, plan_batches, start_batch, mark_fixed, cannot_fix, verdict, batch_verdict,
+rollback_batch, record_commit, emit_progress). A local bridge answers each call: it is Arma's
+ledger. It de-duplicates the same component across pages, timestamps every transition with its
+author, recomputes the score, and turns everything into the event stream that drives the
+dashboard, live or in replay. Issue lifecycle:
+detected > fixing > fixed_pending > validated | rejected (retry) | needs_human.
+
+3. PLAN > ACT > VERIFY LOOP
+Audit: axe + keyboard walk + expert judgement (emoji-named buttons, useless alt text, vague links,
+placeholder-as-label, colour-only errors, headings, clickable divs, removed focus, third-party
+iframes). Plan: one batch per WCAG criterion, purchase blockers first. Per batch: the developer
+fixes (native HTML first, nearest brand-safe colour, never invents content), the tester re-measures
+(compare.py, keyboard.py, pixel diff; opens the diff image above 2% of changed pixels) and accepts or
+rejects each fix with an actionable reason. A batch regression triggers git checkout + rollback_batch.
+Validated fixes are committed as one commit per criterion. After three attempts the issue goes to a
+human with a concrete action (merchandising confirms product colour; the payment vendor supplies its
+conformance report).
+
+4. OUTCOME RUBRIC AND INDEPENDENT GRADER
+Each session receives user.define_outcome with a rubric (audit coverage, fix quality with zero
+regressions and preserved design, keyboard-operable funnel, honesty, deliverables). An independent
+grader evaluates the finished work; needs_revision sends the lead back to work, satisfied ends the
+run. The dashboard shows the grader's verdict and explanation.
+
+5. EVAL AGAINST GROUND TRUTH, HILL CLIMB
+eval/run_eval.py compares the run's report with the 16 planted defects of the demo store: recall
+(all, and defects scanners miss), precision, verified fix rate, false fixes, regressions, honest
+escalations, each with a PASS/FAIL threshold. Prompt changes to the auditor and tester are measured
+run after run (eval/history.csv) and shown as a hill-climb curve.
+
+6. LONG RUNNING AND RECOVERY
+The session lives on the server: if the bridge stops, "bridge.py resume <session>" reattaches,
+replays the event history, de-duplicates by event id and answers pending tool calls. Sandbox scripts
+never crash: they return actionable JSON errors that the agents diagnose and retry. A cost budget is
+set on the session; budget_reached pauses it cleanly.
+
+7. GOVERNANCE
+Tools per role (the tester cannot edit, only the tester can call verdict, only the lead commits).
+The ledger enforces the status state machine and refuses illegal transitions with an explanation.
+Full audit trail per issue. Compliance sign-off ("Send PR") is recorded. Web search and fetch are
+disabled. Arma never claims full compliance: at best "compliant (automated scope)", and items that
+need a human stay visibly open in the accessibility statement.
+
+8. STACK
+Claude Managed Agents (multi-agent, custom tools, outcomes), anthropic Python SDK and ant CLI for
+versioned agent definitions; Playwright + vendored axe-core + Pillow in the sandbox; git; a FastAPI
+bridge (SSE); a static vanilla JS + D3 dashboard on Vercel that is a pure function of the recorded
+event stream.

@@ -24,3 +24,11 @@ Submission: 15:00. Two sessions: "web" (steps 2, 3, 10-11) and "agents" (steps 4
 - [ ] 12. Live mode (SSE)
 - [ ] 13. Real GitHub PR
 - [ ] 14. --chaos / --resume
+
+## Reorientation to Managed Agents (new-guidelines/, web session)
+- [x] W0 Event contract sent to the agents session (outcome, eval, session_id, labels)
+- [x] W1 Contract v2 + fixture (outcome needs_revision→satisfied, eval PASS)
+- [x] W2 Minimalist D3 dashboard: live agent workflow, gauge, timeline, POUR, grader + eval cards
+- [x] W3 Interim replay of the real claude-agent-sdk run deployed (honest: no hosted badge)
+- [x] W4 Deliverables tooling for the hosted architecture
+- [ ] W5 Ship a real Managed Agents run (outcome satisfied + eval) and finalize deliverables

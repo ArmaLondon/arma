@@ -6,8 +6,9 @@ the source code, has every fix verified by an independent tester agent (reject â
 human escalation), then prepares a pull request plus an accessibility statement. The dashboard is
 a pure function of a JSONL event stream, rendered identically live (SSE) or in replay (Vercel).
 
-- Spec (source of truth): `arma-spec.md`
-- Build plan (follow in order, commit per step): `arma-build-plan.md`
+- Spec (source of truth): `new-guidelines/arma-spec 2.md` (Managed Agents version; supersedes `arma-spec.md`)
+- Build plan (follow in order, commit per step): `new-guidelines/arma-build-plan 2.md`
+- Two sessions: "web" owns `web/`, the fixture, check/pick/export scripts and deliverables; "agents" owns the rest
 - Progress: `TASKS.md`
 - Visual reference + test data: `reference/arma-dashboard-prototype.html`
 
