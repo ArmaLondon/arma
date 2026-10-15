@@ -48,10 +48,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--recreate", action="store_true")
     ap.add_argument("--model-all", default="")
+    ap.add_argument("--agents-only", action="store_true", help="re-create the agents, keep the environment")
     a = ap.parse_args()
     client = anthropic.Anthropic()
     lock = json.loads(LOCK.read_text()) if LOCK.exists() else {}
-    if "environment" not in lock or a.recreate:
+    if "environment" not in lock or (a.recreate and not a.agents_only):
         env = client.beta.environments.create(
             name="arma-env",
             config={"type": "cloud",
@@ -60,7 +61,7 @@ def main():
         )
         lock["environment"] = {"id": env.id, "name": env.name}
         print("environment", env.id)
-    agents = lock.get("agents", {}) if not a.recreate else {}
+    agents = lock.get("agents", {}) if not (a.recreate or a.agents_only) else {}
     for role in ["page-auditor", "developer", "tester", "writer", "lead"]:
         if role in agents and not a.recreate:
             continue
