@@ -1,34 +1,17 @@
 # Arma: tasks (arma-build-plan.md)
 
-Submission: 15:00. Two sessions: "web" (steps 2, 3, 10-11) and "agents" (steps 4-9).
+## Done: claude-agent-sdk version (git tag `sdk-version`, superseded)
+- [x] Repo skeleton, event contract + EventBus + fixture, replay dashboard, first Vercel deploy
+- [x] Trapped demo shop (Maison Lumière), browser tools, store + scoring + tests
 
-## A. Demo you can show
-- [x] 0. Repo skeleton, deps, vendored axe-core, CLAUDE.md
-- [x] 1. Event contract + EventBus + realistic fixture (16 issues from the prototype)
-- [x] 2. Dashboard in replay mode (from the prototype) + scripts/check_web.py
-- [x] 3. First Vercel deploy (fixture replay): https://web-rosy-xi-65.vercel.app
-
-## B. Real agents
-- [x] 4. Trapped demo shop (Maison Lumière) + scripts/check_demo_shop.py
-- [x] 5. Deterministic browser tools (arma/browser.py)
-- [x] 6. Store + scoring + tests
-- [ ] 7. MCP tools, agents, orchestrator: crawl + baseline + audit (first real run)
-- [ ] 8. Developer/tester fix loop with rollback and escalation
-- [ ] 9. Re-audit, writer documents, PR ready
-
-## C. Final demo
-- [ ] 10. Pick the best real run, redeploy
-- [ ] 11. Deliverables (agent-design.txt, agent-logs.txt, links.md)
-
-## D. Bonus
-- [ ] 12. Live mode (SSE)
-- [ ] 13. Real GitHub PR
-- [ ] 14. --chaos / --resume
-
-## Reorientation to Managed Agents (new-guidelines/, web session)
+## Done: Managed Agents version
 - [x] W0 Event contract sent to the agents session (outcome, eval, session_id, labels)
 - [x] W1 Contract v2 + fixture (outcome needs_revision→satisfied, eval PASS)
 - [x] W2 Minimalist D3 dashboard: live agent workflow, gauge, timeline, POUR, grader + eval cards
 - [x] W3 Interim replay of the real claude-agent-sdk run deployed (honest: no hosted badge)
 - [x] W4 Deliverables tooling for the hosted architecture
 - [x] W5 Real Managed Agents run shipped: grader satisfied, eval recall 1.0 (honesty FAIL on 1 escalation), deliverables updated
+
+## Open
+- [ ] Live mode (SSE): `web/app.js` expects `/api/events`, no server provides it yet
+- [ ] Real GitHub PR
