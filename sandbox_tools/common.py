@@ -2,7 +2,7 @@
 
 Every script prints one JSON object on stdout. On failure it prints {"error": "..."} with an
 actionable message and exits non-zero; it never dies with an unhandled traceback.
-Env: ARMA_CHROMIUM (browser binary, default /usr/bin/chromium), ARMA_WORK (default /workspace/arma),
+Env: ARMA_CHROMIUM (optional browser binary; default: Playwright's bundled Chromium), ARMA_WORK (default /workspace/arma),
 ARMA_BASE (site root, default http://127.0.0.1:8765/).
 """
 import json
@@ -41,18 +41,19 @@ def main(fn):
         tb = traceback.format_exc().strip().splitlines()[-1]
         hint = ""
         if "Executable doesn't exist" in str(e) or "No such file" in str(e):
-            hint = " Set ARMA_CHROMIUM to the chromium binary (try: ls /usr/bin | grep -i chrom). Never run playwright install."
+            hint = " Unset ARMA_CHROMIUM to use Playwright's bundled Chromium (/usr/bin/chromium-browser is a snap wrapper that does not run). Never run playwright install."
         elif "ERR_CONNECTION_REFUSED" in str(e):
             hint = " The site is not served: run `python -m http.server 8765 -d /workspace/site &` first."
         fail(f"{type(e).__name__}: {str(e)[:300]} ({tb[:200]}).{hint} This may be transient: retry once.")
 
 
 def launch(p):
+    # Playwright's bundled Chromium (present in the sandbox image) by default. /usr/bin/chromium-browser on
+    # Ubuntu is only a snap wrapper and does not run: set ARMA_CHROMIUM only to a real binary.
     kw = {"args": ["--no-sandbox", "--disable-dev-shm-usage"]}
-    for exe in (os.environ.get("ARMA_CHROMIUM"), "/usr/bin/chromium", "/usr/bin/chromium-browser"):
-        if exe and Path(exe).exists():
-            kw["executable_path"] = exe
-            break
+    exe = os.environ.get("ARMA_CHROMIUM")
+    if exe and Path(exe).exists():
+        kw["executable_path"] = exe
     return p.chromium.launch(**kw)
 
 

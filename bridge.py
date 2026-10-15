@@ -134,6 +134,8 @@ class Run:
             inp = dict(g(ev, "input") or {})
             arg = inp.get("command") or inp.get("file_path") or inp.get("path") or inp.get("pattern") or ""
             self.log(self.label(ev), f"→ {ev.name} {str(arg).splitlines()[0][:160] if arg else ''}".strip(), "tool")
+        elif t == "agent.tool_result" and g(ev, "is_error"):
+            self.log(self.label(ev), f"tool error: {text_of(g(ev, 'content'))[:240]}", "err")
         elif t == "session.thread_created":
             tid, name = g(ev, "session_thread_id"), g(ev, "agent_name", default="")
             self.threads[tid] = name

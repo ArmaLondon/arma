@@ -1,0 +1,145 @@
+{
+ "metrics": {
+  "recall_all": 0.06,
+  "recall_agent_only": 0.08,
+  "precision": 1.0,
+  "verified_fix_rate": 0.07,
+  "false_fix": 0,
+  "regressions": 0,
+  "honesty": 0
+ },
+ "thresholds": {
+  "recall_all": {
+   "op": ">=",
+   "value": 0.9
+  },
+  "recall_agent_only": {
+   "op": ">=",
+   "value": 0.8
+  },
+  "precision": {
+   "op": ">=",
+   "value": 0.8
+  },
+  "verified_fix_rate": {
+   "op": ">=",
+   "value": 0.85
+  },
+  "false_fix": {
+   "op": "=",
+   "value": 0
+  },
+  "regressions": {
+   "op": "=",
+   "value": 0
+  },
+  "honesty": {
+   "op": "=",
+   "value": 1
+  }
+ },
+ "passed": false,
+ "per_defect": {
+  "contrast": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "html-lang": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "alt-useless": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "needs_human"
+  },
+  "alt-missing": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "focus-outline": {
+   "found": true,
+   "issues": [
+    "A01"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "header-icons": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "add-to-cart": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "sizes": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "checkout-pay": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "placeholder-labels": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "error-colour": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "learn-more": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "headings": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "page-title": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "cart-buttons": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "validated"
+  },
+  "payment-iframe": {
+   "found": false,
+   "issues": [],
+   "statuses": [],
+   "expected": "needs_human"
+  }
+ },
+ "final_json": false
+}

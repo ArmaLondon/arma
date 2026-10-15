@@ -1,0 +1,18 @@
+[
+ {"key": "contrast", "wcag": ["1.4.3"], "any": [".hero", "price-note", "footer", "#b5b5b5", "#aaa", "#b0b0b0", "contrast", "grey", "gray"], "axe": true, "expected": "validated"},
+ {"key": "html-lang", "wcag": ["3.1.1"], "any": ["lang", "<html"], "axe": true, "expected": "validated"},
+ {"key": "alt-useless", "wcag": ["1.1.1"], "any": ["alt=\"image\"", "product-photo", "useless", "meaningless", "generic"], "axe": false, "expected": "needs_human"},
+ {"key": "alt-missing", "wcag": ["1.1.1"], "any": ["image-alt", "no alt", "without alt", "missing alt", "lack", ".card img", "cart-table", "<img src=\"img/sneaker.svg\">", "<img src=\"img/"], "axe": true, "expected": "validated"},
+ {"key": "focus-outline", "wcag": ["2.4.7"], "any": ["outline", "focus"], "axe": false, "expected": "validated"},
+ {"key": "header-icons", "wcag": ["4.1.2"], "any": ["🔍", "♡", "🛒", "header", ".icons", "search", "wishlist", "favori", "emoji"], "axe": false, "expected": "validated"},
+ {"key": "add-to-cart", "wcag": ["2.1.1", "4.1.2"], "any": ["ajouter", "add to", "addtocart", "div.btn:nth-of-type(2)", "main.container > div.product > div > div.btn"], "axe": false, "expected": "validated"},
+ {"key": "sizes", "wcag": ["2.1.1", "4.1.2"], "any": ["size", "taille"], "axe": false, "expected": "validated"},
+ {"key": "checkout-pay", "wcag": ["2.1.1", "4.1.2"], "any": ["commander", "payer", "pay(", "span.btn", "checkout"], "axe": false, "expected": "validated"},
+ {"key": "placeholder-labels", "wcag": ["3.3.2", "1.3.1", "4.1.2"], "any": ["placeholder", "label"], "axe": false, "expected": "validated"},
+ {"key": "error-colour", "wcag": ["3.3.1", "1.4.1"], "any": ["error", "red", "border", "colour", "color"], "axe": false, "expected": "validated"},
+ {"key": "learn-more", "wcag": ["2.4.4"], "any": ["savoir plus", "learn more", "link"], "axe": false, "expected": "validated"},
+ {"key": "headings", "wcag": ["1.3.1", "2.4.6"], "any": ["h1", "h3", "heading"], "axe": false, "expected": "validated"},
+ {"key": "page-title", "wcag": ["2.4.2"], "any": ["title", "paiement"], "axe": false, "expected": "validated"},
+ {"key": "cart-buttons", "wcag": ["4.1.2"], "any": ["qty", "🗑", "remov", "quantit", "changeqty", "−", "minus", "plus"], "axe": false, "expected": "validated"},
+ {"key": "payment-iframe", "wcag": ["1.3.1", "4.1.2", "2.1.1"], "any": ["iframe", "third-party", "third party", "payvite", "card-field", "vendor", "provider"], "axe": false, "expected": "needs_human"}
+]
