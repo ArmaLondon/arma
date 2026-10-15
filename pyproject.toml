@@ -7,7 +7,9 @@ authors = [
     { name = "Arthur Dauchez", email = "adauchez08@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "claude-agent-sdk>=0.2.167",
+]
 
 [project.scripts]
 arma = "arma:main"
