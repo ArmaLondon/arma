@@ -6,6 +6,8 @@ accessibility, proves it against a rubric, and hands engineering a ready-to-merg
 - Demo video (1 min): https://youtu.be/w0FeMr0TNuQ
 - Live dashboard (replay of a real run): https://web-rosy-xi-65.vercel.app
 - Pitch / About: https://web-rosy-xi-65.vercel.app/#about
+- Deck : https://claude.ai/artifact/AozLW9K8RZVQaZQ72SEUHS#slide-c2d1a52b6f8e
+
 
 From June 2025 the European Accessibility Act requires e-commerce sites to meet WCAG 2.1 AA.
 Scanners catch only part of the problem and fix nothing. Arma runs a team of Claude agents on
