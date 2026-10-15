@@ -202,6 +202,8 @@ function renderHeader() {
   $("clock").textContent = running ? `Running, ${mmss(S.t)} elapsed` : (S.finished ? `Last run: ${mmss(S.t)} of agent time` : "Idle");
   $("hosted").hidden = !S.session;
   $("sess").textContent = S.session ? S.session.slice(-8) : "";
+  // say honestly where the recorded run ran: hosted session, or a local Claude Agent SDK run
+  $("footHost").textContent = S.session || !S.logs.length ? "hosted on Claude Managed Agents" : "(this recording: a local Claude Agent SDK run)";
 }
 
 /* ------------------------------------------------------------------ live agent workflow (D3) */

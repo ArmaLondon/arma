@@ -3,7 +3,7 @@
 usage: python scripts/pick_demo_run.py recordings/run-<date>.jsonl [--max-gap 4] [--force]
 
 Checks (OK/KO): pr.ready present; an issue rejected then validated; a rollback log; parallel
-sub-auditors (subagents). Dead time is compressed: every gap between consecutive events is capped
+sub-auditors (subagents); run.finished; outcome satisfied; eval passed; hosted session id. Dead time is compressed: every gap between consecutive events is capped
 at --max-gap seconds, order is kept, t is recomputed. Nothing else is changed: events are never
 invented or edited. Output: web/recordings/demo-run.jsonl.
 """
@@ -29,6 +29,9 @@ def checks(events):
         "rollback logged": any(e["type"] == "log" and e["data"].get("kind") == "rollback" for e in events),
         "parallel sub-auditors": any(e["type"] == "subagents" for e in events),
         "run.finished present": any(e["type"] == "run.finished" for e in events),
+        "outcome satisfied (independent grader)": any(e["type"] == "outcome" and e["data"].get("result") == "satisfied" for e in events),
+        "eval passed": any(e["type"] == "eval" and e["data"].get("passed") for e in events),
+        "hosted session (session_id)": any(e["type"] == "run.started" and e["data"].get("session_id") for e in events),
     }
 
 

@@ -1,401 +1,636 @@
 {"t": 0.0, "type": "run.started", "data": {"site": "maison-lumiere.fr", "repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15"}}
-{"t": 0.0, "type": "phase.changed", "data": {"phase": "crawl"}}
 {"t": 0.0, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "coordinating run"}}
-{"t": 0.2, "type": "log", "agent": "orchestrator", "data": {"text": "Run started on http://localhost:8765 · source repo storefront@main", "kind": "phase"}}
-{"t": 0.8, "type": "agent.status", "data": {"agent": "cartographer", "status": "working", "activity": "crawl_site"}}
-{"t": 0.8, "type": "log", "agent": "cartographer", "data": {"text": "→ crawl_site max_pages=30", "kind": "tool"}}
-{"t": 2.4, "type": "log", "agent": "cartographer", "data": {"text": "Found 4 pages. /checkout.html is only reachable through an onclick redirect (noted).", "kind": "msg"}}
-{"t": 2.75, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page / template=\"Home\"", "kind": "tool"}}
-{"t": 3.1, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page /product.html template=\"Product page\"", "kind": "tool"}}
-{"t": 3.45, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page /cart.html template=\"Cart\"", "kind": "tool"}}
-{"t": 3.8, "type": "log", "agent": "cartographer", "data": {"text": "→ register_page /checkout.html template=\"Checkout\"", "kind": "tool"}}
-{"t": 4.4, "type": "log", "agent": "cartographer", "data": {"text": "Purchase funnel fully covered: home → product → cart → checkout.", "kind": "ok"}}
-{"t": 4.4, "type": "agent.status", "data": {"agent": "cartographer", "status": "done", "activity": "4 pages mapped"}}
-{"t": 5.2, "type": "phase.changed", "data": {"phase": "baseline"}}
-{"t": 5.2, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "measuring baseline"}}
-{"t": 5.5, "type": "log", "agent": "orchestrator", "data": {"text": "Branch created: a11y/eaa-remediation-2026-10-15", "kind": "tool"}}
-{"t": 6.7, "type": "baseline", "data": {"axe_violations": 17, "unreachable": 9, "focus_visible": [0, 24]}}
-{"t": 6.7, "type": "log", "agent": "orchestrator", "data": {"text": "Baseline: 17 automated violations · 9 controls unreachable by keyboard · focus visible on 0 of 24 stops", "kind": "msg"}}
-{"t": 7.5, "type": "phase.changed", "data": {"phase": "audit"}}
-{"t": 7.5, "type": "agent.status", "data": {"agent": "auditors", "status": "working", "activity": "dispatching page auditors"}}
-{"t": 7.8, "type": "log", "agent": "lead-auditor", "data": {"text": "Dispatching 4 page auditors in parallel (axe + keyboard walk + expert review)", "kind": "msg"}}
-{"t": 8.0, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "working", "working", "working"]}}
-{"t": 8.5, "type": "log", "agent": "auditor·home", "data": {"text": "→ audit_page /", "kind": "tool"}}
-{"t": 8.6, "type": "log", "agent": "auditor·product", "data": {"text": "→ audit_page /product.html", "kind": "tool"}}
-{"t": 8.7, "type": "log", "agent": "auditor·cart", "data": {"text": "→ audit_page /cart.html", "kind": "tool"}}
-{"t": 8.8, "type": "log", "agent": "auditor·checkout", "data": {"text": "→ audit_page /checkout.html", "kind": "tool"}}
-{"t": 9.5, "type": "log", "agent": "system", "data": {"text": "Tool error: Chromium crashed during analysis (Target closed). Injected fault.", "kind": "err"}}
-{"t": 10.1, "type": "log", "agent": "auditor·checkout", "data": {"text": "Transient browser crash, not a page error. Retrying once.", "kind": "msg"}}
-{"t": 10.5, "type": "log", "agent": "auditor·checkout", "data": {"text": "→ audit_page /checkout.html (retry)", "kind": "tool"}}
-{"t": 11.1, "type": "log", "agent": "auditor·checkout", "data": {"text": "Retry succeeded.", "kind": "ok"}}
-{"t": 11.7, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A02", "wcag": "3.1.1", "criterion_name": "Language of Page", "level": "A", "principle": "U", "en301549": "9.3.1.1", "title": "Page language not declared", "impact": "Screen readers read French content with an English voice, making product names unintelligible.", "evidence": "<html>", "severity": "minor", "source": "axe", "selector": "html", "rule": "html-has-lang", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 11.1, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
-{"t": 11.7, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue A02 [3.1.1] Page language not declared", "kind": "msg"}}
-{"t": 12.3, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A01", "wcag": "1.4.3", "criterion_name": "Contrast (Minimum)", "level": "AA", "principle": "P", "en301549": "9.1.4.3", "title": "Low-contrast secondary text (hero, price notes, footer)", "impact": "Grey #b5b5b5 on #faf7f2 has a 1.9:1 ratio. Low-vision shoppers cannot read VAT notes, delivery promises or legal links.", "evidence": ".price-note { color: #aaaaaa; }\n.site-footer { color: #b0b0b0; }\n.hero p { color: #b5b5b5; }", "severity": "major", "source": "axe", "selector": ".hero p", "rule": "color-contrast", "pages": ["/", "/product.html", "/cart.html", "/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 11.7, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
-{"t": 12.3, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue A01 [1.4.3] Low-contrast secondary text (hero, price notes, footer)", "kind": "msg"}}
-{"t": 12.9, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A03", "wcag": "1.1.1", "criterion_name": "Non-text Content", "level": "A", "principle": "P", "en301549": "9.1.1.1", "title": "Product images have no text alternative", "impact": "Blind shoppers hear “image” or the file name for every product in the grid and the cart.", "evidence": "<img src=\"img/sneaker.svg\">", "severity": "major", "source": "axe", "selector": ".card img", "rule": "image-alt", "pages": ["/", "/cart.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 12.3, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
-{"t": 12.9, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue A03 [1.1.1] Product images have no text alternative", "kind": "msg"}}
-{"t": 13.3, "type": "log", "agent": "auditor·product", "data": {"text": "→ keyboard_walk /product.html", "kind": "tool"}}
-{"t": 13.9, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A05", "wcag": "2.4.7", "criterion_name": "Focus Visible", "level": "AA", "principle": "O", "en301549": "9.2.4.7", "title": "Keyboard focus is invisible on every page", "impact": "A global rule removes the focus ring. Keyboard users cannot see where they are, so checkout is effectively impossible.", "evidence": "*:focus { outline: none; }", "severity": "critical", "source": "agent", "selector": "*:focus", "rule": "", "pages": ["/", "/product.html", "/cart.html", "/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 13.3, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
-{"t": 13.9, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue A05 [2.4.7] Keyboard focus is invisible on every page", "kind": "msg"}}
-{"t": 14.3, "type": "log", "agent": "auditor·product", "data": {"text": "→ keyboard_walk /product.html", "kind": "tool"}}
-{"t": 14.9, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A07", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "“Ajouter au panier” cannot be reached with the keyboard", "impact": "The main call to action is a clickable div. Keyboard and switch users cannot add anything to their bag.", "evidence": "<div class=\"btn\" onclick=\"addToCart()\">Ajouter au panier</div>", "severity": "critical", "source": "agent", "selector": "div.btn", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 14.3, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
-{"t": 14.9, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue A07 [2.1.1] “Ajouter au panier” cannot be reached with the keyboard", "kind": "msg"}}
-{"t": 15.3, "type": "log", "agent": "auditor·home", "data": {"text": "→ get_page_html /", "kind": "tool"}}
-{"t": 15.9, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A13", "wcag": "1.3.1", "criterion_name": "Info and Relationships", "level": "A", "principle": "P", "en301549": "9.1.3.1", "title": "Home page has no h1 and skips heading levels", "impact": "The page title is an h3 and product names are h4. Heading navigation gives no outline of the page.", "evidence": "<h3>La collection automne</h3>\n<h4>Baskets en cuir</h4>", "severity": "major", "source": "agent", "selector": ".hero h3", "rule": "", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 15.3, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
-{"t": 15.9, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue A13 [1.3.1] Home page has no h1 and skips heading levels", "kind": "msg"}}
-{"t": 16.0, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "working", "working", "working"]}}
-{"t": 16.4, "type": "log", "agent": "auditor·product", "data": {"text": "→ keyboard_walk /product.html", "kind": "tool"}}
-{"t": 17.0, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A08", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "Size selector is mouse-only and has no state", "impact": "Sizes are clickable divs with no role or selected state. Screen reader users cannot choose or confirm a size.", "evidence": "<div class=\"size\" onclick=\"selectSize(this)\">41</div>", "severity": "critical", "source": "agent", "selector": "div.size", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 16.4, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
-{"t": 17.0, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue A08 [2.1.1] Size selector is mouse-only and has no state", "kind": "msg"}}
-{"t": 17.4, "type": "log", "agent": "auditor·checkout", "data": {"text": "→ get_page_html /checkout.html", "kind": "tool"}}
-{"t": 18.0, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A10", "wcag": "3.3.2", "criterion_name": "Labels or Instructions", "level": "A", "principle": "U", "en301549": "9.3.3.2", "title": "Checkout fields use placeholders instead of labels", "impact": "Labels disappear while typing and are not reliably announced. Name, email and address fields are easy to confuse.", "evidence": "<input type=\"text\" name=\"email\" placeholder=\"Adresse e-mail\">", "severity": "critical", "source": "agent", "selector": "#checkout-form input", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 17.4, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
-{"t": 18.0, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue A10 [3.3.2] Checkout fields use placeholders instead of labels", "kind": "msg"}}
-{"t": 18.4, "type": "log", "agent": "auditor·home", "data": {"text": "→ get_page_html /", "kind": "tool"}}
-{"t": 19.0, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A06", "wcag": "4.1.2", "criterion_name": "Name, Role, Value", "level": "A", "principle": "R", "en301549": "9.4.1.2", "title": "Header icon buttons are announced as emoji", "impact": "Search, wishlist and bag buttons are read as “magnifying glass tilted left”, “heart suit”, “shopping cart”. Their purpose is unclear.", "evidence": "<button onclick=\"toggleSearch()\">🔍</button>\n<button>♡</button>", "severity": "major", "source": "agent", "selector": ".icons button", "rule": "", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 18.4, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
-{"t": 19.0, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue A06 [4.1.2] Header icon buttons are announced as emoji", "kind": "msg"}}
-{"t": 19.1, "type": "issue.merged", "agent": "auditor·product", "data": {"id": "A06", "page": "/product.html"}}
-{"t": 19.2, "type": "issue.merged", "agent": "auditor·cart", "data": {"id": "A06", "page": "/cart.html"}}
-{"t": 19.3, "type": "issue.merged", "agent": "auditor·checkout", "data": {"id": "A06", "page": "/checkout.html"}}
-{"t": 19.5, "type": "log", "agent": "auditor·product", "data": {"text": "A06 merged: same component on 4 pages (shared header). One fix covers all.", "kind": "msg"}}
-{"t": 19.9, "type": "log", "agent": "auditor·cart", "data": {"text": "→ get_page_html /cart.html", "kind": "tool"}}
-{"t": 20.5, "type": "issue.detected", "agent": "auditor·cart", "data": {"id": "A15", "wcag": "4.1.2", "criterion_name": "Name, Role, Value", "level": "A", "principle": "R", "en301549": "9.4.1.2", "title": "Quantity and remove buttons have no accessible name", "impact": "Buttons are read as “minus”, “plus”, “wastebasket” with no product named. Users risk removing the wrong item.", "evidence": "<button onclick=\"removeRow(this)\">🗑</button>", "severity": "major", "source": "agent", "selector": ".qty button", "rule": "", "pages": ["/cart.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 19.9, "status": "detected", "by": "auditor·cart", "note": "Detected during page audit"}]}}
-{"t": 20.5, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue A15 [4.1.2] Quantity and remove buttons have no accessible name", "kind": "msg"}}
-{"t": 20.6, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "done", "working", "working"]}}
-{"t": 21.0, "type": "log", "agent": "auditor·home", "data": {"text": "→ get_page_html /", "kind": "tool"}}
-{"t": 21.6, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A12", "wcag": "2.4.4", "criterion_name": "Link Purpose (In Context)", "level": "A", "principle": "O", "en301549": "9.2.4.4", "title": "Four identical “En savoir plus” links", "impact": "Listed out of context by a screen reader, the links are indistinguishable.", "evidence": "<a href=\"product.html\">En savoir plus</a>", "severity": "minor", "source": "agent", "selector": ".card a", "rule": "", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 21.0, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
-{"t": 21.6, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue A12 [2.4.4] Four identical “En savoir plus” links", "kind": "msg"}}
-{"t": 22.0, "type": "log", "agent": "auditor·cart", "data": {"text": "→ get_page_html /cart.html", "kind": "tool"}}
-{"t": 22.6, "type": "issue.detected", "agent": "auditor·cart", "data": {"id": "A09", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "“Commander” and “Payer” are not keyboard operable", "impact": "Both steps that complete a purchase are clickable elements. A keyboard user is blocked at the end of the funnel.", "evidence": "<div class=\"btn\" onclick=\"pay()\">Payer 268 €</div>", "severity": "critical", "source": "agent", "selector": "span.btn", "rule": "", "pages": ["/cart.html", "/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 22.0, "status": "detected", "by": "auditor·cart", "note": "Detected during page audit"}]}}
-{"t": 22.6, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue A09 [2.1.1] “Commander” and “Payer” are not keyboard operable", "kind": "msg"}}
-{"t": 23.0, "type": "log", "agent": "auditor·checkout", "data": {"text": "→ get_page_html /checkout.html", "kind": "tool"}}
-{"t": 23.6, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A11", "wcag": "3.3.1", "criterion_name": "Error Identification", "level": "A", "principle": "U", "en301549": "9.3.3.1", "title": "Form errors are shown only by a red border", "impact": "Colour-blind and screen reader users are not told which field failed or why.", "evidence": "i.classList.toggle('error', !ok)", "severity": "major", "source": "agent", "selector": "input.error", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 23.0, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
-{"t": 23.6, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue A11 [3.3.1] Form errors are shown only by a red border", "kind": "msg"}}
-{"t": 24.0, "type": "log", "agent": "auditor·product", "data": {"text": "→ get_page_html /product.html", "kind": "tool"}}
-{"t": 24.6, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A04", "wcag": "1.1.1", "criterion_name": "Non-text Content", "level": "A", "principle": "P", "en301549": "9.1.1.1", "title": "Product photo alt text says only “image”", "impact": "The main product photo is described as “image”. Shoppers miss colour and material, which drive the purchase.", "evidence": "<img class=\"product-photo\" src=\"img/sneaker.svg\" alt=\"image\">", "severity": "minor", "source": "agent", "selector": "img.product-photo", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 24.0, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
-{"t": 24.6, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue A04 [1.1.1] Product photo alt text says only “image”", "kind": "msg"}}
-{"t": 24.7, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "done", "done", "working"]}}
-{"t": 25.1, "type": "log", "agent": "auditor·checkout", "data": {"text": "→ get_page_html /checkout.html", "kind": "tool"}}
-{"t": 25.7, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A14", "wcag": "2.4.2", "criterion_name": "Page Titled", "level": "A", "principle": "O", "en301549": "9.2.4.2", "title": "Checkout page title is vague", "impact": "The tab reads “Paiement” with no shop name or step, which is confusing with several tabs open.", "evidence": "<title>Paiement</title>", "severity": "minor", "source": "agent", "selector": "title", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 25.1, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
-{"t": 25.7, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue A14 [2.4.2] Checkout page title is vague", "kind": "msg"}}
-{"t": 26.1, "type": "log", "agent": "auditor·checkout", "data": {"text": "→ get_page_html /checkout.html", "kind": "tool"}}
-{"t": 26.7, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A16", "wcag": "1.3.1", "criterion_name": "Info and Relationships", "level": "A", "principle": "P", "en301549": "9.1.3.1", "title": "Third-party card widget not verifiable", "impact": "The payment provider's embedded field cannot be audited from the storefront code. It may block keyboard or screen reader users.", "evidence": "<iframe title=\"\" src=\"about:blank\" class=\"card-field\">", "severity": "major", "source": "agent", "selector": "iframe.card-field", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 26.1, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
-{"t": 26.7, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue A16 [1.3.1] Third-party card widget not verifiable", "kind": "msg"}}
-{"t": 27.2, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "done", "done", "done"]}}
-{"t": 27.6, "type": "log", "agent": "lead-auditor", "data": {"text": "16 issues · 13 missed by automated scanners · 5 block the purchase funnel", "kind": "ok"}}
-{"t": 27.6, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 27.6, "type": "agent.status", "data": {"agent": "auditors", "status": "done", "activity": "16 issues logged"}}
-{"t": 28.4, "type": "phase.changed", "data": {"phase": "plan"}}
-{"t": 28.4, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "planning batches"}}
-{"t": 28.8, "type": "log", "agent": "orchestrator", "data": {"text": "Grouped into 11 batches by WCAG criterion, purchase blockers first.", "kind": "msg"}}
-{"t": 28.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 2.4.7: A05", "kind": "tool"}}
-{"t": 29.1, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 2.1.1: A07, A08, A09", "kind": "tool"}}
-{"t": 29.25, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 3.3.2: A10", "kind": "tool"}}
-{"t": 29.4, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 4.1.2: A06, A15", "kind": "tool"}}
-{"t": 29.55, "type": "log", "agent": "orchestrator", "data": {"text": "… 7 more batches queued", "kind": "tool"}}
-{"t": 30.35, "type": "phase.changed", "data": {"phase": "fix"}}
-{"t": 30.95, "type": "batch.started", "data": {"id": "B01", "criterion": "2.4.7", "issue_ids": ["A05"], "attempt": 1}}
-{"t": 30.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 1/11 · WCAG 2.4.7 Focus Visible · attempt 1/3", "kind": "phase"}}
-{"t": 30.95, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.7"}}
-{"t": 30.95, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 31.05, "type": "issue.status", "data": {"id": "A05", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 31.05, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 31.55, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'outline: none'", "kind": "tool"}}
-{"t": 32.05, "type": "log", "agent": "developer", "data": {"text": "→ Edit styles.css", "kind": "tool"}}
-{"t": 32.5, "type": "issue.status", "data": {"id": "A05", "status": "fixed_pending", "by": "developer", "note": "global :focus-visible ring", "attempt": 1, "files": ["styles.css"], "fix_diff": "- *:focus { outline: none; }\n+ :focus-visible {\n+   outline: 3px solid #2b2622;\n+   outline-offset: 3px;\n+ }"}}
-{"t": 32.5, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 32.5, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A05: global :focus-visible ring", "kind": "msg"}}
-{"t": 32.5, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 32.5, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 33.0, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline / +3 pages", "kind": "tool"}}
-{"t": 33.4, "type": "log", "agent": "tester", "data": {"text": "→ keyboard_walk /", "kind": "tool"}}
-{"t": 33.85, "type": "issue.status", "data": {"id": "A05", "status": "validated", "by": "tester", "note": "focus ring visible on 24 of 24 stops", "attempt": 1}}
-{"t": 33.85, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 33.85, "type": "log", "agent": "tester", "data": {"text": "A05 validated: focus ring visible on 24 of 24 stops", "kind": "ok"}}
-{"t": 34.25, "type": "commit.created", "data": {"sha": "3f2a9c1", "criterion": "2.4.7", "message": "fix(a11y): WCAG 2.4.7 — focus visible on all interactive elements", "files": ["styles.css"]}}
-{"t": 34.25, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 3f2a9c1 · fix(a11y): WCAG 2.4.7 — focus visible on all interactive elements", "kind": "commit"}}
-{"t": 34.85, "type": "batch.started", "data": {"id": "B02", "criterion": "2.1.1", "issue_ids": ["A07", "A08", "A09"], "attempt": 1}}
-{"t": 34.85, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 2/11 · WCAG 2.1.1 Keyboard · attempt 1/3", "kind": "phase"}}
-{"t": 34.85, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.1.1"}}
-{"t": 34.85, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 34.95, "type": "issue.status", "data": {"id": "A07", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 34.95, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 35.05, "type": "issue.status", "data": {"id": "A08", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 35.05, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 35.15, "type": "issue.status", "data": {"id": "A09", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 35.15, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 35.65, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 36.15, "type": "log", "agent": "developer", "data": {"text": "→ Edit cart.html, checkout.html +2", "kind": "tool"}}
-{"t": 36.65, "type": "issue.status", "data": {"id": "A07", "status": "fixed_pending", "by": "developer", "note": "Added role=\"button\" and aria-label to the div.", "attempt": 1, "files": ["product.html"], "fix_diff": "- <div class=\"btn\" onclick=\"addToCart()\">Ajouter au panier</div>\n+ <div class=\"btn\" role=\"button\" aria-label=\"Ajouter au panier\" onclick=\"addToCart()\">Ajouter au panier</div>"}}
-{"t": 36.65, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 36.65, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A07: added role=\"button\" and aria-label", "kind": "msg"}}
-{"t": 37.1, "type": "issue.status", "data": {"id": "A08", "status": "fixed_pending", "by": "developer", "note": "radio group in a fieldset with legend", "attempt": 1, "files": ["product.html", "styles.css"], "fix_diff": "+ <fieldset class=\"sizes\"><legend>Taille</legend>\n+   <label><input type=\"radio\" name=\"size\" value=\"41\"> 41</label>\n- <div class=\"size\" onclick=\"selectSize(this)\">41</div>"}}
-{"t": 37.1, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 37.1, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A08: radio group in a fieldset with legend", "kind": "msg"}}
-{"t": 37.55, "type": "issue.status", "data": {"id": "A09", "status": "fixed_pending", "by": "developer", "note": "native buttons", "attempt": 1, "files": ["cart.html", "checkout.html"], "fix_diff": "- <div class=\"btn\" onclick=\"pay()\">Payer 268 €</div>\n+ <button type=\"submit\" class=\"btn\">Payer 268 €</button>"}}
-{"t": 37.55, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 37.55, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A09: native buttons", "kind": "msg"}}
-{"t": 37.55, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 37.55, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 38.05, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline /product.html +2 pages", "kind": "tool"}}
-{"t": 38.45, "type": "log", "agent": "tester", "data": {"text": "→ keyboard_walk /product.html", "kind": "tool"}}
-{"t": 38.95, "type": "issue.status", "data": {"id": "A07", "status": "rejected", "by": "tester", "note": "Cosmetic fix: the div has a role but is still not focusable, and Enter does nothing. Use a native <button>.", "attempt": 1}}
-{"t": 38.95, "type": "score", "data": {"value": 44, "baseline": 38, "by_principle": {"P": 0, "O": 22, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 38.95, "type": "log", "agent": "tester", "data": {"text": "REJECTED A07: still not focusable, Enter does nothing. Use a native <button>.", "kind": "reject"}}
-{"t": 39.4, "type": "issue.status", "data": {"id": "A08", "status": "validated", "by": "tester", "note": "sizes reachable with arrows, selection announced", "attempt": 1}}
-{"t": 39.4, "type": "score", "data": {"value": 50, "baseline": 38, "by_principle": {"P": 0, "O": 43, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 39.4, "type": "log", "agent": "tester", "data": {"text": "A08 validated: sizes reachable with arrows, selection announced", "kind": "ok"}}
-{"t": 39.85, "type": "issue.status", "data": {"id": "A09", "status": "validated", "by": "tester", "note": "funnel completes with keyboard only", "attempt": 1}}
-{"t": 39.85, "type": "score", "data": {"value": 56, "baseline": 38, "by_principle": {"P": 0, "O": 65, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 39.85, "type": "log", "agent": "tester", "data": {"text": "A09 validated: funnel completes with keyboard only", "kind": "ok"}}
-{"t": 40.15, "type": "log", "agent": "tester", "data": {"text": "Batch verdict: no regression. Commit validated fixes, return A07.", "kind": "msg"}}
-{"t": 40.55, "type": "commit.created", "data": {"sha": "8c41d07", "criterion": "2.1.1", "message": "fix(a11y): WCAG 2.1.1 — partial: native buttons and radio group for keyboard access", "files": ["product.html", "styles.css", "cart.html", "checkout.html"]}}
-{"t": 40.55, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 8c41d07 · fix(a11y): WCAG 2.1.1 — partial: native buttons and radio group for keyboard access", "kind": "commit"}}
-{"t": 40.95, "type": "batch.started", "data": {"id": "B02", "criterion": "2.1.1", "issue_ids": ["A07"], "attempt": 2}}
-{"t": 40.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch WCAG 2.1.1 · attempt 2/3 for A07 with tester feedback", "kind": "phase"}}
-{"t": 40.95, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "A07 · attempt 2"}}
-{"t": 40.95, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 41.25, "type": "issue.status", "data": {"id": "A07", "status": "fixing", "by": "orchestrator", "note": "Retry with tester feedback", "attempt": 2}}
-{"t": 41.25, "type": "score", "data": {"value": 56, "baseline": 38, "by_principle": {"P": 0, "O": 65, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 41.85, "type": "log", "agent": "developer", "data": {"text": "→ Edit product.html (div → <button type=\"button\">)", "kind": "tool"}}
-{"t": 42.25, "type": "issue.status", "data": {"id": "A07", "status": "fixed_pending", "by": "developer", "note": "Replaced div with native button; styles kept.", "attempt": 2, "files": ["product.html", "styles.css"], "fix_diff": "- <div class=\"btn\" onclick=\"addToCart()\">Ajouter au panier</div>\n+ <button type=\"button\" class=\"btn\" onclick=\"addToCart()\">\n+   Ajouter au panier\n+ </button>"}}
-{"t": 42.25, "type": "score", "data": {"value": 56, "baseline": 38, "by_principle": {"P": 0, "O": 65, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 42.25, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A07: native <button>, same styling", "kind": "msg"}}
-{"t": 42.25, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": ""}}
-{"t": 42.25, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "keyboard_walk"}}
-{"t": 42.75, "type": "log", "agent": "tester", "data": {"text": "→ keyboard_walk /product.html · Tab reaches “Ajouter au panier”, Enter adds item", "kind": "tool"}}
-{"t": 43.25, "type": "issue.status", "data": {"id": "A07", "status": "validated", "by": "tester", "note": "Reachable by Tab, operable with Enter and Space, announced as button.", "attempt": 2}}
-{"t": 43.25, "type": "score", "data": {"value": 62, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 43.25, "type": "log", "agent": "tester", "data": {"text": "A07 validated: reachable by Tab, works with Enter and Space", "kind": "ok"}}
-{"t": 43.65, "type": "commit.created", "data": {"sha": "d27a8f3", "criterion": "2.1.1", "message": "fix(a11y): WCAG 2.1.1 — native button for Ajouter au panier", "files": ["product.html"]}}
-{"t": 43.65, "type": "log", "agent": "orchestrator", "data": {"text": "Commit d27a8f3 · fix(a11y): WCAG 2.1.1 — native button for Ajouter au panier", "kind": "commit"}}
-{"t": 44.25, "type": "batch.started", "data": {"id": "B03", "criterion": "3.3.2", "issue_ids": ["A10"], "attempt": 1}}
-{"t": 44.25, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 3/11 · WCAG 3.3.2 Labels or Instructions · attempt 1/3", "kind": "phase"}}
-{"t": 44.25, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.3.2"}}
-{"t": 44.25, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 44.35, "type": "issue.status", "data": {"id": "A10", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 44.35, "type": "score", "data": {"value": 62, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 44.85, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 45.35, "type": "log", "agent": "developer", "data": {"text": "→ Edit checkout.html", "kind": "tool"}}
-{"t": 45.8, "type": "issue.status", "data": {"id": "A10", "status": "fixed_pending", "by": "developer", "note": "visible labels + autocomplete", "attempt": 1, "files": ["checkout.html"], "fix_diff": "+ <label for=\"email\">Adresse e-mail</label>\n- <input type=\"text\" name=\"email\" placeholder=\"Adresse e-mail\">\n+ <input type=\"email\" id=\"email\" name=\"email\" autocomplete=\"email\">"}}
-{"t": 45.8, "type": "score", "data": {"value": 62, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 0, "R": 0}, "eaa": "non_compliant"}}
-{"t": 45.8, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A10: visible labels + autocomplete", "kind": "msg"}}
-{"t": 45.8, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 45.8, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 46.3, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline /checkout.html", "kind": "tool"}}
-{"t": 46.75, "type": "issue.status", "data": {"id": "A10", "status": "validated", "by": "tester", "note": "every field has a programmatic label", "attempt": 1}}
-{"t": 46.75, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
-{"t": 46.75, "type": "log", "agent": "tester", "data": {"text": "A10 validated: every field has a programmatic label", "kind": "ok"}}
-{"t": 47.15, "type": "commit.created", "data": {"sha": "b19e6a4", "criterion": "3.3.2", "message": "fix(a11y): WCAG 3.3.2 — labels and autocomplete on checkout form", "files": ["checkout.html"]}}
-{"t": 47.15, "type": "log", "agent": "orchestrator", "data": {"text": "Commit b19e6a4 · fix(a11y): WCAG 3.3.2 — labels and autocomplete on checkout form", "kind": "commit"}}
-{"t": 47.75, "type": "batch.started", "data": {"id": "B04", "criterion": "4.1.2", "issue_ids": ["A06", "A15"], "attempt": 1}}
-{"t": 47.75, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 4/11 · WCAG 4.1.2 Name, Role, Value · attempt 1/3", "kind": "phase"}}
-{"t": 47.75, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 4.1.2"}}
-{"t": 47.75, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 47.85, "type": "issue.status", "data": {"id": "A06", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 47.85, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
-{"t": 47.95, "type": "issue.status", "data": {"id": "A15", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 47.95, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
-{"t": 48.45, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 48.95, "type": "log", "agent": "developer", "data": {"text": "→ Edit cart.html, checkout.html +2", "kind": "tool"}}
-{"t": 49.4, "type": "issue.status", "data": {"id": "A06", "status": "fixed_pending", "by": "developer", "note": "aria-label on header icon buttons", "attempt": 1, "files": ["index.html", "product.html", "cart.html", "checkout.html"], "fix_diff": "- <button onclick=\"toggleSearch()\">🔍</button>\n+ <button onclick=\"toggleSearch()\" aria-label=\"Search\">\n+   <span aria-hidden=\"true\">🔍</span>\n+ </button>"}}
-{"t": 49.4, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
-{"t": 49.4, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A06: aria-label on header icon buttons", "kind": "msg"}}
-{"t": 49.85, "type": "issue.status", "data": {"id": "A15", "status": "fixed_pending", "by": "developer", "note": "product-specific aria-labels", "attempt": 1, "files": ["cart.html"], "fix_diff": "- <button onclick=\"removeRow(this)\">🗑</button>\n+ <button onclick=\"removeRow(this)\" aria-label=\"Retirer Baskets en cuir, taille 40\">"}}
-{"t": 49.85, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 0}, "eaa": "non_compliant"}}
-{"t": 49.85, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A15: product-specific aria-labels", "kind": "msg"}}
-{"t": 49.85, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 49.85, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 50.35, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline / +3 pages", "kind": "tool"}}
-{"t": 50.75, "type": "log", "agent": "tester", "data": {"text": "→ keyboard_walk /", "kind": "tool"}}
-{"t": 51.2, "type": "issue.status", "data": {"id": "A06", "status": "validated", "by": "tester", "note": "buttons announced as Search, Wishlist, Bag", "attempt": 1}}
-{"t": 51.2, "type": "score", "data": {"value": 71, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 50}, "eaa": "non_compliant"}}
-{"t": 51.2, "type": "log", "agent": "tester", "data": {"text": "A06 validated: buttons announced as Search, Wishlist, Bag", "kind": "ok"}}
-{"t": 51.65, "type": "issue.status", "data": {"id": "A15", "status": "validated", "by": "tester", "note": "each button names its product", "attempt": 1}}
-{"t": 51.65, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 51.65, "type": "log", "agent": "tester", "data": {"text": "A15 validated: each button names its product", "kind": "ok"}}
-{"t": 52.05, "type": "commit.created", "data": {"sha": "e07d3f8", "criterion": "4.1.2", "message": "fix(a11y): WCAG 4.1.2 — accessible names for icon buttons", "files": ["cart.html", "checkout.html", "index.html", "product.html"]}}
-{"t": 52.05, "type": "log", "agent": "orchestrator", "data": {"text": "Commit e07d3f8 · fix(a11y): WCAG 4.1.2 — accessible names for icon buttons", "kind": "commit"}}
-{"t": 52.65, "type": "batch.started", "data": {"id": "B05", "criterion": "1.4.3", "issue_ids": ["A01"], "attempt": 1}}
-{"t": 52.65, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 5/11 · WCAG 1.4.3 Contrast (Minimum) · attempt 1/3", "kind": "phase"}}
-{"t": 52.65, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.4.3"}}
-{"t": 52.65, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 52.75, "type": "issue.status", "data": {"id": "A01", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 52.75, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 53.25, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'color: #'", "kind": "tool"}}
-{"t": 53.75, "type": "log", "agent": "developer", "data": {"text": "→ Edit styles.css", "kind": "tool"}}
-{"t": 54.35, "type": "issue.status", "data": {"id": "A01", "status": "fixed_pending", "by": "developer", "note": "Darkened text and hero background for 4.5:1.", "attempt": 1, "files": ["styles.css"], "fix_diff": "- .hero { background: #faf7f2; }\n+ .hero { background: #3d3a35; }\n- .hero p { color: #b5b5b5; }\n+ .hero p { color: #f5f5f5; }"}}
-{"t": 54.35, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 54.35, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A01: darkened secondary text and hero background", "kind": "msg"}}
-{"t": 54.35, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 54.35, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "compare_with_baseline"}}
-{"t": 54.85, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline / · changed_pixels_ratio=0.18", "kind": "tool"}}
-{"t": 55.35, "type": "log", "agent": "tester", "data": {"text": "→ Read shots/home.diff.png", "kind": "tool"}}
-{"t": 55.95, "type": "issue.status", "data": {"id": "A01", "status": "rejected", "by": "tester", "note": "Contrast passes, but the hero background changed colour (18% of pixels). Brand regression: keep #faf7f2 and adjust text colour only.", "attempt": 1}}
-{"t": 55.95, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 55.95, "type": "log", "agent": "tester", "data": {"text": "REJECTED A01: hero background changed (18% of pixels). Keep the brand background, adjust text only.", "kind": "reject"}}
-{"t": 56.25, "type": "log", "agent": "tester", "data": {"text": "Batch verdict: regression, roll back.", "kind": "reject"}}
-{"t": 56.65, "type": "log", "agent": "orchestrator", "data": {"text": "Rollback: git checkout -- . · retrying batch with tester feedback (attempt 2/3)", "kind": "rollback"}}
-{"t": 56.65, "type": "batch.started", "data": {"id": "B05", "criterion": "1.4.3", "issue_ids": ["A01"], "attempt": 2}}
-{"t": 56.65, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.4.3 · attempt 2"}}
-{"t": 56.65, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 57.05, "type": "issue.status", "data": {"id": "A01", "status": "fixing", "by": "orchestrator", "note": "Retry with tester feedback", "attempt": 2}}
-{"t": 57.05, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 57.65, "type": "log", "agent": "developer", "data": {"text": "Nearest compliant shades to the brand palette: #6b6b6b (5.3:1), #5f5a52 (6.4:1). Background untouched.", "kind": "msg"}}
-{"t": 58.05, "type": "log", "agent": "developer", "data": {"text": "→ Edit styles.css", "kind": "tool"}}
-{"t": 58.45, "type": "issue.status", "data": {"id": "A01", "status": "fixed_pending", "by": "developer", "note": "Text colours only, nearest compliant shade.", "attempt": 2, "files": ["styles.css"], "fix_diff": "- .price-note { color: #aaaaaa; }\n+ .price-note { color: #6b6b6b; }  /* 5.3:1 */\n- .site-footer { color: #b0b0b0; }\n+ .site-footer { color: #666666; }  /* 5.7:1 */\n- .hero p { color: #b5b5b5; }\n+ .hero p { color: #5f5a52; }  /* 6.4:1 on #faf7f2 */"}}
-{"t": 58.45, "type": "score", "data": {"value": 75, "baseline": 38, "by_principle": {"P": 0, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 58.45, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A01: text colours only, background unchanged", "kind": "msg"}}
-{"t": 58.45, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": ""}}
-{"t": 58.45, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "compare_with_baseline"}}
-{"t": 58.95, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline / · resolved 8 · regressions 0 · changed_pixels_ratio=0.01", "kind": "tool"}}
-{"t": 59.45, "type": "issue.status", "data": {"id": "A01", "status": "validated", "by": "tester", "note": "All secondary text ≥ 4.5:1, design unchanged (1% pixel diff).", "attempt": 2}}
-{"t": 59.45, "type": "score", "data": {"value": 78, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 59.45, "type": "log", "agent": "tester", "data": {"text": "A01 validated: all secondary text ≥ 4.5:1, design intact", "kind": "ok"}}
-{"t": 59.85, "type": "commit.created", "data": {"sha": "5ad21c9", "criterion": "1.4.3", "message": "fix(a11y): WCAG 1.4.3 — brand-safe contrast for secondary text", "files": ["styles.css"]}}
-{"t": 59.85, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 5ad21c9 · fix(a11y): WCAG 1.4.3 — brand-safe contrast for secondary text", "kind": "commit"}}
-{"t": 60.45, "type": "batch.started", "data": {"id": "B06", "criterion": "3.3.1", "issue_ids": ["A11"], "attempt": 1}}
-{"t": 60.45, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 6/11 · WCAG 3.3.1 Error Identification · attempt 1/3", "kind": "phase"}}
-{"t": 60.45, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.3.1"}}
-{"t": 60.45, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 60.55, "type": "issue.status", "data": {"id": "A11", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 60.55, "type": "score", "data": {"value": 78, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 61.05, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 61.55, "type": "log", "agent": "developer", "data": {"text": "→ Edit checkout.html", "kind": "tool"}}
-{"t": 62.0, "type": "issue.status", "data": {"id": "A11", "status": "fixed_pending", "by": "developer", "note": "text errors linked with aria-describedby", "attempt": 1, "files": ["checkout.html"], "fix_diff": "+ i.setAttribute('aria-invalid', !ok);\n+ err.textContent = 'Saisissez une adresse e-mail valide';\n+ i.setAttribute('aria-describedby', err.id);"}}
-{"t": 62.0, "type": "score", "data": {"value": 78, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 53, "R": 100}, "eaa": "non_compliant"}}
-{"t": 62.0, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A11: text errors linked with aria-describedby", "kind": "msg"}}
-{"t": 62.0, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 62.0, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 62.5, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline /checkout.html", "kind": "tool"}}
-{"t": 62.95, "type": "issue.status", "data": {"id": "A11", "status": "validated", "by": "tester", "note": "error text announced and tied to its field", "attempt": 1}}
-{"t": 62.95, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 62.95, "type": "log", "agent": "tester", "data": {"text": "A11 validated: error text announced and tied to its field", "kind": "ok"}}
-{"t": 63.35, "type": "commit.created", "data": {"sha": "c6f0b82", "criterion": "3.3.1", "message": "fix(a11y): WCAG 3.3.1 — text error messages linked to fields", "files": ["checkout.html"]}}
-{"t": 63.35, "type": "log", "agent": "orchestrator", "data": {"text": "Commit c6f0b82 · fix(a11y): WCAG 3.3.1 — text error messages linked to fields", "kind": "commit"}}
-{"t": 63.95, "type": "batch.started", "data": {"id": "B07", "criterion": "1.1.1", "issue_ids": ["A03", "A04"], "attempt": 1}}
-{"t": 63.95, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 7/11 · WCAG 1.1.1 Non-text Content · attempt 1/3", "kind": "phase"}}
-{"t": 63.95, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.1.1"}}
-{"t": 63.95, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 64.05, "type": "issue.status", "data": {"id": "A03", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 64.05, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 64.15, "type": "issue.status", "data": {"id": "A04", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 64.15, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 64.65, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 65.15, "type": "log", "agent": "developer", "data": {"text": "→ Edit cart.html, index.html +1", "kind": "tool"}}
-{"t": 65.6, "type": "issue.status", "data": {"id": "A03", "status": "fixed_pending", "by": "developer", "note": "alt text from product names", "attempt": 1, "files": ["index.html", "cart.html"], "fix_diff": "- <img src=\"img/sneaker.svg\">\n+ <img src=\"img/sneaker.svg\" alt=\"Leather sneakers\">"}}
-{"t": 65.6, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 65.6, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A03: alt text from product names", "kind": "msg"}}
-{"t": 66.05, "type": "issue.status", "data": {"id": "A04", "status": "fixed_pending", "by": "developer", "note": "draft alt text from product name", "attempt": 1, "files": ["product.html"], "fix_diff": "- alt=\"image\"\n+ alt=\"Leather sneakers\"   /* draft: colour and material to confirm */"}}
-{"t": 66.05, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 22, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 66.05, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A04: draft alt text from product name", "kind": "msg"}}
-{"t": 66.05, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 66.05, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 66.55, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline / +2 pages", "kind": "tool"}}
-{"t": 67.0, "type": "issue.status", "data": {"id": "A03", "status": "validated", "by": "tester", "note": "all product images announced by name", "attempt": 1}}
-{"t": 67.0, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 67.0, "type": "log", "agent": "tester", "data": {"text": "A03 validated: all product images announced by name", "kind": "ok"}}
-{"t": 67.5, "type": "issue.status", "data": {"id": "A04", "status": "needs_human", "by": "tester", "note": "Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.", "attempt": 1, "human_action": "Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts."}}
-{"t": 67.5, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 67.5, "type": "log", "agent": "tester", "data": {"text": "A04 needs human review: draft alt text cannot confirm colour or material", "kind": "reject"}}
-{"t": 67.9, "type": "commit.created", "data": {"sha": "71be4d0", "criterion": "1.1.1", "message": "fix(a11y): WCAG 1.1.1 — text alternatives for product images", "files": ["cart.html", "index.html", "product.html"]}}
-{"t": 67.9, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 71be4d0 · fix(a11y): WCAG 1.1.1 — text alternatives for product images", "kind": "commit"}}
-{"t": 68.5, "type": "batch.started", "data": {"id": "B08", "criterion": "1.3.1", "issue_ids": ["A13", "A16"], "attempt": 1}}
-{"t": 68.5, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 8/11 · WCAG 1.3.1 Info and Relationships · attempt 1/3", "kind": "phase"}}
-{"t": 68.5, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.3.1"}}
-{"t": 68.5, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 68.6, "type": "issue.status", "data": {"id": "A13", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 68.6, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 68.7, "type": "issue.status", "data": {"id": "A16", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 68.7, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 69.2, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 69.7, "type": "log", "agent": "developer", "data": {"text": "→ Edit index.html", "kind": "tool"}}
-{"t": 70.15, "type": "issue.status", "data": {"id": "A13", "status": "fixed_pending", "by": "developer", "note": "h1 + corrected heading levels", "attempt": 1, "files": ["index.html"], "fix_diff": "- <h3>La collection automne</h3>\n+ <h1>La collection automne</h1>\n- <h4>Baskets en cuir</h4>\n+ <h2>Baskets en cuir</h2>"}}
-{"t": 70.15, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 70.15, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A13: h1 + corrected heading levels", "kind": "msg"}}
-{"t": 70.65, "type": "issue.status", "data": {"id": "A16", "status": "needs_human", "by": "developer", "note": "Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.", "attempt": 1, "human_action": "Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility."}}
-{"t": 70.65, "type": "score", "data": {"value": 86, "baseline": 38, "by_principle": {"P": 44, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 70.65, "type": "log", "agent": "developer", "data": {"text": "cannot_fix A16: third-party widget outside this repository → escalated", "kind": "reject"}}
-{"t": 70.65, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 70.65, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 71.15, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline / +1 pages", "kind": "tool"}}
-{"t": 71.6, "type": "issue.status", "data": {"id": "A13", "status": "validated", "by": "tester", "note": "one h1, no skipped levels", "attempt": 1}}
-{"t": 71.6, "type": "score", "data": {"value": 89, "baseline": 38, "by_principle": {"P": 67, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 71.6, "type": "log", "agent": "tester", "data": {"text": "A13 validated: one h1, no skipped levels", "kind": "ok"}}
-{"t": 72.0, "type": "commit.created", "data": {"sha": "0d9c5ea", "criterion": "1.3.1", "message": "fix(a11y): WCAG 1.3.1 — heading structure on home page", "files": ["index.html"]}}
-{"t": 72.0, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 0d9c5ea · fix(a11y): WCAG 1.3.1 — heading structure on home page", "kind": "commit"}}
-{"t": 72.6, "type": "batch.started", "data": {"id": "B09", "criterion": "2.4.4", "issue_ids": ["A12"], "attempt": 1}}
-{"t": 72.6, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 9/11 · WCAG 2.4.4 Link Purpose (In Context) · attempt 1/3", "kind": "phase"}}
-{"t": 72.6, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.4"}}
-{"t": 72.6, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 72.7, "type": "issue.status", "data": {"id": "A12", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 72.7, "type": "score", "data": {"value": 89, "baseline": 38, "by_principle": {"P": 67, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 73.2, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 73.7, "type": "log", "agent": "developer", "data": {"text": "→ Edit index.html, styles.css", "kind": "tool"}}
-{"t": 74.15, "type": "issue.status", "data": {"id": "A12", "status": "fixed_pending", "by": "developer", "note": "visually hidden product names in links", "attempt": 1, "files": ["index.html", "styles.css"], "fix_diff": "+ <a href=\"product.html\">En savoir plus\n+   <span class=\"sr-only\"> sur Baskets en cuir</span></a>"}}
-{"t": 74.15, "type": "score", "data": {"value": 89, "baseline": 38, "by_principle": {"P": 67, "O": 87, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 74.15, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A12: visually hidden product names in links", "kind": "msg"}}
-{"t": 74.15, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 74.15, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 74.65, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline /", "kind": "tool"}}
-{"t": 75.1, "type": "issue.status", "data": {"id": "A12", "status": "validated", "by": "tester", "note": "each link names its product", "attempt": 1}}
-{"t": 75.1, "type": "score", "data": {"value": 91, "baseline": 38, "by_principle": {"P": 67, "O": 93, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 75.1, "type": "log", "agent": "tester", "data": {"text": "A12 validated: each link names its product", "kind": "ok"}}
-{"t": 75.5, "type": "commit.created", "data": {"sha": "a4e83f1", "criterion": "2.4.4", "message": "fix(a11y): WCAG 2.4.4 — descriptive product links", "files": ["index.html", "styles.css"]}}
-{"t": 75.5, "type": "log", "agent": "orchestrator", "data": {"text": "Commit a4e83f1 · fix(a11y): WCAG 2.4.4 — descriptive product links", "kind": "commit"}}
-{"t": 76.1, "type": "batch.started", "data": {"id": "B10", "criterion": "2.4.2", "issue_ids": ["A14"], "attempt": 1}}
-{"t": 76.1, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 10/11 · WCAG 2.4.2 Page Titled · attempt 1/3", "kind": "phase"}}
-{"t": 76.1, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.2"}}
-{"t": 76.1, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 76.2, "type": "issue.status", "data": {"id": "A14", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 76.2, "type": "score", "data": {"value": 91, "baseline": 38, "by_principle": {"P": 67, "O": 93, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 76.7, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 77.2, "type": "log", "agent": "developer", "data": {"text": "→ Edit checkout.html", "kind": "tool"}}
-{"t": 77.65, "type": "issue.status", "data": {"id": "A14", "status": "fixed_pending", "by": "developer", "note": "descriptive title", "attempt": 1, "files": ["checkout.html"], "fix_diff": "- <title>Paiement</title>\n+ <title>Paiement · Commande · Maison Lumière</title>"}}
-{"t": 77.65, "type": "score", "data": {"value": 91, "baseline": 38, "by_principle": {"P": 67, "O": 93, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 77.65, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A14: descriptive title", "kind": "msg"}}
-{"t": 77.65, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 77.65, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 78.15, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline /checkout.html", "kind": "tool"}}
-{"t": 78.6, "type": "issue.status", "data": {"id": "A14", "status": "validated", "by": "tester", "note": "title names page, step and shop", "attempt": 1}}
-{"t": 78.6, "type": "score", "data": {"value": 93, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 78.6, "type": "log", "agent": "tester", "data": {"text": "A14 validated: title names page, step and shop", "kind": "ok"}}
-{"t": 79.0, "type": "commit.created", "data": {"sha": "2bf9e07", "criterion": "2.4.2", "message": "fix(a11y): WCAG 2.4.2 — descriptive checkout title", "files": ["checkout.html"]}}
-{"t": 79.0, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 2bf9e07 · fix(a11y): WCAG 2.4.2 — descriptive checkout title", "kind": "commit"}}
-{"t": 79.6, "type": "batch.started", "data": {"id": "B11", "criterion": "3.1.1", "issue_ids": ["A02"], "attempt": 1}}
-{"t": 79.6, "type": "log", "agent": "orchestrator", "data": {"text": "Batch 11/11 · WCAG 3.1.1 Language of Page · attempt 1/3", "kind": "phase"}}
-{"t": 79.6, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.1.1"}}
-{"t": 79.6, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
-{"t": 79.7, "type": "issue.status", "data": {"id": "A02", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
-{"t": 79.7, "type": "score", "data": {"value": 93, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 80.2, "type": "log", "agent": "developer", "data": {"text": "→ Grep 'onclick=|<img|aria-'", "kind": "tool"}}
-{"t": 80.7, "type": "log", "agent": "developer", "data": {"text": "→ Edit index.html", "kind": "tool"}}
-{"t": 81.15, "type": "issue.status", "data": {"id": "A02", "status": "fixed_pending", "by": "developer", "note": "lang=\"fr\" on <html>", "attempt": 1, "files": ["index.html"], "fix_diff": "- <html>\n+ <html lang=\"fr\">"}}
-{"t": 81.15, "type": "score", "data": {"value": 93, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 84, "R": 100}, "eaa": "non_compliant"}}
-{"t": 81.15, "type": "log", "agent": "developer", "data": {"text": "mark_fixed A02: lang=\"fr\" on <html>", "kind": "msg"}}
-{"t": 81.15, "type": "agent.status", "data": {"agent": "developer", "status": "idle", "activity": "waiting for review"}}
-{"t": 81.15, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying"}}
-{"t": 81.65, "type": "log", "agent": "tester", "data": {"text": "→ compare_with_baseline /", "kind": "tool"}}
-{"t": 82.1, "type": "issue.status", "data": {"id": "A02", "status": "validated", "by": "tester", "note": "lang detected, French voice used", "attempt": 1}}
-{"t": 82.1, "type": "score", "data": {"value": 95, "baseline": 38, "by_principle": {"P": 67, "O": 100, "U": 100, "R": 100}, "eaa": "partially_compliant"}}
-{"t": 82.1, "type": "log", "agent": "tester", "data": {"text": "A02 validated: lang detected, French voice used", "kind": "ok"}}
-{"t": 82.5, "type": "commit.created", "data": {"sha": "96c1d3b", "criterion": "3.1.1", "message": "fix(a11y): WCAG 3.1.1 — declare page language", "files": ["index.html"]}}
-{"t": 82.5, "type": "log", "agent": "orchestrator", "data": {"text": "Commit 96c1d3b · fix(a11y): WCAG 3.1.1 — declare page language", "kind": "commit"}}
-{"t": 82.5, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "all batches processed"}}
-{"t": 82.5, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": ""}}
-{"t": 83.3, "type": "phase.changed", "data": {"phase": "reaudit"}}
-{"t": 83.3, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "independent re-audit"}}
-{"t": 84.5, "type": "reaudit", "data": {"axe_violations": 0, "unreachable": 0, "focus_visible": [24, 24]}}
-{"t": 84.5, "type": "log", "agent": "orchestrator", "data": {"text": "Re-audit: automated violations 17 → 0 · unreachable controls 9 → 0 · focus visible 0 → 24 of 24 stops", "kind": "ok"}}
-{"t": 85.3, "type": "phase.changed", "data": {"phase": "report"}}
-{"t": 85.3, "type": "agent.status", "data": {"agent": "writer", "status": "working", "activity": "writing"}}
-{"t": 86.1, "type": "log", "agent": "writer", "data": {"text": "→ Write pr-body.md", "kind": "tool"}}
-{"t": 86.1, "type": "document.written", "agent": "writer", "data": {"name": "pr-body.md", "path": "state/out/pr-body.md", "content": "## Summary\n\nThis PR remediates 14 WCAG 2.1 AA issues found by the Arma audit of maison-lumiere.fr (4 page templates covering the full purchase funnel). Each commit maps to one WCAG criterion and every fix was verified by an independent tester agent.\n\n- Score: 38 → 95\n- Automated violations: 17 → 0\n- Controls unreachable by keyboard: 9 → 0\n\n## Changes by criterion\n\n### WCAG 2.4.7 Focus Visible\n- A05: Keyboard focus is invisible on every page\n\n### WCAG 2.1.1 Keyboard\n- A07: “Ajouter au panier” cannot be reached with the keyboard\n- A08: Size selector is mouse-only and has no state\n- A09: “Commander” and “Payer” are not keyboard operable\n\n### WCAG 3.3.2 Labels or Instructions\n- A10: Checkout fields use placeholders instead of labels\n\n### WCAG 4.1.2 Name, Role, Value\n- A06: Header icon buttons are announced as emoji\n- A15: Quantity and remove buttons have no accessible name\n\n### WCAG 1.4.3 Contrast (Minimum)\n- A01: Low-contrast secondary text (hero, price notes, footer)\n\n### WCAG 3.3.1 Error Identification\n- A11: Form errors are shown only by a red border\n\n### WCAG 1.1.1 Non-text Content\n- A03: Product images have no text alternative\n\n### WCAG 1.3.1 Info and Relationships\n- A13: Home page has no h1 and skips heading levels\n\n### WCAG 2.4.4 Link Purpose (In Context)\n- A12: Four identical “En savoir plus” links\n\n### WCAG 2.4.2 Page Titled\n- A14: Checkout page title is vague\n\n### WCAG 3.1.1 Language of Page\n- A02: Page language not declared\n\n## Needs human review\n\n- **A04** (1.1.1) Product photo alt text says only “image”: Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.\n- **A16** (1.3.1) Third-party card widget not verifiable: Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.\n"}}
-{"t": 86.7, "type": "log", "agent": "writer", "data": {"text": "→ Write accessibility-statement.md (status: partially compliant)", "kind": "tool"}}
-{"t": 86.7, "type": "document.written", "agent": "writer", "data": {"name": "accessibility-statement.md", "path": "state/out/accessibility-statement.md", "content": "# Accessibility statement · Maison Lumière\n\nMaison Lumière is committed to making maison-lumiere.fr accessible, in line with the European Accessibility Act and the French law transposing it.\n\n## Compliance status\n\nThe website is **partially compliant** with EN 301 549 v3.2.1 and WCAG 2.1 level AA, due to the non-compliant content listed below.\n\n## Non-accessible content\n\n- Product photo alt text says only “image” (WCAG 1.1.1). Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.\n- Third-party card widget not verifiable (WCAG 1.3.1). Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.\n\n## How this statement was prepared\n\nAudit of 4 page templates covering the full purchase funnel on 15 October 2026, combining automated testing (axe-core), keyboard testing and expert review by AI agents, with independent verification of every fix. Testing with disabled users: [TO COMPLETE].\n\n## Feedback and contact\n\nIf you cannot access content or a service, contact [TO COMPLETE: accessibility contact email]. We respond within [TO COMPLETE: time frame].\n\n## Enforcement\n\nIf you are not satisfied with our response, you can contact the market surveillance authority: [TO COMPLETE: national authority].\n"}}
-{"t": 87.2, "type": "agent.status", "data": {"agent": "writer", "status": "done", "activity": "2 documents"}}
-{"t": 87.8, "type": "phase.changed", "data": {"phase": "pr"}}
-{"t": 88.2, "type": "pr.ready", "data": {"repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15", "base": "main", "commits": 12, "files": ["cart.html", "checkout.html", "index.html", "product.html", "styles.css"], "body": "## Summary\n\nThis PR remediates 14 WCAG 2.1 AA issues found by the Arma audit of maison-lumiere.fr (4 page templates covering the full purchase funnel). Each commit maps to one WCAG criterion and every fix was verified by an independent tester agent.\n\n- Score: 38 → 95\n- Automated violations: 17 → 0\n- Controls unreachable by keyboard: 9 → 0\n\n## Changes by criterion\n\n### WCAG 2.4.7 Focus Visible\n- A05: Keyboard focus is invisible on every page\n\n### WCAG 2.1.1 Keyboard\n- A07: “Ajouter au panier” cannot be reached with the keyboard\n- A08: Size selector is mouse-only and has no state\n- A09: “Commander” and “Payer” are not keyboard operable\n\n### WCAG 3.3.2 Labels or Instructions\n- A10: Checkout fields use placeholders instead of labels\n\n### WCAG 4.1.2 Name, Role, Value\n- A06: Header icon buttons are announced as emoji\n- A15: Quantity and remove buttons have no accessible name\n\n### WCAG 1.4.3 Contrast (Minimum)\n- A01: Low-contrast secondary text (hero, price notes, footer)\n\n### WCAG 3.3.1 Error Identification\n- A11: Form errors are shown only by a red border\n\n### WCAG 1.1.1 Non-text Content\n- A03: Product images have no text alternative\n\n### WCAG 1.3.1 Info and Relationships\n- A13: Home page has no h1 and skips heading levels\n\n### WCAG 2.4.4 Link Purpose (In Context)\n- A12: Four identical “En savoir plus” links\n\n### WCAG 2.4.2 Page Titled\n- A14: Checkout page title is vague\n\n### WCAG 3.1.1 Language of Page\n- A02: Page language not declared\n\n## Needs human review\n\n- **A04** (1.1.1) Product photo alt text says only “image”: Draft alt text applied. Merchandising must confirm colour and material: the agent does not invent product facts.\n- **A16** (1.3.1) Third-party card widget not verifiable: Request the provider's accessibility conformance report and add it to the statement. Vendor responsibility.\n"}}
-{"t": 88.2, "type": "log", "agent": "orchestrator", "data": {"text": "Branch ready: 12 commits, 5 files changed. Waiting for compliance sign-off to send to engineering.", "kind": "ok"}}
-{"t": 88.2, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "awaiting sign-off"}}
-{"t": 88.4, "type": "run.finished", "data": {"cost_usd": 0.0, "duration_s": 88.2}}
-{"t": 89.4, "type": "pr.sent", "data": {"number": 218, "url": "", "simulated": true, "by": "compliance", "notified": ["Slack #eng-frontend", "Jira A11Y-42"]}}
+{"t": 0.0, "type": "log", "agent": "orchestrator", "data": {"text": "Run started on http://localhost:8766/ · model sonnet", "kind": "phase"}}
+{"t": 0.0, "type": "phase.changed", "data": {"phase": "crawl"}}
+{"t": 0.0, "type": "log", "agent": "orchestrator", "data": {"text": "Mapping the store and its purchase funnel", "kind": "phase"}}
+{"t": 0.0, "type": "agent.status", "data": {"agent": "cartographer", "status": "working", "activity": "crawl_site"}}
+{"t": 1.89, "type": "log", "agent": "cartographer", "data": {"text": "crawl_site()", "kind": "tool"}}
+{"t": 3.69, "type": "log", "agent": "cartographer", "data": {"text": "register_page(http://localhost:8766/)", "kind": "tool"}}
+{"t": 3.69, "type": "log", "agent": "cartographer", "data": {"text": "Registered / as home template", "kind": "ok"}}
+{"t": 4.04, "type": "log", "agent": "cartographer", "data": {"text": "register_page(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 4.04, "type": "log", "agent": "cartographer", "data": {"text": "Registered /product.html as product template", "kind": "ok"}}
+{"t": 4.48, "type": "log", "agent": "cartographer", "data": {"text": "register_page(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 4.49, "type": "log", "agent": "cartographer", "data": {"text": "Registered /cart.html as cart template", "kind": "ok"}}
+{"t": 4.88, "type": "log", "agent": "cartographer", "data": {"text": "register_page(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 4.88, "type": "log", "agent": "cartographer", "data": {"text": "Registered /checkout.html as checkout template", "kind": "ok"}}
+{"t": 5.91, "type": "log", "agent": "cartographer", "data": {"text": "I registered four pages: home, product, cart and checkout. The cart and checkout pages are only reachable through JavaScript navigation, and they complete the purchase funnel from product to cart to checkout.", "kind": "msg"}}
+{"t": 6.72, "type": "agent.status", "data": {"agent": "cartographer", "status": "done", "activity": "crawl_site"}}
+{"t": 6.72, "type": "log", "agent": "cartographer", "data": {"text": "4 pages to audit: /, /product.html, /cart.html, /checkout.html", "kind": "ok"}}
+{"t": 6.72, "type": "phase.changed", "data": {"phase": "baseline"}}
+{"t": 6.72, "type": "log", "agent": "orchestrator", "data": {"text": "Baseline measurements: scanner, keyboard, screenshots", "kind": "phase"}}
+{"t": 6.72, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "baseline measurements"}}
+{"t": 6.79, "type": "log", "agent": "orchestrator", "data": {"text": "Working on branch a11y/eaa-remediation-2026-10-15 (from main)", "kind": "ok"}}
+{"t": 8.24, "type": "baseline", "data": {"axe_violations": 34, "unreachable": 8, "focus_visible": [0, 57]}}
+{"t": 8.24, "type": "log", "agent": "orchestrator", "data": {"text": "Baseline: 34 scanner violations, 8 controls unreachable by keyboard, visible focus on 0/57 tab stops", "kind": "ok"}}
+{"t": 8.24, "type": "phase.changed", "data": {"phase": "audit"}}
+{"t": 8.24, "type": "log", "agent": "orchestrator", "data": {"text": "Parallel audit: one page-auditor per page", "kind": "phase"}}
+{"t": 8.24, "type": "agent.status", "data": {"agent": "auditors", "status": "working", "activity": "dispatching page auditors"}}
+{"t": 9.92, "type": "log", "agent": "lead-auditor", "data": {"text": "list_pages()", "kind": "tool"}}
+{"t": 11.44, "type": "log", "agent": "lead-auditor", "data": {"text": "Dispatching page-auditor for /", "kind": "msg"}}
+{"t": 11.44, "type": "subagents", "data": {"agent": "auditors", "states": ["working"]}}
+{"t": 11.83, "type": "log", "agent": "lead-auditor", "data": {"text": "Dispatching page-auditor for /product.html", "kind": "msg"}}
+{"t": 11.83, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "working"]}}
+{"t": 12.24, "type": "log", "agent": "lead-auditor", "data": {"text": "Dispatching page-auditor for /cart.html", "kind": "msg"}}
+{"t": 12.24, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "working", "working"]}}
+{"t": 12.7, "type": "log", "agent": "auditor·home", "data": {"text": "audit_page(/)", "kind": "tool"}}
+{"t": 12.71, "type": "log", "agent": "lead-auditor", "data": {"text": "Dispatching page-auditor for /checkout.html", "kind": "msg"}}
+{"t": 12.71, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "working", "working", "working"]}}
+{"t": 12.96, "type": "log", "agent": "auditor·product", "data": {"text": "audit_page(/product.html)", "kind": "tool"}}
+{"t": 13.31, "type": "log", "agent": "auditor·home", "data": {"text": "keyboard_walk(/)", "kind": "tool"}}
+{"t": 13.35, "type": "log", "agent": "auditor·cart", "data": {"text": "audit_page(/cart.html)", "kind": "tool"}}
+{"t": 13.6, "type": "log", "agent": "auditor·product", "data": {"text": "keyboard_walk(/product.html)", "kind": "tool"}}
+{"t": 13.61, "type": "log", "agent": "auditor·home", "data": {"text": "get_page_html(/)", "kind": "tool"}}
+{"t": 13.8, "type": "log", "agent": "auditor·checkout", "data": {"text": "audit_page(/checkout.html)", "kind": "tool"}}
+{"t": 13.82, "type": "log", "agent": "lead-auditor", "data": {"text": "I've launched four page-auditor agents in parallel, one each for the home, product, cart and checkout pages. They're still running, so I have no results yet.", "kind": "msg"}}
+{"t": 13.89, "type": "log", "agent": "auditor·product", "data": {"text": "get_page_html(/product.html)", "kind": "tool"}}
+{"t": 14.03, "type": "log", "agent": "auditor·cart", "data": {"text": "keyboard_walk(/cart.html)", "kind": "tool"}}
+{"t": 14.33, "type": "log", "agent": "auditor·cart", "data": {"text": "get_page_html(/cart.html)", "kind": "tool"}}
+{"t": 14.65, "type": "log", "agent": "auditor·checkout", "data": {"text": "keyboard_walk(/checkout.html)", "kind": "tool"}}
+{"t": 14.93, "type": "log", "agent": "auditor·checkout", "data": {"text": "get_page_html(/checkout.html)", "kind": "tool"}}
+{"t": 16.66, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue(1.4.3 Light grey text is too faint to read)", "kind": "tool"}}
+{"t": 16.67, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A01", "wcag": "1.4.3", "criterion_name": "Contrast (Minimum)", "level": "AA", "principle": "P", "en301549": "9.1.4.3", "title": "Light grey text is too faint to read", "impact": "Shoppers with low vision cannot read the price note (returns and VAT info) or footer links.", "evidence": ".price-note color #aaa on #fff (2.32:1); footer text #b0b0b0 on #f7f5f2 (1.99:1)", "severity": "major", "source": "axe", "selector": ".price-note, .site-footer p, .site-footer a", "rule": "color-contrast", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 16.68, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
+{"t": 17.14, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(1.4.3 Light grey text is too faint to read)", "kind": "tool"}}
+{"t": 17.15, "type": "issue.merged", "agent": "auditor·home", "data": {"id": "A01", "page": "/"}}
+{"t": 17.29, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue(1.4.3 Light grey text is too faint to read)", "kind": "tool"}}
+{"t": 17.3, "type": "issue.merged", "agent": "auditor·cart", "data": {"id": "A01", "page": "/cart.html"}}
+{"t": 18.18, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue(2.4.7 Keyboard focus is not visible anywhere)", "kind": "tool"}}
+{"t": 18.19, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A02", "wcag": "2.4.7", "criterion_name": "Focus Visible", "level": "AA", "principle": "O", "en301549": "9.2.4.7", "title": "Keyboard focus is not visible anywhere", "impact": "Keyboard users cannot see which link or button is focused, so they cannot navigate or buy reliably.", "evidence": "keyboard_walk: focus_visible false on all 10 stops (links and header buttons)", "severity": "major", "source": "keyboard", "selector": "*:focus", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 18.2, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
+{"t": 18.19, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(1.4.3 Footer text is too light to read)", "kind": "tool"}}
+{"t": 18.2, "type": "issue.merged", "agent": "auditor·checkout", "data": {"id": "A01", "page": "/checkout.html"}}
+{"t": 18.42, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(3.1.1 Page language is not declared)", "kind": "tool"}}
+{"t": 18.43, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A03", "wcag": "3.1.1", "criterion_name": "Language of Page", "level": "A", "principle": "U", "en301549": "9.3.1.1", "title": "Page language is not declared", "impact": "Screen readers may read the French content with the wrong pronunciation, making it hard to understand.", "evidence": "<html>", "severity": "major", "source": "axe", "selector": "html", "rule": "html-has-lang", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 18.44, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
+{"t": 18.86, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue(1.1.1 Product images in the cart have no alt text)", "kind": "tool"}}
+{"t": 18.86, "type": "issue.detected", "agent": "auditor·cart", "data": {"id": "A04", "wcag": "1.1.1", "criterion_name": "Non-text Content", "level": "A", "principle": "P", "en301549": "9.1.1.1", "title": "Product images in the cart have no alt text", "impact": "Screen reader users get no image description for cart items.", "evidence": "<img src=\"img/sneaker.svg\"> / <img src=\"img/scarf.svg\">", "severity": "major", "source": "axe", "selector": ".cart-table img", "rule": "image-alt", "pages": ["/cart.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 18.87, "status": "detected", "by": "auditor·cart", "note": "Detected during page audit"}]}}
+{"t": 19.39, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(2.4.7 Keyboard focus is not visible anywhere)", "kind": "tool"}}
+{"t": 19.4, "type": "issue.merged", "agent": "auditor·checkout", "data": {"id": "A02", "page": "/checkout.html"}}
+{"t": 19.65, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue(2.1.1 Size choices cannot be selected with the keyboard)", "kind": "tool"}}
+{"t": 19.66, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A05", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "Size choices cannot be selected with the keyboard", "impact": "Keyboard and screen reader users cannot choose a size, blocking the purchase.", "evidence": "<div class=\"size\" onclick=\"selectSize(this)\">38</div> (not reachable with Tab)", "severity": "critical", "source": "keyboard", "selector": ".sizes .size", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 19.67, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
+{"t": 19.84, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(1.1.1 Product images have no alternative text)", "kind": "tool"}}
+{"t": 19.84, "type": "issue.merged", "agent": "auditor·home", "data": {"id": "A04", "page": "/"}}
+{"t": 20.1, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue(2.4.7 Keyboard focus is not visible)", "kind": "tool"}}
+{"t": 20.1, "type": "issue.merged", "agent": "auditor·cart", "data": {"id": "A02", "page": "/cart.html"}}
+{"t": 20.78, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(2.1.1 \"Payer\" button cannot be reached or used with the keyboard)", "kind": "tool"}}
+{"t": 20.79, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A06", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "\"Payer\" button cannot be reached or used with the keyboard", "impact": "Keyboard and screen reader users cannot complete the payment; the purchase is blocked.", "evidence": "<div class=\"btn\" onclick=\"pay()\">Payer 268 €</div>", "severity": "critical", "source": "keyboard", "selector": ".btn", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 20.8, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
+{"t": 21.05, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue(2.1.1 \"Add to cart\" is a div that keyboard users cannot reach)", "kind": "tool"}}
+{"t": 21.06, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A07", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "\"Add to cart\" is a div that keyboard users cannot reach", "impact": "Keyboard and screen reader users cannot add the product to the cart, blocking the purchase.", "evidence": "<div class=\"btn\" onclick=\"addToCart()\">Ajouter au panier</div>", "severity": "critical", "source": "keyboard", "selector": "div.btn", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 21.07, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
+{"t": 21.31, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(2.4.7 Keyboard focus is not visible anywhere)", "kind": "tool"}}
+{"t": 21.32, "type": "issue.merged", "agent": "auditor·home", "data": {"id": "A02", "page": "/"}}
+{"t": 21.41, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue(2.1.1 \"Commander\" button cannot be reached with keyboard)", "kind": "tool"}}
+{"t": 21.41, "type": "issue.detected", "agent": "auditor·cart", "data": {"id": "A08", "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A", "principle": "O", "en301549": "9.2.1.1", "title": "\"Commander\" button cannot be reached with keyboard", "impact": "Keyboard and screen reader users cannot proceed to checkout, blocking purchase.", "evidence": "<span class=\"btn\" onclick=\"location.href='checkout.html'\">Commander</span>", "severity": "critical", "source": "keyboard", "selector": "span.btn", "rule": "", "pages": ["/cart.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 21.42, "status": "detected", "by": "auditor·cart", "note": "Detected during page audit"}]}}
+{"t": 22.45, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(4.1.2 Header icon buttons are named only by emoji)", "kind": "tool"}}
+{"t": 22.46, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A09", "wcag": "4.1.2", "criterion_name": "Name, Role, Value", "level": "A", "principle": "R", "en301549": "9.4.1.2", "title": "Header icon buttons are named only by emoji", "impact": "Screen reader users hear \"magnifying glass\" or \"white heart\" instead of Search, Favorites, Cart.", "evidence": "<button onclick=\"toggleSearch()\">🔍</button> <button>♡</button> <button>🛒 <span>2</span></button>", "severity": "major", "source": "agent", "selector": ".site-header .icons button", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 22.47, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
+{"t": 22.77, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue(4.1.2 Header icon buttons are named only by emoji)", "kind": "tool"}}
+{"t": 22.77, "type": "issue.merged", "agent": "auditor·product", "data": {"id": "A09", "page": "/product.html"}}
+{"t": 22.87, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(4.1.2 Header icon buttons are named only by emoji or symbols)", "kind": "tool"}}
+{"t": 22.88, "type": "issue.merged", "agent": "auditor·home", "data": {"id": "A09", "page": "/"}}
+{"t": 23.09, "type": "log", "agent": "auditor·cart", "data": {"text": "add_issue(4.1.2 Icon buttons named only by emoji or symbol)", "kind": "tool"}}
+{"t": 23.1, "type": "issue.detected", "agent": "auditor·cart", "data": {"id": "A10", "wcag": "4.1.2", "criterion_name": "Name, Role, Value", "level": "A", "principle": "R", "en301549": "9.4.1.2", "title": "Icon buttons named only by emoji or symbol", "impact": "Screen reader users hear \"magnifier\" or \"wastebasket\" instead of search, favourites, cart, or remove item.", "evidence": "<button onclick=\"toggleSearch()\">🔍</button> ... <button onclick=\"removeRow(this)\">🗑</button>", "severity": "major", "source": "agent", "selector": ".site-header .icons button, .cart-table button", "rule": "", "pages": ["/cart.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 23.11, "status": "detected", "by": "auditor·cart", "note": "Detected during page audit"}]}}
+{"t": 23.97, "type": "log", "agent": "auditor·product", "data": {"text": "add_issue(1.1.1 Product photo has a useless description)", "kind": "tool"}}
+{"t": 23.98, "type": "issue.detected", "agent": "auditor·product", "data": {"id": "A11", "wcag": "1.1.1", "criterion_name": "Non-text Content", "level": "A", "principle": "P", "en301549": "9.1.1.1", "title": "Product photo has a useless description", "impact": "Blind shoppers are told only \"image\" and get no information about the sneakers.", "evidence": "<img class=\"product-photo\" src=\"img/sneaker.svg\" alt=\"image\">", "severity": "major", "source": "agent", "selector": ".product-photo", "rule": "", "pages": ["/product.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 23.99, "status": "detected", "by": "auditor·product", "note": "Detected during page audit"}]}}
+{"t": 24.19, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(3.3.2 Delivery form fields have no labels, only placeholders)", "kind": "tool"}}
+{"t": 24.19, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A12", "wcag": "3.3.2", "criterion_name": "Labels or Instructions", "level": "A", "principle": "U", "en301549": "9.3.3.2", "title": "Delivery form fields have no labels, only placeholders", "impact": "Labels vanish once typing starts; people with cognitive or memory impairments lose context and voice-control users cannot target fields reliably.", "evidence": "<input type=\"text\" name=\"name\" placeholder=\"Nom complet\"> (same for email, address, zip, city)", "severity": "major", "source": "agent", "selector": "#checkout-form input", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 24.2, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
+{"t": 24.22, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(2.4.4 Repeated \"En savoir plus\" links do not say which product)", "kind": "tool"}}
+{"t": 24.23, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A13", "wcag": "2.4.4", "criterion_name": "Link Purpose (In Context)", "level": "A", "principle": "O", "en301549": "9.2.4.4", "title": "Repeated \"En savoir plus\" links do not say which product", "impact": "Screen reader users listing links hear four identical \"En savoir plus\" and cannot tell which product each opens.", "evidence": "<a href=\"product.html\">En savoir plus</a> x4", "severity": "major", "source": "agent", "selector": ".card > a", "rule": "", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 24.24, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
+{"t": 24.86, "type": "log", "agent": "auditor·cart", "data": {"text": "I recorded 5 issues on /cart.html: low contrast on the delivery note and footer, missing alt text on product images, no visible focus, a \"Commander\" span that Tab can't reach, and icon buttons named only by an emoji.", "kind": "msg"}}
+{"t": 24.89, "type": "log", "agent": "lead-auditor", "data": {"text": "auditor·cart finished", "kind": "ok"}}
+{"t": 24.89, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "working", "done", "working"]}}
+{"t": 25.24, "type": "log", "agent": "auditor·product", "data": {"text": "I recorded 6 issues on /product.html. The add-to-cart div and the size choices are critical because they block purchase, and the header icon buttons merged into an existing issue (A09) already found on /checkout.html.", "kind": "msg"}}
+{"t": 25.25, "type": "log", "agent": "lead-auditor", "data": {"text": "auditor·product finished", "kind": "ok"}}
+{"t": 25.25, "type": "subagents", "data": {"agent": "auditors", "states": ["working", "done", "done", "working"]}}
+{"t": 25.56, "type": "log", "agent": "auditor·home", "data": {"text": "add_issue(1.3.1 No main heading and heading levels are skipped)", "kind": "tool"}}
+{"t": 25.57, "type": "issue.detected", "agent": "auditor·home", "data": {"id": "A14", "wcag": "1.3.1", "criterion_name": "Info and Relationships", "level": "A", "principle": "P", "en301549": "9.1.3.1", "title": "No main heading and heading levels are skipped", "impact": "Screen reader users cannot navigate by headings; the page starts at h3, jumps to h4 and has no h1.", "evidence": "<h3>La collection automne</h3> ... <h4>Baskets en cuir</h4> (no h1/h2)", "severity": "minor", "source": "agent", "selector": ".hero h3, .card h4", "rule": "", "pages": ["/"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 25.58, "status": "detected", "by": "auditor·home", "note": "Detected during page audit"}]}}
+{"t": 25.82, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(3.3.1 Email error is shown by colour only)", "kind": "tool"}}
+{"t": 25.82, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A15", "wcag": "3.3.1", "criterion_name": "Error Identification", "level": "A", "principle": "U", "en301549": "9.3.3.1", "title": "Email error is shown by colour only", "impact": "Shoppers who cannot perceive colour get no indication the email is invalid or how to fix it.", "evidence": "<input name=\"email\" value=\"marie.dupont@\" class=\"error\"> with no error text or aria-invalid", "severity": "major", "source": "agent", "selector": "#checkout-form input.error", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 25.83, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
+{"t": 26.31, "type": "log", "agent": "lead-auditor", "data": {"text": "The cart audit is done and recorded 5 issues. I'm still waiting on the home, product and checkout audits.", "kind": "msg"}}
+{"t": 27.21, "type": "log", "agent": "auditor·home", "data": {"text": "I recorded 7 issues on this page (/): contrast, missing language, missing image alt text, no visible focus, emoji-only icon buttons, repeated \"En savoir plus\" links, and the heading structure. Five of them merged into existing issues from other pages, and two were new (language …", "kind": "msg"}}
+{"t": 27.22, "type": "log", "agent": "lead-auditor", "data": {"text": "auditor·home finished", "kind": "ok"}}
+{"t": 27.22, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "done", "done", "working"]}}
+{"t": 27.51, "type": "log", "agent": "lead-auditor", "data": {"text": "Cart and product audits are done. Home and checkout are still running.", "kind": "msg"}}
+{"t": 27.58, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(1.3.1 Third-party card payment iframe cannot be verified)", "kind": "tool"}}
+{"t": 27.59, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A16", "wcag": "1.3.1", "criterion_name": "Info and Relationships", "level": "A", "principle": "P", "en301549": "9.1.3.1", "title": "Third-party card payment iframe cannot be verified", "impact": "Card fields are inside a PayVite widget with placeholder-only inputs and a vague title; screen reader users may be unable to pay, and the shop cannot fix its code.", "evidence": "<iframe class=\"card-field\" title=\"Paiement\" srcdoc=\"...<input placeholder='Numéro de carte'>...\"></iframe>", "severity": "major", "source": "agent", "selector": "iframe.card-field", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 27.6, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
+{"t": 28.72, "type": "log", "agent": "auditor·checkout", "data": {"text": "add_issue(2.4.2 Page title is too vague)", "kind": "tool"}}
+{"t": 28.73, "type": "issue.detected", "agent": "auditor·checkout", "data": {"id": "A17", "wcag": "2.4.2", "criterion_name": "Page Titled", "level": "A", "principle": "O", "en301549": "9.2.4.2", "title": "Page title is too vague", "impact": "\"Paiement\" does not identify the shop or the step, making tabs and history hard to distinguish for screen reader users.", "evidence": "<title>Paiement</title>", "severity": "minor", "source": "agent", "selector": "title", "rule": "", "pages": ["/checkout.html"], "status": "detected", "attempts": 0, "files": [], "fix_diff": "", "fix_note": "", "human_action": "", "history": [{"t": 28.73, "status": "detected", "by": "auditor·checkout", "note": "Detected during page audit"}]}}
+{"t": 28.97, "type": "log", "agent": "lead-auditor", "data": {"text": "Home, product and cart are done. Checkout is still running.", "kind": "msg"}}
+{"t": 30.22, "type": "log", "agent": "auditor·checkout", "data": {"text": "I recorded 8 issues on /checkout.html. Two of them (footer contrast and missing focus outline) merged into issues already logged on other pages.", "kind": "msg"}}
+{"t": 30.23, "type": "log", "agent": "lead-auditor", "data": {"text": "auditor·checkout finished", "kind": "ok"}}
+{"t": 30.24, "type": "subagents", "data": {"agent": "auditors", "states": ["done", "done", "done", "done"]}}
+{"t": 31.59, "type": "log", "agent": "lead-auditor", "data": {"text": "list_issues()", "kind": "tool"}}
+{"t": 33.58, "type": "log", "agent": "lead-auditor", "data": {"text": "All 4 pages were audited, and the audit recorded 17 issues. Eight came from the automated scanner (axe) and the keyboard walk, and the other 9 were found only by expert judgment, with A01, A03 and A04 the only axe-sourced ones. The purchase blockers are the size choices (A05) an…", "kind": "msg"}}
+{"t": 34.16, "type": "agent.status", "data": {"agent": "auditors", "status": "done", "activity": "dispatching page auditors"}}
+{"t": 34.16, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 34.16, "type": "log", "agent": "orchestrator", "data": {"text": "Audit complete: 17 issues, 14 missed by automated scanners, 5 purchase blockers (A02, A05, A06, A07, A08). Baseline score 38.", "kind": "ok"}}
+{"t": 34.16, "type": "log", "agent": "orchestrator", "data": {"text": "Stopped after phase audit (--until)", "kind": "phase"}}
+{"t": 34.16, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "cost $0.67"}}
+{"t": 35.16, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "coordinating run"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Run started on http://localhost:8766/ · model sonnet", "kind": "phase"}}
+{"t": 35.16, "type": "phase.changed", "data": {"phase": "plan"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Planning: one batch per WCAG criterion, purchase blockers first", "kind": "phase"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B01 · WCAG 2.1.1 Keyboard: A05, A06, A07, A08", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B02 · WCAG 2.4.7 Focus Visible: A02", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B03 · WCAG 1.1.1 Non-text Content: A04, A11", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B04 · WCAG 1.3.1 Info and Relationships: A14, A16", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B05 · WCAG 1.4.3 Contrast (Minimum): A01", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B06 · WCAG 2.4.4 Link Purpose (In Context): A13", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B07 · WCAG 3.1.1 Language of Page: A03", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B08 · WCAG 3.3.1 Error Identification: A15", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B09 · WCAG 3.3.2 Labels or Instructions: A12", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B10 · WCAG 4.1.2 Name, Role, Value: A09, A10", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B11 · WCAG 2.4.2 Page Titled: A17", "kind": "msg"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "11 batches planned for 17 issues", "kind": "ok"}}
+{"t": 35.16, "type": "phase.changed", "data": {"phase": "fix"}}
+{"t": 35.16, "type": "log", "agent": "orchestrator", "data": {"text": "Fix and verify: developer ⇄ independent tester, one batch at a time", "kind": "phase"}}
+{"t": 35.17, "type": "batch.started", "data": {"id": "B01", "criterion": "2.1.1", "issue_ids": ["A05", "A06", "A07", "A08"], "attempt": 1}}
+{"t": 35.17, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B01 · WCAG 2.1.1 Keyboard · attempt 1: A05, A06, A07, A08", "kind": "phase"}}
+{"t": 35.17, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 35.17, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A05", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 35.17, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 35.17, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A06", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 35.17, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 35.17, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A07", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 35.17, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 35.17, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A08", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 35.17, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 35.49, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.1.1"}}
+{"t": 37.68, "type": "log", "agent": "developer", "data": {"text": "Grep(class=\"(size|btn)|\\.size|\\.btn|selectSize)", "kind": "tool"}}
+{"t": 39.19, "type": "log", "agent": "developer", "data": {"text": "Read(shop.js)", "kind": "tool"}}
+{"t": 40.6, "type": "log", "agent": "developer", "data": {"text": "Use buttons; add aria-pressed for sizes.", "kind": "msg"}}
+{"t": 41.77, "type": "log", "agent": "developer", "data": {"text": "Edit(shop.js)", "kind": "tool"}}
+{"t": 42.53, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 43.69, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 44.38, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 45.26, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 45.77, "type": "log", "agent": "developer", "data": {"text": "Read(product.html)", "kind": "tool"}}
+{"t": 49.31, "type": "log", "agent": "developer", "data": {"text": "Edit(product.html)", "kind": "tool"}}
+{"t": 51.24, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A05)", "kind": "tool"}}
+{"t": 51.25, "type": "issue.status", "agent": "developer", "data": {"id": "A05", "status": "fixed_pending", "by": "developer", "note": "Sizes are now native buttons with aria-pressed state kept in sync by selectSize.", "attempt": 1}}
+{"t": 51.25, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 51.25, "type": "log", "agent": "developer", "data": {"text": "A05 fixed in product.html, styles.css, shop.js: Sizes are now native buttons with aria-pressed state kept in sync by selectSize.", "kind": "msg"}}
+{"t": 52.06, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A06)", "kind": "tool"}}
+{"t": 52.07, "type": "issue.status", "agent": "developer", "data": {"id": "A06", "status": "fixed_pending", "by": "developer", "note": "Payer is now a native button.", "attempt": 1}}
+{"t": 52.07, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 52.07, "type": "log", "agent": "developer", "data": {"text": "A06 fixed in checkout.html, styles.css: Payer is now a native button.", "kind": "msg"}}
+{"t": 52.42, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A07)", "kind": "tool"}}
+{"t": 52.43, "type": "issue.status", "agent": "developer", "data": {"id": "A07", "status": "fixed_pending", "by": "developer", "note": "Add to cart is now a native button.", "attempt": 1}}
+{"t": 52.43, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 52.43, "type": "log", "agent": "developer", "data": {"text": "A07 fixed in product.html, styles.css: Add to cart is now a native button.", "kind": "msg"}}
+{"t": 52.74, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A08)", "kind": "tool"}}
+{"t": 52.75, "type": "issue.status", "agent": "developer", "data": {"id": "A08", "status": "fixed_pending", "by": "developer", "note": "Commander is now a native button.", "attempt": 1}}
+{"t": 52.75, "type": "score", "data": {"value": 38, "baseline": 38, "by_principle": {"P": 0, "O": 0, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 52.75, "type": "log", "agent": "developer", "data": {"text": "A08 fixed in cart.html, styles.css: Commander is now a native button.", "kind": "msg"}}
+{"t": 55.64, "type": "log", "agent": "developer", "data": {"text": "I fixed all four issues (A05–A08) by replacing the clickable `div`/`span` elements with native `<button type=\"button\">` elements. I haven't re-scanned or tab-tested the pages yet, so the fixes are marked fixed but not confirmed. - **A05, size choices (`product.html`):** the five…", "kind": "msg"}}
+{"t": 56.14, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 2.1.1"}}
+{"t": 56.17, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 2.1.1"}}
+{"t": 57.68, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 58.11, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 58.56, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 59.46, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 59.74, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 60.04, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 61.74, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 63.11, "type": "log", "agent": "tester", "data": {"text": "Good; selectSize sync can't be verified directly but the markup is correct and the pixel diff is zero.", "kind": "msg"}}
+{"t": 63.78, "type": "log", "agent": "tester", "data": {"text": "verdict(A05 accepted=True)", "kind": "tool"}}
+{"t": 63.79, "type": "issue.status", "agent": "tester", "data": {"id": "A05", "status": "validated", "by": "tester", "note": "Sizes are native buttons, reachable with Tab, with aria-pressed. No visual change.", "attempt": 1}}
+{"t": 63.79, "type": "score", "data": {"value": 43, "baseline": 38, "by_principle": {"P": 0, "O": 17, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 63.79, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A05: Sizes are native buttons, reachable with Tab, with aria-pressed. No visual change.", "kind": "ok"}}
+{"t": 64.3, "type": "log", "agent": "tester", "data": {"text": "verdict(A06 accepted=True)", "kind": "tool"}}
+{"t": 64.3, "type": "issue.status", "agent": "tester", "data": {"id": "A06", "status": "validated", "by": "tester", "note": "Payer is a native button reachable with Tab and correctly named.", "attempt": 1}}
+{"t": 64.3, "type": "score", "data": {"value": 48, "baseline": 38, "by_principle": {"P": 0, "O": 34, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 64.3, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A06: Payer is a native button reachable with Tab and correctly named.", "kind": "ok"}}
+{"t": 64.81, "type": "log", "agent": "tester", "data": {"text": "verdict(A07 accepted=True)", "kind": "tool"}}
+{"t": 64.81, "type": "issue.status", "agent": "tester", "data": {"id": "A07", "status": "validated", "by": "tester", "note": "Add to cart is a native button reachable with Tab.", "attempt": 1}}
+{"t": 64.81, "type": "score", "data": {"value": 54, "baseline": 38, "by_principle": {"P": 0, "O": 51, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 64.81, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A07: Add to cart is a native button reachable with Tab.", "kind": "ok"}}
+{"t": 65.34, "type": "log", "agent": "tester", "data": {"text": "verdict(A08 accepted=True)", "kind": "tool"}}
+{"t": 65.34, "type": "issue.status", "agent": "tester", "data": {"id": "A08", "status": "validated", "by": "tester", "note": "Commander is a native button reachable with Tab.", "attempt": 1}}
+{"t": 65.34, "type": "score", "data": {"value": 59, "baseline": 38, "by_principle": {"P": 0, "O": 68, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 65.34, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A08: Commander is a native button reachable with Tab.", "kind": "ok"}}
+{"t": 65.79, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 68.68, "type": "log", "agent": "tester", "data": {"text": "I accepted all four issues (A05–A08) and accepted batch B01. The keyboard walks show each control reachable with Tab and correctly named. Compared with the baseline, none of the three pages has new violations or any pixel change. - **A05 (size choices, `/product.html`):** The si…", "kind": "msg"}}
+{"t": 69.47, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 2.1.1"}}
+{"t": 69.53, "type": "commit.created", "data": {"sha": "6d3b239", "criterion": "2.1.1", "message": "fix(a11y): WCAG 2.1.1 — Size choices cannot be selected with the keyboard; \"Payer\" button cannot be reached or used wit…", "files": ["cart.html", "checkout.html", "product.html", "shop.js", "styles.css"]}}
+{"t": 69.53, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 6d3b239 fix(a11y): WCAG 2.1.1 — Size choices cannot be selected with the keyboard; \"Payer\" button cannot be reached or used wit…", "kind": "commit"}}
+{"t": 69.53, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B01 done", "kind": "ok"}}
+{"t": 69.53, "type": "log", "agent": "orchestrator", "data": {"text": "Phase fix left open; continue with --resume", "kind": "phase"}}
+{"t": 69.53, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "cost $0.78"}}
+{"t": 70.53, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "coordinating run"}}
+{"t": 70.53, "type": "log", "agent": "orchestrator", "data": {"text": "Run started on http://localhost:8766/ · model sonnet", "kind": "phase"}}
+{"t": 70.53, "type": "phase.changed", "data": {"phase": "fix"}}
+{"t": 70.53, "type": "log", "agent": "orchestrator", "data": {"text": "Fix and verify: developer ⇄ independent tester, one batch at a time", "kind": "phase"}}
+{"t": 70.54, "type": "batch.started", "data": {"id": "B02", "criterion": "2.4.7", "issue_ids": ["A02"], "attempt": 1}}
+{"t": 70.54, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B02 · WCAG 2.4.7 Focus Visible · attempt 1: A02", "kind": "phase"}}
+{"t": 70.54, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 70.54, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A02", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 70.54, "type": "score", "data": {"value": 59, "baseline": 38, "by_principle": {"P": 0, "O": 68, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 70.93, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.7"}}
+{"t": 73.17, "type": "log", "agent": "developer", "data": {"text": "Grep(outline|:focus)", "kind": "tool"}}
+{"t": 74.87, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 76.81, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A02)", "kind": "tool"}}
+{"t": 76.82, "type": "issue.status", "agent": "developer", "data": {"id": "A02", "status": "fixed_pending", "by": "developer", "note": "Replaced the global `*:focus { outline: none; }` with a visible 3px blue :focus-visible outline.", "attempt": 1}}
+{"t": 76.82, "type": "log", "agent": "developer", "data": {"text": "A02 fixed in styles.css: Replaced the global `*:focus { outline: none; }` with a visible 3px blue :focus-visible outline.", "kind": "msg"}}
+{"t": 78.76, "type": "log", "agent": "developer", "data": {"text": "I fixed A02 in `styles.css`. A global rule, `*:focus { outline: none; }`, was removing the focus outline on every page. I replaced it with `*:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }`, so keyboard focus now shows a 3px blue outline. Mouse users see no c…", "kind": "msg"}}
+{"t": 79.58, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 2.4.7"}}
+{"t": 79.6, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 2.4.7"}}
+{"t": 81.33, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 81.79, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 82.15, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 83.03, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 83.39, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/)", "kind": "tool"}}
+{"t": 83.66, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 83.93, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 84.2, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 88.16, "type": "log", "agent": "tester", "data": {"text": "verdict(A02 accepted=True)", "kind": "tool"}}
+{"t": 88.17, "type": "issue.status", "agent": "tester", "data": {"id": "A02", "status": "validated", "by": "tester", "note": "Focus is now visible on all links, buttons and inputs on all 4 pages, with no pixel change and no new violations. The only exception is the payment iframe on checkout, where the walk reported focus_visible false. Its inner focus style is third-party content and is out of scope here. Optionally add `iframe:focus-visible` to the outline rule.", "attempt": 1}}
+{"t": 88.17, "type": "score", "data": {"value": 64, "baseline": 38, "by_principle": {"P": 0, "O": 85, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 88.17, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A02: Focus is now visible on all links, buttons and inputs on all 4 pages, with no pixel change and no new violations. The only exception is the payment iframe on checkout, where the walk reported focus_visible false. Its inner focus style is third-party content and is out of scope here. Optionally add `iframe:focus-visible` to the outline rule.", "kind": "ok"}}
+{"t": 88.85, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 91.28, "type": "log", "agent": "tester", "data": {"text": "I accepted A02 and accepted batch B02. Keyboard focus is now visible on all four pages except the payment iframe on `/checkout.html`. - **Focus visibility:** the keyboard walks showed visible focus on 63 of 64 stops. The one exception is the iframe, which reported `focus_visible…", "kind": "msg"}}
+{"t": 92.05, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 2.4.7"}}
+{"t": 92.1, "type": "commit.created", "data": {"sha": "e94c22e", "criterion": "2.4.7", "message": "fix(a11y): WCAG 2.4.7 — Keyboard focus is not visible anywhere", "files": ["styles.css"]}}
+{"t": 92.1, "type": "log", "agent": "orchestrator", "data": {"text": "Committed e94c22e fix(a11y): WCAG 2.4.7 — Keyboard focus is not visible anywhere", "kind": "commit"}}
+{"t": 92.11, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B02 done", "kind": "ok"}}
+{"t": 92.11, "type": "batch.started", "data": {"id": "B03", "criterion": "1.1.1", "issue_ids": ["A04", "A11"], "attempt": 1}}
+{"t": 92.11, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B03 · WCAG 1.1.1 Non-text Content · attempt 1: A04, A11", "kind": "phase"}}
+{"t": 92.11, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 92.11, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A04", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 92.11, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A11", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 92.54, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.1.1"}}
+{"t": 94.64, "type": "log", "agent": "developer", "data": {"text": "Grep(<img)", "kind": "tool"}}
+{"t": 96.04, "type": "log", "agent": "developer", "data": {"text": "Read(cart.html)", "kind": "tool"}}
+{"t": 96.44, "type": "log", "agent": "developer", "data": {"text": "Read(product.html)", "kind": "tool"}}
+{"t": 97.67, "type": "log", "agent": "developer", "data": {"text": "Cart images are adjacent to text naming the product, so they're decorative (empty alt). The product photo gets a descriptive alt.", "kind": "msg"}}
+{"t": 98.33, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 98.94, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 99.45, "type": "log", "agent": "developer", "data": {"text": "Edit(product.html)", "kind": "tool"}}
+{"t": 100.97, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A04)", "kind": "tool"}}
+{"t": 100.98, "type": "issue.status", "agent": "developer", "data": {"id": "A04", "status": "fixed_pending", "by": "developer", "note": "Cart thumbnails are decorative since the product name is in the adjacent cell, so they now have alt=\"\".", "attempt": 1}}
+{"t": 100.98, "type": "log", "agent": "developer", "data": {"text": "A04 fixed in cart.html: Cart thumbnails are decorative since the product name is in the adjacent cell, so they now have alt=\"\".", "kind": "msg"}}
+{"t": 101.46, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A11)", "kind": "tool"}}
+{"t": 101.47, "type": "issue.status", "agent": "developer", "data": {"id": "A11", "status": "fixed_pending", "by": "developer", "note": "Replaced alt=\"image\" with alt=\"Baskets en cuir\", matching the product title.", "attempt": 1}}
+{"t": 101.47, "type": "log", "agent": "developer", "data": {"text": "A11 fixed in product.html: Replaced alt=\"image\" with alt=\"Baskets en cuir\", matching the product title.", "kind": "msg"}}
+{"t": 104.09, "type": "log", "agent": "developer", "data": {"text": "I fixed both issues and marked them fixed in the tracker. I haven't re-scanned the pages or checked them in a browser. - **A04 (cart images):** I gave both cart thumbnails in `cart.html` an empty `alt=\"\"`. The product name is already written in the next cell, so a description wo…", "kind": "msg"}}
+{"t": 104.92, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 1.1.1"}}
+{"t": 104.94, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 1.1.1"}}
+{"t": 106.73, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 107.11, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 107.72, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 108.16, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 109.3, "type": "log", "agent": "tester", "data": {"text": "Product page: verify the alt.", "kind": "msg"}}
+{"t": 109.49, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 112.25, "type": "log", "agent": "tester", "data": {"text": "verdict(A04 accepted=True)", "kind": "tool"}}
+{"t": 112.26, "type": "issue.status", "agent": "tester", "data": {"id": "A04", "status": "validated", "by": "tester", "note": "Cart images now have alt=\"\" and image-alt is resolved on /cart.html. The name is in the adjacent cell, so decorative is correct. The home page image-alt failures are on catalogue cards, not .cart-table img, so they are a separate issue.", "attempt": 1}}
+{"t": 112.26, "type": "score", "data": {"value": 68, "baseline": 38, "by_principle": {"P": 22, "O": 85, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 112.26, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A04: Cart images now have alt=\"\" and image-alt is resolved on /cart.html. The name is in the adjacent cell, so decorative is correct. The home page image-alt failures are on catalogue cards, not .cart-table img, so they are a separate issue.", "kind": "ok"}}
+{"t": 112.9, "type": "log", "agent": "tester", "data": {"text": "verdict(A11 accepted=True)", "kind": "tool"}}
+{"t": 112.9, "type": "issue.status", "agent": "tester", "data": {"id": "A11", "status": "validated", "by": "tester", "note": "The product photo now has alt=\"Baskets en cuir\", which describes the product. No regressions and no visual change.", "attempt": 1}}
+{"t": 112.91, "type": "score", "data": {"value": 71, "baseline": 38, "by_principle": {"P": 44, "O": 85, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 112.91, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A11: The product photo now has alt=\"Baskets en cuir\", which describes the product. No regressions and no visual change.", "kind": "ok"}}
+{"t": 113.59, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 116.02, "type": "log", "agent": "tester", "data": {"text": "I accepted both fixes and the batch. The pixel diff is 0 on all three pages and there are no new violations. - **A04 (cart images):** accepted. The cart thumbnails now have `alt=\"\"`, and the `image-alt` failures on `/cart.html` are resolved. Empty alt is right here because the p…", "kind": "msg"}}
+{"t": 116.79, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 1.1.1"}}
+{"t": 116.84, "type": "commit.created", "data": {"sha": "1036379", "criterion": "1.1.1", "message": "fix(a11y): WCAG 1.1.1 — Product images in the cart have no alt text; Product photo has a useless description", "files": ["cart.html", "product.html"]}}
+{"t": 116.84, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 1036379 fix(a11y): WCAG 1.1.1 — Product images in the cart have no alt text; Product photo has a useless description", "kind": "commit"}}
+{"t": 116.84, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B03 done", "kind": "ok"}}
+{"t": 116.84, "type": "batch.started", "data": {"id": "B04", "criterion": "1.3.1", "issue_ids": ["A14", "A16"], "attempt": 1}}
+{"t": 116.84, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B04 · WCAG 1.3.1 Info and Relationships · attempt 1: A14, A16", "kind": "phase"}}
+{"t": 116.84, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 116.84, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A14", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 116.85, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A16", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 117.16, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.3.1"}}
+{"t": 119.71, "type": "log", "agent": "developer", "data": {"text": "Grep(<h[1-6]|\\.hero|\\.card h|\\.card-field)", "kind": "tool"}}
+{"t": 121.69, "type": "log", "agent": "developer", "data": {"text": "Read(index.html)", "kind": "tool"}}
+{"t": 121.94, "type": "log", "agent": "developer", "data": {"text": "Grep(iframe)", "kind": "tool"}}
+{"t": 123.62, "type": "log", "agent": "developer", "data": {"text": "Hero becomes h1, cards h2 (no h-level between them needed).", "kind": "msg"}}
+{"t": 124.41, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 125.22, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 125.62, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 126.41, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 126.95, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 127.53, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 128.07, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 130.83, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A14)", "kind": "tool"}}
+{"t": 130.84, "type": "issue.status", "agent": "developer", "data": {"id": "A14", "status": "fixed_pending", "by": "developer", "note": "Hero heading is now h1 and product card headings h2, with CSS selectors updated so visuals are unchanged.", "attempt": 1}}
+{"t": 130.84, "type": "log", "agent": "developer", "data": {"text": "A14 fixed in index.html, styles.css: Hero heading is now h1 and product card headings h2, with CSS selectors updated so visuals are unchanged.", "kind": "msg"}}
+{"t": 131.62, "type": "log", "agent": "developer", "data": {"text": "cannot_fix(A16)", "kind": "tool"}}
+{"t": 131.63, "type": "issue.status", "agent": "developer", "data": {"id": "A16", "status": "needs_human", "by": "developer", "note": "The card fields are PayVite's third-party widget, so the shop cannot safely change them. PayVite must supply a version with real <label>s (or aria-labels) and autocomplete attributes (cc-number, cc-exp, cc-csc) on the inputs. The shop team should then embed that version with a descriptive iframe title such as \"Paiement par carte bancaire\".", "attempt": 1}}
+{"t": 131.63, "type": "log", "agent": "developer", "data": {"text": "Escalated A16 to a human: The card fields are PayVite's third-party widget, so the shop cannot safely change them. PayVite must supply a version with real <label>s (or aria-labels) and autocomplete attributes (cc-number, cc-exp, cc-csc) on the inputs. The shop team should then embed that version with a descriptive iframe title such as \"Paiement par carte bancaire\".", "kind": "msg"}}
+{"t": 134.73, "type": "log", "agent": "developer", "data": {"text": "I fixed A14 and escalated A16 to a human. I haven't re-scanned the home page or run the baseline comparison. - **A14 (fixed):** On `index.html`, the hero heading \"La collection automne\" is now an `h1`. The four product card headings are now `h2`. I changed the matching selectors…", "kind": "msg"}}
+{"t": 135.2, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 1.3.1"}}
+{"t": 135.21, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 1.3.1"}}
+{"t": 136.88, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 137.34, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/)", "kind": "tool"}}
+{"t": 138.98, "type": "log", "agent": "tester", "data": {"text": "verdict(A14 accepted=True)", "kind": "tool"}}
+{"t": 138.99, "type": "issue.status", "agent": "tester", "data": {"id": "A14", "status": "validated", "by": "tester", "note": "Page now has one h1 and h2 card headings, with no skipped levels. Pixel diff is 0.0 and no new violations.", "attempt": 1}}
+{"t": 138.99, "type": "score", "data": {"value": 73, "baseline": 38, "by_principle": {"P": 56, "O": 85, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 138.99, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A14: Page now has one h1 and h2 card headings, with no skipped levels. Pixel diff is 0.0 and no new violations.", "kind": "ok"}}
+{"t": 139.37, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 141.49, "type": "log", "agent": "tester", "data": {"text": "A14 is accepted and batch B04 is accepted. The home page now has one h1 (\"La collection automne\") and h2 headings on the four product cards, so no heading levels are skipped. The pixel diff against the baseline is 0.0, so the page looks the same, and the re-scan found no new vio…", "kind": "msg"}}
+{"t": 142.23, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 1.3.1"}}
+{"t": 142.28, "type": "commit.created", "data": {"sha": "7f7f737", "criterion": "1.3.1", "message": "fix(a11y): WCAG 1.3.1 — No main heading and heading levels are skipped", "files": ["index.html", "styles.css"]}}
+{"t": 142.28, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 7f7f737 fix(a11y): WCAG 1.3.1 — No main heading and heading levels are skipped", "kind": "commit"}}
+{"t": 142.29, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B04 done", "kind": "ok"}}
+{"t": 142.29, "type": "batch.started", "data": {"id": "B05", "criterion": "1.4.3", "issue_ids": ["A01"], "attempt": 1}}
+{"t": 142.29, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B05 · WCAG 1.4.3 Contrast (Minimum) · attempt 1: A01", "kind": "phase"}}
+{"t": 142.29, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 142.29, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A01", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 142.69, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 1.4.3"}}
+{"t": 145.41, "type": "log", "agent": "developer", "data": {"text": "Grep(#aaa|#b0b0b0)", "kind": "tool"}}
+{"t": 147.42, "type": "log", "agent": "developer", "data": {"text": "#595959 on #f7f5f2 is about 6.3:1, so it passes.", "kind": "msg"}}
+{"t": 148.08, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 148.75, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 149.34, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 151.84, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A01)", "kind": "tool"}}
+{"t": 151.85, "type": "issue.status", "agent": "developer", "data": {"id": "A01", "status": "fixed_pending", "by": "developer", "note": "Darkened .price-note text to #767676 (4.54:1 on white) and footer text and links to #595959 (about 6.3:1 on #f7f5f2); backgrounds unchanged.", "attempt": 1}}
+{"t": 151.85, "type": "log", "agent": "developer", "data": {"text": "A01 fixed in styles.css: Darkened .price-note text to #767676 (4.54:1 on white) and footer text and links to #595959 (about 6.3:1 on #f7f5f2); backgrounds unchanged.", "kind": "msg"}}
+{"t": 154.62, "type": "log", "agent": "developer", "data": {"text": "I fixed A01 in `styles.css` by darkening the faint grey text, and I've marked it fixed. I haven't re-scanned any page, so the contrast ratios are my own calculations, not audit results. - **Price note:** `.price-note` text went from `#aaaaaa` to `#767676`. That is about 4.54:1 o…", "kind": "msg"}}
+{"t": 155.3, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 1.4.3"}}
+{"t": 155.31, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 1.4.3"}}
+{"t": 157.44, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 157.88, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 158.25, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 159.13, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 161.32, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/)", "kind": "tool"}}
+{"t": 162.91, "type": "log", "agent": "tester", "data": {"text": "The remaining failure is the hero paragraph. It's a separate element outside A01's selector, so it's not a regression.", "kind": "msg"}}
+{"t": 163.95, "type": "log", "agent": "tester", "data": {"text": "verdict(A01 accepted=True)", "kind": "tool"}}
+{"t": 163.95, "type": "issue.status", "agent": "tester", "data": {"id": "A01", "status": "validated", "by": "tester", "note": "Price-note and footer contrast violations are resolved on all four pages. There are no new violations, and the pixel change is under 0.4%. The hero paragraph (.hero p) on / still fails contrast. It is a different component, so report it as its own issue.", "attempt": 1}}
+{"t": 163.95, "type": "score", "data": {"value": 76, "baseline": 38, "by_principle": {"P": 78, "O": 85, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 163.95, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A01: Price-note and footer contrast violations are resolved on all four pages. There are no new violations, and the pixel change is under 0.4%. The hero paragraph (.hero p) on / still fails contrast. It is a different component, so report it as its own issue.", "kind": "ok"}}
+{"t": 164.35, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 166.28, "type": "log", "agent": "tester", "data": {"text": "I accepted A01 and accepted batch B05. The `.price-note` and footer contrast violations are gone on `/`, `/cart.html`, `/checkout.html` and `/product.html`. No new violations appeared, and no more than 0.33% of pixels changed on any page, so I didn't open the diff images. One co…", "kind": "msg"}}
+{"t": 166.99, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 1.4.3"}}
+{"t": 167.05, "type": "commit.created", "data": {"sha": "095222e", "criterion": "1.4.3", "message": "fix(a11y): WCAG 1.4.3 — Light grey text is too faint to read", "files": ["styles.css"]}}
+{"t": 167.05, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 095222e fix(a11y): WCAG 1.4.3 — Light grey text is too faint to read", "kind": "commit"}}
+{"t": 167.05, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B05 done", "kind": "ok"}}
+{"t": 167.05, "type": "batch.started", "data": {"id": "B06", "criterion": "2.4.4", "issue_ids": ["A13"], "attempt": 1}}
+{"t": 167.05, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B06 · WCAG 2.4.4 Link Purpose (In Context) · attempt 1: A13", "kind": "phase"}}
+{"t": 167.05, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 167.05, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A13", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 167.33, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.4"}}
+{"t": 169.26, "type": "log", "agent": "developer", "data": {"text": "Grep(En savoir plus)", "kind": "tool"}}
+{"t": 170.45, "type": "log", "agent": "developer", "data": {"text": "Use aria-labelledby-free approach: visually hidden text. Check for an existing sr-only class.", "kind": "msg"}}
+{"t": 170.64, "type": "log", "agent": "developer", "data": {"text": "Grep(sr-only|visually-hidden)", "kind": "tool"}}
+{"t": 171.74, "type": "log", "agent": "developer", "data": {"text": "Simplest: aria-label including the visible text.", "kind": "msg"}}
+{"t": 172.77, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 173.79, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 174.74, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 175.56, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 176.93, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A13)", "kind": "tool"}}
+{"t": 176.95, "type": "issue.status", "agent": "developer", "data": {"id": "A13", "status": "fixed_pending", "by": "developer", "note": "Each \"En savoir plus\" link now has an aria-label that starts with the visible text and adds the product name.", "attempt": 1}}
+{"t": 176.95, "type": "log", "agent": "developer", "data": {"text": "A13 fixed in index.html: Each \"En savoir plus\" link now has an aria-label that starts with the visible text and adds the product name.", "kind": "msg"}}
+{"t": 178.54, "type": "log", "agent": "developer", "data": {"text": "I fixed A13 in `index.html`. Each of the four \"En savoir plus\" links now has an `aria-label` that starts with the visible text and adds the product name. For example: \"En savoir plus : Baskets en cuir\". The other three are Sac Alma, Écharpe en laine and Montre Aube. I did not re…", "kind": "msg"}}
+{"t": 179.36, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 2.4.4"}}
+{"t": 179.38, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 2.4.4"}}
+{"t": 181.05, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 181.5, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/)", "kind": "tool"}}
+{"t": 183.23, "type": "log", "agent": "tester", "data": {"text": "verdict(A13 accepted=True)", "kind": "tool"}}
+{"t": 183.24, "type": "issue.status", "agent": "tester", "data": {"id": "A13", "status": "validated", "by": "tester", "note": "All four links now have aria-labels that start with the visible text \"En savoir plus\" and add the product name. There is no visual change and no new violations.", "attempt": 1}}
+{"t": 183.24, "type": "score", "data": {"value": 79, "baseline": 38, "by_principle": {"P": 78, "O": 95, "U": 0, "R": 0}, "eaa": "non_compliant"}}
+{"t": 183.24, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A13: All four links now have aria-labels that start with the visible text \"En savoir plus\" and add the product name. There is no visual change and no new violations.", "kind": "ok"}}
+{"t": 183.75, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 185.67, "type": "log", "agent": "tester", "data": {"text": "I accepted A13 and accepted batch B06. On `/`, each of the four \"En savoir plus\" links now has an `aria-label` that starts with the visible text and adds the product name (for example \"En savoir plus : Sac Alma\"). The comparison with the baseline shows no new violations and no p…", "kind": "msg"}}
+{"t": 186.5, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 2.4.4"}}
+{"t": 186.55, "type": "commit.created", "data": {"sha": "a00bf16", "criterion": "2.4.4", "message": "fix(a11y): WCAG 2.4.4 — Repeated \"En savoir plus\" links do not say which product", "files": ["index.html"]}}
+{"t": 186.55, "type": "log", "agent": "orchestrator", "data": {"text": "Committed a00bf16 fix(a11y): WCAG 2.4.4 — Repeated \"En savoir plus\" links do not say which product", "kind": "commit"}}
+{"t": 186.56, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B06 done", "kind": "ok"}}
+{"t": 186.56, "type": "batch.started", "data": {"id": "B07", "criterion": "3.1.1", "issue_ids": ["A03"], "attempt": 1}}
+{"t": 186.56, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B07 · WCAG 3.1.1 Language of Page · attempt 1: A03", "kind": "phase"}}
+{"t": 186.56, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 186.56, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A03", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 186.86, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.1.1"}}
+{"t": 188.8, "type": "log", "agent": "developer", "data": {"text": "Grep(<html)", "kind": "tool"}}
+{"t": 190.57, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 192.25, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A03)", "kind": "tool"}}
+{"t": 192.26, "type": "issue.status", "agent": "developer", "data": {"id": "A03", "status": "fixed_pending", "by": "developer", "note": "Added lang=\"fr\" to the html element of index.html, matching the other pages.", "attempt": 1}}
+{"t": 192.26, "type": "log", "agent": "developer", "data": {"text": "A03 fixed in index.html: Added lang=\"fr\" to the html element of index.html, matching the other pages.", "kind": "msg"}}
+{"t": 194.24, "type": "log", "agent": "developer", "data": {"text": "I fixed A03: `index.html` now has `<html lang=\"fr\">`, so the home page declares French like the other pages. I haven't re-scanned the page, so the fix is marked fixed but not yet confirmed by the tester. `cart.html`, `checkout.html` and `product.html` already declared `lang=\"fr\"…", "kind": "msg"}}
+{"t": 194.99, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 3.1.1"}}
+{"t": 195.01, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 3.1.1"}}
+{"t": 196.78, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 198.97, "type": "log", "agent": "tester", "data": {"text": "verdict(A03 accepted=True)", "kind": "tool"}}
+{"t": 198.98, "type": "issue.status", "agent": "tester", "data": {"id": "A03", "status": "validated", "by": "tester", "note": "html-has-lang no longer reported on /; no visual change.", "attempt": 1}}
+{"t": 198.98, "type": "score", "data": {"value": 82, "baseline": 38, "by_principle": {"P": 78, "O": 95, "U": 33, "R": 0}, "eaa": "non_compliant"}}
+{"t": 198.98, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A03: html-has-lang no longer reported on /; no visual change.", "kind": "ok"}}
+{"t": 199.18, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 201.68, "type": "log", "agent": "tester", "data": {"text": "I accepted A03 and the batch. The `html-has-lang` violation no longer appears on `/`, there are no new violations, and the screenshot diff shows 0% changed pixels. I didn't run a keyboard walk, since a page language isn't a keyboard issue. The re-scan also stopped reporting seve…", "kind": "msg"}}
+{"t": 202.43, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 3.1.1"}}
+{"t": 202.48, "type": "commit.created", "data": {"sha": "089c44e", "criterion": "3.1.1", "message": "fix(a11y): WCAG 3.1.1 — Page language is not declared", "files": ["index.html"]}}
+{"t": 202.48, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 089c44e fix(a11y): WCAG 3.1.1 — Page language is not declared", "kind": "commit"}}
+{"t": 202.49, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B07 done", "kind": "ok"}}
+{"t": 202.49, "type": "batch.started", "data": {"id": "B08", "criterion": "3.3.1", "issue_ids": ["A15"], "attempt": 1}}
+{"t": 202.49, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B08 · WCAG 3.3.1 Error Identification · attempt 1: A15", "kind": "phase"}}
+{"t": 202.49, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 202.49, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A15", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 202.75, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.3.1"}}
+{"t": 204.83, "type": "log", "agent": "developer", "data": {"text": "Grep(email|error)", "kind": "tool"}}
+{"t": 206.16, "type": "log", "agent": "developer", "data": {"text": "Read(checkout.html)", "kind": "tool"}}
+{"t": 206.69, "type": "log", "agent": "developer", "data": {"text": "Grep(\\.error|\\.field-error)", "kind": "tool"}}
+{"t": 207.9, "type": "log", "agent": "developer", "data": {"text": "Add error text, aria-invalid, and describedby; also a label.", "kind": "msg"}}
+{"t": 209.25, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 209.98, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 211.86, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A15)", "kind": "tool"}}
+{"t": 211.88, "type": "issue.status", "agent": "developer", "data": {"id": "A15", "status": "fixed_pending", "by": "developer", "note": "Added visible error text linked via aria-describedby, aria-invalid=\"true\" and an accessible name on the email input, with a compliant red text style.", "attempt": 1}}
+{"t": 211.88, "type": "log", "agent": "developer", "data": {"text": "A15 fixed in checkout.html, styles.css: Added visible error text linked via aria-describedby, aria-invalid=\"true\" and an accessible name on the email input, with a compliant red text style.", "kind": "msg"}}
+{"t": 214.8, "type": "log", "agent": "developer", "data": {"text": "I fixed A15 on the checkout page and marked it fixed in the tracker. I haven't re-scanned the page, so the fix is untested. - **`checkout.html`:** - The email input now has `aria-invalid=\"true\"` and an `aria-label` of \"Adresse e-mail\". - A visible message sits right under the fi…", "kind": "msg"}}
+{"t": 215.62, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 3.3.1"}}
+{"t": 215.63, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 3.3.1"}}
+{"t": 218.04, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 218.94, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 219.22, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 221.07, "type": "log", "agent": "tester", "data": {"text": "Looks good; the pixel ratio is under 0.02.", "kind": "msg"}}
+{"t": 221.87, "type": "log", "agent": "tester", "data": {"text": "verdict(A15 accepted=True)", "kind": "tool"}}
+{"t": 221.88, "type": "issue.status", "agent": "tester", "data": {"id": "A15", "status": "validated", "by": "tester", "note": "The email input now has aria-invalid=\"true\", aria-describedby pointing to a visible error message, and an accessible name. The axe scan shows no new violations.", "attempt": 1}}
+{"t": 221.88, "type": "score", "data": {"value": 85, "baseline": 38, "by_principle": {"P": 78, "O": 95, "U": 67, "R": 0}, "eaa": "non_compliant"}}
+{"t": 221.88, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A15: The email input now has aria-invalid=\"true\", aria-describedby pointing to a visible error message, and an accessible name. The axe scan shows no new violations.", "kind": "ok"}}
+{"t": 222.26, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 225.38, "type": "log", "agent": "tester", "data": {"text": "I accepted A15 and accepted batch B08. - **A15 (email error shown by colour only):** On `/checkout.html` the email input now has `aria-invalid=\"true\"`. It also has `aria-describedby` pointing to a visible French error message and an accessible name. The keyboard walk reaches the…", "kind": "msg"}}
+{"t": 226.22, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 3.3.1"}}
+{"t": 226.28, "type": "commit.created", "data": {"sha": "c841751", "criterion": "3.3.1", "message": "fix(a11y): WCAG 3.3.1 — Email error is shown by colour only", "files": ["checkout.html", "styles.css"]}}
+{"t": 226.28, "type": "log", "agent": "orchestrator", "data": {"text": "Committed c841751 fix(a11y): WCAG 3.3.1 — Email error is shown by colour only", "kind": "commit"}}
+{"t": 226.28, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B08 done", "kind": "ok"}}
+{"t": 226.29, "type": "batch.started", "data": {"id": "B09", "criterion": "3.3.2", "issue_ids": ["A12"], "attempt": 1}}
+{"t": 226.29, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B09 · WCAG 3.3.2 Labels or Instructions · attempt 1: A12", "kind": "phase"}}
+{"t": 226.29, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 226.29, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A12", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 226.54, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 3.3.2"}}
+{"t": 228.76, "type": "log", "agent": "developer", "data": {"text": "Grep(checkout-form)", "kind": "tool"}}
+{"t": 231.51, "type": "log", "agent": "developer", "data": {"text": "Grep(checkout-form|\\.error-text)", "kind": "tool"}}
+{"t": 233.77, "type": "log", "agent": "developer", "data": {"text": "Grep(\\.checkout)", "kind": "tool"}}
+{"t": 235.71, "type": "log", "agent": "developer", "data": {"text": "Add visible labels, keeping placeholders.", "kind": "msg"}}
+{"t": 237.31, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 238.8, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 239.47, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 241.42, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A12)", "kind": "tool"}}
+{"t": 241.43, "type": "issue.status", "agent": "developer", "data": {"id": "A12", "status": "fixed_pending", "by": "developer", "note": "Added visible <label for> to each delivery field (with autocomplete tokens) and a shared label style; placeholders kept.", "attempt": 1}}
+{"t": 241.43, "type": "log", "agent": "developer", "data": {"text": "A12 fixed in checkout.html, styles.css: Added visible <label for> to each delivery field (with autocomplete tokens) and a shared label style; placeholders kept.", "kind": "msg"}}
+{"t": 244.28, "type": "log", "agent": "developer", "data": {"text": "I fixed A12 on the checkout page: each of the five delivery fields now has a visible label tied to it with `for`/`id`. I haven't re-scanned the page, so the fix is marked fixed but not yet verified. - **Labels:** Nom complet, Adresse e-mail, Adresse, Code postal and Ville are la…", "kind": "msg"}}
+{"t": 245.08, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 3.3.2"}}
+{"t": 245.09, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 3.3.2"}}
+{"t": 246.69, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 247.63, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 247.9, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 249.37, "type": "log", "agent": "tester", "data": {"text": "Pixel change is 2.7%, so I'll check the diff.", "kind": "msg"}}
+{"t": 249.67, "type": "log", "agent": "tester", "data": {"text": "Read(diff-checkout-16.png)", "kind": "tool"}}
+{"t": 251.29, "type": "log", "agent": "tester", "data": {"text": "The changes are layout shifts from the added labels, which the fix requires.", "kind": "msg"}}
+{"t": 252.3, "type": "log", "agent": "tester", "data": {"text": "verdict(A12 accepted=True)", "kind": "tool"}}
+{"t": 252.31, "type": "issue.status", "agent": "tester", "data": {"id": "A12", "status": "validated", "by": "tester", "note": "Each delivery input now has a visible label linked with for/id, and its accessible name comes from that label. Autocomplete tokens are present. Layout shifted only by the added labels.", "attempt": 1}}
+{"t": 252.31, "type": "score", "data": {"value": 89, "baseline": 38, "by_principle": {"P": 78, "O": 95, "U": 100, "R": 0}, "eaa": "non_compliant"}}
+{"t": 252.31, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A12: Each delivery input now has a visible label linked with for/id, and its accessible name comes from that label. Autocomplete tokens are present. Layout shifted only by the added labels.", "kind": "ok"}}
+{"t": 252.65, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 255.66, "type": "log", "agent": "tester", "data": {"text": "I accepted A12 and accepted batch B09. Each delivery field on `/checkout.html` now has a visible label tied to its input, and the accessible names match (Nom complet, Adresse e-mail, Adresse, Code postal, Ville). - **Baseline comparison:** it found no new violations. The only ch…", "kind": "msg"}}
+{"t": 256.47, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 3.3.2"}}
+{"t": 256.52, "type": "commit.created", "data": {"sha": "0dd0685", "criterion": "3.3.2", "message": "fix(a11y): WCAG 3.3.2 — Delivery form fields have no labels, only placeholders", "files": ["checkout.html", "styles.css"]}}
+{"t": 256.52, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 0dd0685 fix(a11y): WCAG 3.3.2 — Delivery form fields have no labels, only placeholders", "kind": "commit"}}
+{"t": 256.53, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B09 done", "kind": "ok"}}
+{"t": 256.53, "type": "batch.started", "data": {"id": "B10", "criterion": "4.1.2", "issue_ids": ["A09", "A10"], "attempt": 1}}
+{"t": 256.53, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B10 · WCAG 4.1.2 Name, Role, Value · attempt 1: A09, A10", "kind": "phase"}}
+{"t": 256.53, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 256.53, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A09", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 256.53, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A10", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 256.92, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 4.1.2"}}
+{"t": 259.27, "type": "log", "agent": "developer", "data": {"text": "Grep(<button[^>]*>(🔍|♡|🛒|🗑|[^<]*<span))", "kind": "tool"}}
+{"t": 262.72, "type": "log", "agent": "developer", "data": {"text": "Read(cart.html)", "kind": "tool"}}
+{"t": 263.14, "type": "log", "agent": "developer", "data": {"text": "Read(checkout.html)", "kind": "tool"}}
+{"t": 263.54, "type": "log", "agent": "developer", "data": {"text": "Read(product.html)", "kind": "tool"}}
+{"t": 263.9, "type": "log", "agent": "developer", "data": {"text": "Read(index.html)", "kind": "tool"}}
+{"t": 265.03, "type": "log", "agent": "developer", "data": {"text": "Now edits (3 per file, plus cart rows).", "kind": "msg"}}
+{"t": 265.87, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 266.63, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 267.55, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 269.01, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 269.83, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 270.7, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 271.46, "type": "log", "agent": "developer", "data": {"text": "Edit(product.html)", "kind": "tool"}}
+{"t": 272.3, "type": "log", "agent": "developer", "data": {"text": "Edit(product.html)", "kind": "tool"}}
+{"t": 273.21, "type": "log", "agent": "developer", "data": {"text": "Edit(product.html)", "kind": "tool"}}
+{"t": 273.93, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 274.78, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 275.59, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 276.91, "type": "log", "agent": "developer", "data": {"text": "My malformed call failed; the cart rows remain. Replace both.", "kind": "msg"}}
+{"t": 277.75, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 279.54, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A09)", "kind": "tool"}}
+{"t": 279.55, "type": "issue.status", "agent": "developer", "data": {"id": "A09", "status": "fixed_pending", "by": "developer", "note": "Added French aria-labels (Rechercher, Favoris, Panier) to header icon buttons and hid the emoji from assistive tech.", "attempt": 1}}
+{"t": 279.55, "type": "log", "agent": "developer", "data": {"text": "A09 fixed in index.html, product.html, checkout.html: Added French aria-labels (Rechercher, Favoris, Panier) to header icon buttons and hid the emoji from assistive tech.", "kind": "msg"}}
+{"t": 280.16, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A10)", "kind": "tool"}}
+{"t": 280.17, "type": "issue.status", "agent": "developer", "data": {"id": "A10", "status": "fixed_pending", "by": "developer", "note": "Added aria-labels to header icon buttons and to the remove-row buttons (\"Supprimer l'article\").", "attempt": 1}}
+{"t": 280.17, "type": "log", "agent": "developer", "data": {"text": "A10 fixed in cart.html: Added aria-labels to header icon buttons and to the remove-row buttons (\"Supprimer l'article\").", "kind": "msg"}}
+{"t": 282.98, "type": "log", "agent": "developer", "data": {"text": "I fixed A09 and A10 by giving the icon buttons text names, and both are marked fixed (pending review). I haven't re-scanned any page or checked the changes in a browser. - **Header buttons:** the search, favorites and cart buttons now have French `aria-label`s: \"Rechercher\", \"Fa…", "kind": "msg"}}
+{"t": 283.53, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 4.1.2"}}
+{"t": 283.56, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 4.1.2"}}
+{"t": 285.29, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 285.73, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 286.11, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 287.01, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 287.41, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 287.67, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/)", "kind": "tool"}}
+{"t": 291.15, "type": "log", "agent": "tester", "data": {"text": "verdict(A09 accepted=False)", "kind": "tool"}}
+{"t": 291.15, "type": "issue.status", "agent": "tester", "data": {"id": "A09", "status": "rejected", "by": "tester", "note": "The names are now correct, but the Panier button has a new label-content-name-mismatch violation (WCAG 2.5.3). Its visible text is the count \"2\" and its aria-label is just \"Panier\". Change it to e.g. aria-label=\"Panier, 2 articles\" so the label contains the visible text, or hide the visible count with aria-hidden. Do this in index.html, product.html and checkout.html.", "attempt": 1}}
+{"t": 291.15, "type": "log", "agent": "tester", "data": {"text": "REJECTED A09: The names are now correct, but the Panier button has a new label-content-name-mismatch violation (WCAG 2.5.3). Its visible text is the count \"2\" and its aria-label is just \"Panier\". Change it to e.g. aria-label=\"Panier, 2 articles\" so the label contains the visible text, or hide the visible count with aria-hidden. Do this in index.html, product.html and checkout.html.", "kind": "reject"}}
+{"t": 292.28, "type": "log", "agent": "tester", "data": {"text": "verdict(A10 accepted=False)", "kind": "tool"}}
+{"t": 292.29, "type": "issue.status", "agent": "tester", "data": {"id": "A10", "status": "rejected", "by": "tester", "note": "The remove-row buttons are correctly named \"Supprimer l'article\". The header Panier button still has label-content-name-mismatch: the visible count \"2\" is not in aria-label=\"Panier\". Use aria-label=\"Panier, 2 articles\" or hide the visible count from the accessible name consistently.", "attempt": 1}}
+{"t": 292.29, "type": "log", "agent": "tester", "data": {"text": "REJECTED A10: The remove-row buttons are correctly named \"Supprimer l'article\". The header Panier button still has label-content-name-mismatch: the visible count \"2\" is not in aria-label=\"Panier\". Use aria-label=\"Panier, 2 articles\" or hide the visible count from the accessible name consistently.", "kind": "reject"}}
+{"t": 292.92, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=False)", "kind": "tool"}}
+{"t": 295.83, "type": "log", "agent": "tester", "data": {"text": "I rejected both issues (A09 and A10) and the whole batch B10, because the fix introduced a new violation on all four pages. - **The regression:** the Panier header button now fails axe's `label-content-name-mismatch` rule (WCAG 2.5.3). Its visible text includes the cart count \"2…", "kind": "msg"}}
+{"t": 296.61, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 4.1.2"}}
+{"t": 296.64, "type": "log", "agent": "orchestrator", "data": {"text": "Rollback of batch B10 (WCAG 4.1.2): Regression: all four pages now fail axe label-content-name-mismatch on button[aria-label=\"Panier\"] because the visible cart count is missing from the accessible name. Include the count in the label.", "kind": "rollback"}}
+{"t": 296.64, "type": "batch.started", "data": {"id": "B10", "criterion": "4.1.2", "issue_ids": ["A09", "A10"], "attempt": 2}}
+{"t": 296.64, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B10 · WCAG 4.1.2 Name, Role, Value · attempt 2: A09, A10", "kind": "phase"}}
+{"t": 296.64, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 296.64, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A09", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 2}}
+{"t": 296.64, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A10", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 2}}
+{"t": 297.01, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 4.1.2"}}
+{"t": 298.93, "type": "log", "agent": "developer", "data": {"text": "Grep(aria-label=\"Panier\")", "kind": "tool"}}
+{"t": 300.0, "type": "log", "agent": "developer", "data": {"text": "Grep(🛒)", "kind": "tool"}}
+{"t": 301.59, "type": "log", "agent": "developer", "data": {"text": "Read(index.html)", "kind": "tool"}}
+{"t": 302.07, "type": "log", "agent": "developer", "data": {"text": "Grep(🗑|cart-count)", "kind": "tool"}}
+{"t": 304.72, "type": "log", "agent": "developer", "data": {"text": "Grep(sr-only|visually-hidden)", "kind": "tool"}}
+{"t": 308.72, "type": "log", "agent": "developer", "data": {"text": "Bash isn't available, so I'm making the edits one file at a time with Edit.", "kind": "msg"}}
+{"t": 309.38, "type": "log", "agent": "developer", "data": {"text": "Read(styles.css)", "kind": "tool"}}
+{"t": 309.85, "type": "log", "agent": "developer", "data": {"text": "Read(cart.html)", "kind": "tool"}}
+{"t": 312.4, "type": "log", "agent": "developer", "data": {"text": "Edit(styles.css)", "kind": "tool"}}
+{"t": 313.45, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 314.52, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 316.06, "type": "log", "agent": "developer", "data": {"text": "Edit(cart.html)", "kind": "tool"}}
+{"t": 317.69, "type": "log", "agent": "developer", "data": {"text": "Edit(index.html)", "kind": "tool"}}
+{"t": 319.28, "type": "log", "agent": "developer", "data": {"text": "Edit(product.html)", "kind": "tool"}}
+{"t": 320.88, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 323.83, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A09)", "kind": "tool"}}
+{"t": 323.85, "type": "issue.status", "agent": "developer", "data": {"id": "A09", "status": "fixed_pending", "by": "developer", "note": "Emoji hidden from AT; search/favorites get aria-labels; cart button name is visually-hidden \"Panier\" plus the visible count, so the label contains the visible text (2.5.3) and stays correct as the count changes.", "attempt": 2}}
+{"t": 323.85, "type": "log", "agent": "developer", "data": {"text": "A09 fixed in index.html, product.html, checkout.html, cart.html, styles.css: Emoji hidden from AT; search/favorites get aria-labels; cart button name is visually-hidden \"Panier\" plus the visible count, so the label contains the visible text (2.5.3) and stays correct as the count changes.", "kind": "msg"}}
+{"t": 324.56, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A10)", "kind": "tool"}}
+{"t": 324.57, "type": "issue.status", "agent": "developer", "data": {"id": "A10", "status": "fixed_pending", "by": "developer", "note": "Remove buttons have aria-label \"Supprimer l'article\" with the emoji hidden; header buttons fixed as in A09, including the Panier name containing the visible count.", "attempt": 2}}
+{"t": 324.57, "type": "log", "agent": "developer", "data": {"text": "A10 fixed in cart.html, styles.css: Remove buttons have aria-label \"Supprimer l'article\" with the emoji hidden; header buttons fixed as in A09, including the Panier name containing the visible count.", "kind": "msg"}}
+{"t": 327.4, "type": "log", "agent": "developer", "data": {"text": "I fixed A09 and A10 and marked both as fixed, pending tester review. I didn't re-run an audit, so none of this is verified yet. - **Search and favourites buttons:** they now have `aria-label=\"Rechercher\"` and `aria-label=\"Favoris\"`, with the emoji hidden from screen readers. Thi…", "kind": "msg"}}
+{"t": 328.0, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 4.1.2"}}
+{"t": 328.03, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 4.1.2"}}
+{"t": 329.57, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/)", "kind": "tool"}}
+{"t": 330.0, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 330.36, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 331.27, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/product.html)", "kind": "tool"}}
+{"t": 331.64, "type": "log", "agent": "tester", "data": {"text": "keyboard_walk(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 331.91, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/cart.html)", "kind": "tool"}}
+{"t": 335.09, "type": "log", "agent": "tester", "data": {"text": "verdict(A09 accepted=True)", "kind": "tool"}}
+{"t": 335.1, "type": "issue.status", "agent": "tester", "data": {"id": "A09", "status": "validated", "by": "tester", "note": "Search and favorites buttons have aria-labels. The cart button has an accessible name containing \"Panier\" and the visible count, and the emoji is hidden. No pixel change and no new violations.", "attempt": 2}}
+{"t": 335.1, "type": "score", "data": {"value": 92, "baseline": 38, "by_principle": {"P": 78, "O": 95, "U": 100, "R": 50}, "eaa": "non_compliant"}}
+{"t": 335.1, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A09: Search and favorites buttons have aria-labels. The cart button has an accessible name containing \"Panier\" and the visible count, and the emoji is hidden. No pixel change and no new violations.", "kind": "ok"}}
+{"t": 336.02, "type": "log", "agent": "tester", "data": {"text": "verdict(A10 accepted=True)", "kind": "tool"}}
+{"t": 336.03, "type": "issue.status", "agent": "tester", "data": {"id": "A10", "status": "validated", "by": "tester", "note": "Both remove buttons are focusable and named \"Supprimer l'article\", with the emoji hidden. The header buttons are named as in A09.", "attempt": 2}}
+{"t": 336.03, "type": "score", "data": {"value": 95, "baseline": 38, "by_principle": {"P": 78, "O": 95, "U": 100, "R": 100}, "eaa": "non_compliant"}}
+{"t": 336.03, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A10: Both remove buttons are focusable and named \"Supprimer l'article\", with the emoji hidden. The header buttons are named as in A09.", "kind": "ok"}}
+{"t": 336.37, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 339.82, "type": "log", "agent": "tester", "data": {"text": "I accepted both issues (A09 and A10) and accepted batch B10, because the fixes work and I found no regressions. - **A09:** The search and favorites buttons now have aria-labels. The cart button's name contains \"Panier\" and the visible count, with the emoji hidden from assistive …", "kind": "msg"}}
+{"t": 340.6, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 4.1.2"}}
+{"t": 340.65, "type": "commit.created", "data": {"sha": "b669310", "criterion": "4.1.2", "message": "fix(a11y): WCAG 4.1.2 — Header icon buttons are named only by emoji; Icon buttons named only by emoji or symbol", "files": ["cart.html", "checkout.html", "index.html", "product.html", "styles.css"]}}
+{"t": 340.65, "type": "log", "agent": "orchestrator", "data": {"text": "Committed b669310 fix(a11y): WCAG 4.1.2 — Header icon buttons are named only by emoji; Icon buttons named only by emoji or symbol", "kind": "commit"}}
+{"t": 340.66, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B10 done", "kind": "ok"}}
+{"t": 340.66, "type": "batch.started", "data": {"id": "B11", "criterion": "2.4.2", "issue_ids": ["A17"], "attempt": 1}}
+{"t": 340.66, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B11 · WCAG 2.4.2 Page Titled · attempt 1: A17", "kind": "phase"}}
+{"t": 340.66, "type": "agent.status", "data": {"agent": "tester", "status": "idle", "activity": "waiting"}}
+{"t": 340.66, "type": "issue.status", "agent": "orchestrator", "data": {"id": "A17", "status": "fixing", "by": "orchestrator", "note": "Assigned to developer", "attempt": 1}}
+{"t": 340.94, "type": "agent.status", "data": {"agent": "developer", "status": "working", "activity": "WCAG 2.4.2"}}
+{"t": 343.0, "type": "log", "agent": "developer", "data": {"text": "Grep(<title>)", "kind": "tool"}}
+{"t": 345.12, "type": "log", "agent": "developer", "data": {"text": "Edit(checkout.html)", "kind": "tool"}}
+{"t": 345.67, "type": "log", "agent": "developer", "data": {"text": "mark_fixed(A17)", "kind": "tool"}}
+{"t": 345.68, "type": "issue.status", "agent": "developer", "data": {"id": "A17", "status": "fixed_pending", "by": "developer", "note": "Title now \"Paiement — Maison Lumière\", matching the other pages' pattern.", "attempt": 1}}
+{"t": 345.68, "type": "log", "agent": "developer", "data": {"text": "A17 fixed in checkout.html: Title now \"Paiement — Maison Lumière\", matching the other pages' pattern.", "kind": "msg"}}
+{"t": 347.02, "type": "log", "agent": "developer", "data": {"text": "I changed the title of `checkout.html` from \"Paiement\" to \"Paiement — Maison Lumière\". It now names both the step and the shop, like the titles on the other pages. I marked A17 as fixed. I did not re-scan the page.", "kind": "msg"}}
+{"t": 347.81, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "WCAG 2.4.2"}}
+{"t": 347.83, "type": "agent.status", "data": {"agent": "tester", "status": "working", "activity": "verifying WCAG 2.4.2"}}
+{"t": 349.82, "type": "log", "agent": "tester", "data": {"text": "compare_with_baseline(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 350.76, "type": "log", "agent": "tester", "data": {"text": "get_page_html(http://localhost:8766/checkout.html)", "kind": "tool"}}
+{"t": 354.76, "type": "log", "agent": "tester", "data": {"text": "verdict(A17 accepted=True)", "kind": "tool"}}
+{"t": 354.77, "type": "issue.status", "agent": "tester", "data": {"id": "A17", "status": "validated", "by": "tester", "note": "Title is now \"Paiement — Maison Lumière\". There are no visual changes and no new violations.", "attempt": 1}}
+{"t": 354.77, "type": "score", "data": {"value": 97, "baseline": 38, "by_principle": {"P": 78, "O": 100, "U": 100, "R": 100}, "eaa": "partially_compliant"}}
+{"t": 354.77, "type": "log", "agent": "tester", "data": {"text": "VALIDATED A17: Title is now \"Paiement — Maison Lumière\". There are no visual changes and no new violations.", "kind": "ok"}}
+{"t": 354.78, "type": "log", "agent": "tester", "data": {"text": "batch_verdict(batch accepted=True)", "kind": "tool"}}
+{"t": 358.02, "type": "log", "agent": "tester", "data": {"text": "I accepted A17 and accepted batch B11. The `/checkout.html` title is now \"Paiement — Maison Lumière\", as the fix note said. The baseline comparison showed no visual change (0.0 changed pixels) and no new violations. It also reported five color-contrast violations as resolved, wh…", "kind": "msg"}}
+{"t": 358.76, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "verifying WCAG 2.4.2"}}
+{"t": 358.82, "type": "commit.created", "data": {"sha": "28815ff", "criterion": "2.4.2", "message": "fix(a11y): WCAG 2.4.2 — Page title is too vague", "files": ["checkout.html"]}}
+{"t": 358.82, "type": "log", "agent": "orchestrator", "data": {"text": "Committed 28815ff fix(a11y): WCAG 2.4.2 — Page title is too vague", "kind": "commit"}}
+{"t": 358.82, "type": "log", "agent": "orchestrator", "data": {"text": "Batch B11 done", "kind": "ok"}}
+{"t": 358.82, "type": "agent.status", "data": {"agent": "developer", "status": "done", "activity": "all batches done"}}
+{"t": 358.82, "type": "agent.status", "data": {"agent": "tester", "status": "done", "activity": "all batches verified"}}
+{"t": 358.82, "type": "log", "agent": "orchestrator", "data": {"text": "Stopped after phase fix (--until)", "kind": "phase"}}
+{"t": 358.82, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "cost $1.36"}}
+{"t": 359.82, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "coordinating run"}}
+{"t": 359.82, "type": "log", "agent": "orchestrator", "data": {"text": "Run started on http://localhost:8766/ · model sonnet", "kind": "phase"}}
+{"t": 359.82, "type": "phase.changed", "data": {"phase": "reaudit"}}
+{"t": 359.82, "type": "log", "agent": "orchestrator", "data": {"text": "Re-audit: same measurements on the remediated store", "kind": "phase"}}
+{"t": 359.82, "type": "agent.status", "data": {"agent": "orchestrator", "status": "working", "activity": "final measurements"}}
+{"t": 361.25, "type": "reaudit", "data": {"axe_violations": 5, "unreachable": 0, "focus_visible": [64, 65]}}
+{"t": 361.25, "type": "log", "agent": "orchestrator", "data": {"text": "Scanner violations 34 → 5, unreachable controls 8 → 0, visible focus 0/57 → 64/65", "kind": "ok"}}
+{"t": 361.26, "type": "phase.changed", "data": {"phase": "report"}}
+{"t": 361.26, "type": "log", "agent": "orchestrator", "data": {"text": "Writing the pull request and the accessibility statement", "kind": "phase"}}
+{"t": 361.26, "type": "agent.status", "data": {"agent": "writer", "status": "working", "activity": "writing"}}
+{"t": 365.26, "type": "log", "agent": "writer", "data": {"text": "Write(pr-body.md)", "kind": "tool"}}
+{"t": 369.26, "type": "log", "agent": "writer", "data": {"text": "Write(accessibility-statement.md)", "kind": "tool"}}
+{"t": 370.49, "type": "log", "agent": "writer", "data": {"text": "done", "kind": "msg"}}
+{"t": 371.07, "type": "agent.status", "data": {"agent": "writer", "status": "done", "activity": "writing"}}
+{"t": 371.07, "type": "document.written", "agent": "writer", "data": {"name": "pr-body.md", "path": "state/out/pr-body.md", "content": "# Accessibility remediation (WCAG 2.1 AA / EAA) for maison-lumiere.fr\n\nBranch `a11y/eaa-remediation-2026-10-15` → `main` (repo `maison-lumiere/storefront`)\n\n## Summary\n\n- **Accessibility score: 38 → 97.** EAA status: partially compliant.\n- **16 of 17 issues fixed and verified (validated).** 1 issue is escalated to a human (A16).\n- axe violations: 34 → 5. Keyboard-unreachable controls: 8 → 0. Elements with visible focus: 0/57 → 64/65.\n- Pages covered: `/`, `/product.html`, `/cart.html`, `/checkout.html`.\n\n## Fixes by WCAG criterion\n\n### 1.1.1 Non-text Content (Level A)\n- **A04** Cart product images had no alt text. They are decorative (the name is in the adjacent cell), so they now have `alt=\"\"`. Commit `1036379`.\n- **A11** Product photo had `alt=\"image\"`. It is now `alt=\"Baskets en cuir\"`. Commit `1036379`.\n\n### 1.3.1 Info and Relationships (Level A)\n- **A14** No main heading and skipped levels. The hero is now `h1` and the product cards `h2`. CSS selectors were updated so the visuals are unchanged. Commit `7f7f737`.\n\n### 1.4.3 Contrast (Minimum) (Level AA)\n- **A01** `.price-note` is now `#767676` (4.54:1 on white). Footer text and links are now `#595959` (about 6.3:1 on `#f7f5f2`). Backgrounds are unchanged. Commit `095222e`.\n\n### 2.1.1 Keyboard (Level A)\nAll four fixes are in commit `6d3b239`.\n- **A05** Size choices are now native buttons, with `aria-pressed` kept in sync by `selectSize`.\n- **A06** \"Payer\" is now a native button.\n- **A07** \"Add to cart\" is now a native button.\n- **A08** \"Commander\" is now a native button.\n\n### 2.4.2 Page Titled (Level A)\n- **A17** The checkout title is now \"Paiement — Maison Lumière\", matching the other pages. Commit `28815ff`.\n\n### 2.4.4 Link Purpose (In Context) (Level A)\n- **A13** Each \"En savoir plus\" link has an `aria-label` that starts with the visible text and adds the product name. Commit `a00bf16`.\n\n### 2.4.7 Focus Visible (Level AA)\n- **A02** The global `*:focus { outline: none; }` was replaced with a visible 3px blue `:focus-visible` outline. Commit `e94c22e`.\n\n### 3.1.1 Language of Page (Level A)\n- **A03** `lang=\"fr\"` was added to the `html` element of `index.html`, matching the other pages. Commit `089c44e`.\n\n### 3.3.1 Error Identification (Level A)\n- **A15** The email error is no longer shown by colour only. It now has visible error text linked with `aria-describedby`, `aria-invalid=\"true\"`, an accessible name on the input, and a compliant red text style. Commit `c841751`.\n\n### 3.3.2 Labels or Instructions (Level A)\n- **A12** Each delivery field now has a visible `<label for>` and `autocomplete` tokens, plus a shared label style. Placeholders are kept. Commit `0dd0685`.\n\n### 4.1.2 Name, Role, Value (Level A)\nAll fixes are in commit `b669310`.\n- **A09** Header icon buttons were named only by emoji. The emoji are now hidden from assistive technology. Search and favorites have `aria-label`s. The cart button name is a visually-hidden \"Panier\" plus the visible count, so the name contains the visible text (2.5.3) and stays correct as the count changes.\n- **A10** On the cart page, the remove buttons have `aria-label=\"Supprimer l'article\"` with the emoji hidden. The header buttons are fixed as in A09.\n\n## Needs human review\n\n| Issue | Problem | Action required | Owner |\n|---|---|---|---|\n| **A16** (WCAG 1.3.1, `/checkout.html`, major) | The card payment iframe cannot be verified. It is PayVite's third-party widget, so the shop cannot safely change it. | PayVite must supply a version with real `<label>`s (or `aria-label`s) and `autocomplete` attributes (`cc-number`, `cc-exp`, `cc-csc`) on the inputs. The shop team should then embed that version with a descriptive iframe title such as \"Paiement par carte bancaire\". | PayVite (vendor), then the shop team |\n\n## How this was verified\n\n- Each page was scanned with axe-core (WCAG 2.1 A/AA rules) before and after the changes. Violations went from 34 to 5.\n- A keyboard walk of each page checked focus order, accessible names, visible focus and unreachable controls. Unreachable controls went from 8 to 0, and visible focus from 0/57 to 64/65.\n- AI agent review found the issues that automated tools cannot detect. These were alt text quality, labels, link purpose, headings, error identification and the third-party iframe.\n- Each fix was re-checked against the baseline and accepted (status \"validated\"). A09 and A10 needed a second attempt. The other fixes passed on the first.\n- Automated and agent checks do not replace a manual audit with assistive technology users.\n"}}
+{"t": 371.07, "type": "document.written", "agent": "writer", "data": {"name": "accessibility-statement.md", "path": "state/out/accessibility-statement.md", "content": "# Accessibility Statement — maison-lumiere.fr\n\n*Draft for review. Date of this statement: 15 October 2026.*\n\nMaison Lumière is committed to making its website accessible in line with the European Accessibility Act (EAA). This statement covers maison-lumiere.fr: the home page, product page, cart and checkout.\n\n## Compliance status\n\nThis website is **partially compliant** with WCAG 2.1 level AA and EN 301 549, because of the exceptions listed below.\n\n## Non-accessible content\n\n- **Card payment form (checkout).** The card fields are a third-party widget supplied by PayVite. The inputs may lack proper labels and autocomplete attributes (WCAG 1.3.1), and the widget could not be verified. We have asked the provider for a compliant version. Once it is available, we will embed it with a descriptive iframe title.\n- **Remaining automated findings.** The latest automated scan still reports 5 violations. These are not itemised in the remediation record and need review.\n- **Visible focus.** Keyboard focus is now visible on 64 of 65 tested elements. The one remaining element should be identified and corrected.\n\n## Improvements already made\n\nThe following issues were corrected in October 2026:\n\n- Keyboard access to size selection, \"Add to cart\", \"Commander\" and \"Payer\".\n- Visible keyboard focus.\n- Text contrast.\n- Page language.\n- Alternative text for images.\n- Accessible names for icon buttons.\n- Labels on delivery fields.\n- Error identification for the email field.\n- Heading structure.\n- Descriptive link text.\n- Page titles.\n\n## How this was assessed\n\nThe assessment was a self-assessment on 15 October 2026, against WCAG 2.1 level AA and EN 301 549 (the technical standard behind the EAA). It combined:\n\n- **Automated testing** with axe-core (WCAG 2.1 A/AA rules).\n- **Automated keyboard testing** of focus order, accessible names and visible focus.\n- **AI agent review** of the pages for issues that automated tools miss.\n\nThe pages tested were the home page, product page, cart and checkout. The assessment has not yet been confirmed by a manual audit with assistive technologies or by an independent party.\n\n## Feedback and contact\n\nIf you cannot access any content or service, please contact us:\n\n- Contact name / service: [TO COMPLETE]\n- Email: [TO COMPLETE]\n- Phone / postal address: [TO COMPLETE]\n- Response time commitment: [TO COMPLETE]\n\n## Enforcement procedure\n\nIf you are not satisfied with our response, you may contact the competent national enforcement authority: [TO COMPLETE — authority name, address, website and contact details].\n"}}
+{"t": 371.07, "type": "log", "agent": "writer", "data": {"text": "Documents ready: pr-body.md, accessibility-statement.md", "kind": "ok"}}
+{"t": 371.07, "type": "phase.changed", "data": {"phase": "pr"}}
+{"t": 371.07, "type": "log", "agent": "orchestrator", "data": {"text": "Preparing the pull request", "kind": "phase"}}
+{"t": 371.11, "type": "pr.ready", "data": {"repo": "maison-lumiere/storefront", "branch": "a11y/eaa-remediation-2026-10-15", "base": "main", "commits": 11, "files": ["cart.html", "checkout.html", "index.html", "product.html", "shop.js", "styles.css"], "body": "# Accessibility remediation (WCAG 2.1 AA / EAA) for maison-lumiere.fr\n\nBranch `a11y/eaa-remediation-2026-10-15` → `main` (repo `maison-lumiere/storefront`)\n\n## Summary\n\n- **Accessibility score: 38 → 97.** EAA status: partially compliant.\n- **16 of 17 issues fixed and verified (validated).** 1 issue is escalated to a human (A16).\n- axe violations: 34 → 5. Keyboard-unreachable controls: 8 → 0. Elements with visible focus: 0/57 → 64/65.\n- Pages covered: `/`, `/product.html`, `/cart.html`, `/checkout.html`.\n\n## Fixes by WCAG criterion\n\n### 1.1.1 Non-text Content (Level A)\n- **A04** Cart product images had no alt text. They are decorative (the name is in the adjacent cell), so they now have `alt=\"\"`. Commit `1036379`.\n- **A11** Product photo had `alt=\"image\"`. It is now `alt=\"Baskets en cuir\"`. Commit `1036379`.\n\n### 1.3.1 Info and Relationships (Level A)\n- **A14** No main heading and skipped levels. The hero is now `h1` and the product cards `h2`. CSS selectors were updated so the visuals are unchanged. Commit `7f7f737`.\n\n### 1.4.3 Contrast (Minimum) (Level AA)\n- **A01** `.price-note` is now `#767676` (4.54:1 on white). Footer text and links are now `#595959` (about 6.3:1 on `#f7f5f2`). Backgrounds are unchanged. Commit `095222e`.\n\n### 2.1.1 Keyboard (Level A)\nAll four fixes are in commit `6d3b239`.\n- **A05** Size choices are now native buttons, with `aria-pressed` kept in sync by `selectSize`.\n- **A06** \"Payer\" is now a native button.\n- **A07** \"Add to cart\" is now a native button.\n- **A08** \"Commander\" is now a native button.\n\n### 2.4.2 Page Titled (Level A)\n- **A17** The checkout title is now \"Paiement — Maison Lumière\", matching the other pages. Commit `28815ff`.\n\n### 2.4.4 Link Purpose (In Context) (Level A)\n- **A13** Each \"En savoir plus\" link has an `aria-label` that starts with the visible text and adds the product name. Commit `a00bf16`.\n\n### 2.4.7 Focus Visible (Level AA)\n- **A02** The global `*:focus { outline: none; }` was replaced with a visible 3px blue `:focus-visible` outline. Commit `e94c22e`.\n\n### 3.1.1 Language of Page (Level A)\n- **A03** `lang=\"fr\"` was added to the `html` element of `index.html`, matching the other pages. Commit `089c44e`.\n\n### 3.3.1 Error Identification (Level A)\n- **A15** The email error is no longer shown by colour only. It now has visible error text linked with `aria-describedby`, `aria-invalid=\"true\"`, an accessible name on the input, and a compliant red text style. Commit `c841751`.\n\n### 3.3.2 Labels or Instructions (Level A)\n- **A12** Each delivery field now has a visible `<label for>` and `autocomplete` tokens, plus a shared label style. Placeholders are kept. Commit `0dd0685`.\n\n### 4.1.2 Name, Role, Value (Level A)\nAll fixes are in commit `b669310`.\n- **A09** Header icon buttons were named only by emoji. The emoji are now hidden from assistive technology. Search and favorites have `aria-label`s. The cart button name is a visually-hidden \"Panier\" plus the visible count, so the name contains the visible text (2.5.3) and stays correct as the count changes.\n- **A10** On the cart page, the remove buttons have `aria-label=\"Supprimer l'article\"` with the emoji hidden. The header buttons are fixed as in A09.\n\n## Needs human review\n\n| Issue | Problem | Action required | Owner |\n|---|---|---|---|\n| **A16** (WCAG 1.3.1, `/checkout.html`, major) | The card payment iframe cannot be verified. It is PayVite's third-party widget, so the shop cannot safely change it. | PayVite must supply a version with real `<label>`s (or `aria-label`s) and `autocomplete` attributes (`cc-number`, `cc-exp`, `cc-csc`) on the inputs. The shop team should then embed that version with a descriptive iframe title such as \"Paiement par carte bancaire\". | PayVite (vendor), then the shop team |\n\n## How this was verified\n\n- Each page was scanned with axe-core (WCAG 2.1 A/AA rules) before and after the changes. Violations went from 34 to 5.\n- A keyboard walk of each page checked focus order, accessible names, visible focus and unreachable controls. Unreachable controls went from 8 to 0, and visible focus from 0/57 to 64/65.\n- AI agent review found the issues that automated tools cannot detect. These were alt text quality, labels, link purpose, headings, error identification and the third-party iframe.\n- Each fix was re-checked against the baseline and accepted (status \"validated\"). A09 and A10 needed a second attempt. The other fixes passed on the first.\n- Automated and agent checks do not replace a manual audit with assistive technology users.\n"}}
+{"t": 371.11, "type": "log", "agent": "orchestrator", "data": {"text": "Pull request ready: 11 commits on a11y/eaa-remediation-2026-10-15, 6 files. Waiting for compliance sign-off.", "kind": "ok"}}
+{"t": 371.11, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "PR ready"}}
+{"t": 371.11, "type": "run.finished", "data": {"cost_usd": 1.4202, "duration_s": 383.97}}
+{"t": 371.11, "type": "agent.status", "data": {"agent": "orchestrator", "status": "done", "activity": "cost $1.42"}}
