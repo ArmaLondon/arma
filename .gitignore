@@ -9,3 +9,7 @@ runs/
 state/
 recordings/*.jsonl
 !web/recordings/*.jsonl
+
+# per-run eval outputs: only the shipped run is added explicitly (git add -f)
+eval/results/*
+!eval/results/.gitkeep
