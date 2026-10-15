@@ -1,0 +1,6 @@
+{
+  "cleanUrls": true,
+  "headers": [
+    { "source": "/recordings/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-store" }] }
+  ]
+}

@@ -6,7 +6,7 @@ Submission: 15:00. Two sessions: "web" (steps 2, 3, 10-11) and "agents" (steps 4
 - [x] 0. Repo skeleton, deps, vendored axe-core, CLAUDE.md
 - [x] 1. Event contract + EventBus + realistic fixture (16 issues from the prototype)
 - [x] 2. Dashboard in replay mode (from the prototype) + scripts/check_web.py
-- [ ] 3. First Vercel deploy (fixture replay)
+- [x] 3. First Vercel deploy (fixture replay): https://web-rosy-xi-65.vercel.app
 
 ## B. Real agents
 - [x] 4. Trapped demo shop (Maison Lumière) + scripts/check_demo_shop.py
