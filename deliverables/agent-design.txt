@@ -61,6 +61,22 @@ Full audit trail per issue. Compliance sign-off ("Send PR") is recorded. Web sea
 disabled. Arma never claims full compliance: at best "compliant (automated scope)", and items that
 need a human stay visibly open in the accessibility statement.
 
+RESULTS OF THE RECORDED RUN (Claude Managed Agents session sesn_016a2N5e3DNZHej9MrL4QxSo)
+Demo store Maison Lumière (4 pages, 16 planted defects). 61 min of agent time, $5.49 list cost.
+- Audit: 4 page auditors in parallel threads, 22 issues, 19 of them missed by automated scanners.
+- Fix loop: 13 batches, 13 commits (one per WCAG criterion). 1 tester rejection (cart quantity
+  buttons broken by the fix: they showed NaN) -> batch rolled back with git -> same developer thread
+  fixed it on attempt 2 -> validated. 21 issues fixed and verified, 1 escalated to a human (third-party
+  PayVite payment widget).
+- Re-audit: axe violations 34 -> 0, controls unreachable by keyboard 8 -> 0, visible focus 0/56 -> 64/64
+  tab stops, no regressions. Score 38 -> 98, EAA status non-compliant -> partially compliant.
+- Independent grader: satisfied at iteration 0. A transient stream drop during grading was absorbed:
+  the session kept running server-side and the bridge reattached (bridge.py resume).
+- Eval vs ground truth: recall 1.0 (all 16 planted defects found), agent-only recall 1.0, precision 0.86,
+  verified fix rate 1.0, false fixes 0, regressions 0; honesty FAIL: the useless product alt text was
+  replaced with the visible product name instead of being escalated for merchandising to confirm
+  colour and material. This is the next hill-climb target (developer prompt).
+
 8. STACK
 Claude Managed Agents (multi-agent, custom tools, outcomes), anthropic Python SDK and ant CLI for
 versioned agent definitions; Playwright + vendored axe-core + Pillow in the sandbox; git; a FastAPI

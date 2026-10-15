@@ -209,7 +209,9 @@ class Run:
                             self.log("system", "no grader result after the final turn; finishing.", "err")
                             self.done = True
                             break
-            except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.InternalServerError) as e:
+            except KeyboardInterrupt:
+                raise
+            except Exception as e:  # noqa: BLE001 — any transport failure: the session keeps running server-side
                 self.log("system", f"stream dropped ({type(e).__name__}); reconnecting, the session keeps running server-side", "err")
                 time.sleep(2)
 
@@ -333,7 +335,9 @@ def cmd_run(a):
                 run.handle(ev)
                 if run.done:
                     break
-        except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.InternalServerError) as e:
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:  # noqa: BLE001
             run.log("system", f"stream dropped ({type(e).__name__}); reconnecting", "err")
     run.drain()
     finish(client, run, branch, t0)
@@ -341,15 +345,38 @@ def cmd_run(a):
 
 
 def cmd_resume(a):
+    """Reattach to a running session after the bridge stopped. With --recording, keep appending to the
+    same JSONL (clock continued); history already recorded is marked seen, pending custom tool calls are
+    answered, and outcome results that arrived meanwhile are translated."""
     client = anthropic.Anthropic()
-    date = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    rec = ROOT / "recordings" / f"run-{date}-resume.jsonl"
+    if a.recording:
+        rec = Path(a.recording)
+        last_t = max(json.loads(l)["t"] for l in rec.read_text().splitlines() if l.strip())
+        gap = max(0.0, time.time() - rec.stat().st_mtime)
+    else:
+        rec = ROOT / "recordings" / f"run-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}-resume.jsonl"
+        last_t, gap = 0.0, 0.0
     bus = EventBus(rec)
+    bus._t0 = time.monotonic() - last_t - gap
     store = Store(ROOT / "state" / "state.json")
     run = Run(client, a.session_id, bus, store, outcome=True)
-    run.log("system", f"Bridge resumed on session {a.session_id[-8:]}: replaying history, answering pending tool calls", "phase")
-    run.drain()
-    finish(client, run, f"a11y/eaa-remediation-{dt.date.today().isoformat()}", time.monotonic())
+    run.log("system", f"Bridge reattached to session {a.session_id[-8:]}: the session kept running server-side; catching up", "phase")
+    history = list(client.beta.sessions.events.list(session_id=a.session_id))
+    answered = {g(e, "custom_tool_use_id") for e in history if e.type == "user.custom_tool_result"}
+    replay_types = {"span.outcome_evaluation_start", "span.outcome_evaluation_end", "session.status_idle", "session.status_running", "session.status_terminated"}
+    started = any(e.type == "span.outcome_evaluation_start" for e in history)
+    for e in history:
+        if (e.type == "agent.custom_tool_use" and e.id not in answered) or e.type in replay_types:
+            if e.type == "span.outcome_evaluation_start" and started and a.recording:
+                run.seen.add(e.id)   # already logged before the drop
+                continue
+            run.handle(e)
+        else:
+            run.seen.add(g(e, "id"))
+    if not run.done:
+        run.drain()
+    branch = json.loads(rec.read_text().splitlines()[0])["data"].get("branch", "") if a.recording else f"a11y/eaa-remediation-{dt.date.today().isoformat()}"
+    finish(client, run, branch, time.monotonic() - last_t - gap)
     print(f"recording: {rec}")
 
 
@@ -363,6 +390,7 @@ def main():
     r.add_argument("--model-override", default="")
     s = sub.add_parser("resume")
     s.add_argument("session_id")
+    s.add_argument("--recording", default="", help="continue this JSONL instead of starting a new one")
     a = ap.parse_args()
     cmd_run(a) if a.cmd == "run" else cmd_resume(a)
 

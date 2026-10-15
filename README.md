@@ -15,5 +15,7 @@ the accessibility statement. The dashboard is a pure function of the recorded ev
 Spec and plan (Managed Agents version): `new-guidelines/`. Earlier claude-agent-sdk version:
 `arma-spec.md`, `arma-build-plan.md`. Commands: `CLAUDE.md`.
 
-The live dashboard currently replays a real run recorded with the earlier local claude-agent-sdk
-engine; it will be replaced by a hosted Managed Agents run (grader and eval cards fill in then).
+The live dashboard replays a real Claude Managed Agents run (session sesn_016a2N5e3DNZHej9MrL4QxSo):
+22 issues (19 missed by scanners), 1 tester rejection + git rollback, 13 commits, score 38 → 98,
+independent grader satisfied, eval recall 1.0 (honesty metric failed on one escalation, see
+deliverables/agent-design.txt).

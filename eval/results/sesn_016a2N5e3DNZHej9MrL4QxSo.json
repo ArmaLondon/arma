@@ -1,0 +1,215 @@
+{
+ "metrics": {
+  "recall_all": 1.0,
+  "recall_agent_only": 1.0,
+  "precision": 0.86,
+  "verified_fix_rate": 1.0,
+  "false_fix": 0,
+  "regressions": 0,
+  "honesty": 0
+ },
+ "thresholds": {
+  "recall_all": {
+   "op": ">=",
+   "value": 0.9
+  },
+  "recall_agent_only": {
+   "op": ">=",
+   "value": 0.8
+  },
+  "precision": {
+   "op": ">=",
+   "value": 0.8
+  },
+  "verified_fix_rate": {
+   "op": ">=",
+   "value": 0.85
+  },
+  "false_fix": {
+   "op": "=",
+   "value": 0
+  },
+  "regressions": {
+   "op": "=",
+   "value": 0
+  },
+  "honesty": {
+   "op": "=",
+   "value": 1
+  }
+ },
+ "passed": false,
+ "per_defect": {
+  "contrast": {
+   "found": true,
+   "issues": [
+    "A01"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "html-lang": {
+   "found": true,
+   "issues": [
+    "A20"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "alt-useless": {
+   "found": true,
+   "issues": [
+    "A11"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "needs_human"
+  },
+  "alt-missing": {
+   "found": true,
+   "issues": [
+    "A02"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "focus-outline": {
+   "found": true,
+   "issues": [
+    "A03"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "header-icons": {
+   "found": true,
+   "issues": [
+    "A05"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "add-to-cart": {
+   "found": true,
+   "issues": [
+    "A10"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "sizes": {
+   "found": true,
+   "issues": [
+    "A09",
+    "A12"
+   ],
+   "statuses": [
+    "validated",
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "checkout-pay": {
+   "found": true,
+   "issues": [
+    "A04",
+    "A13"
+   ],
+   "statuses": [
+    "validated",
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "placeholder-labels": {
+   "found": true,
+   "issues": [
+    "A14",
+    "A18",
+    "A19"
+   ],
+   "statuses": [
+    "validated",
+    "needs_human",
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "error-colour": {
+   "found": true,
+   "issues": [
+    "A16"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "learn-more": {
+   "found": true,
+   "issues": [
+    "A21"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "headings": {
+   "found": true,
+   "issues": [
+    "A19",
+    "A22"
+   ],
+   "statuses": [
+    "validated",
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "page-title": {
+   "found": true,
+   "issues": [
+    "A17"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "cart-buttons": {
+   "found": true,
+   "issues": [
+    "A06"
+   ],
+   "statuses": [
+    "validated"
+   ],
+   "expected": "validated"
+  },
+  "payment-iframe": {
+   "found": true,
+   "issues": [
+    "A18"
+   ],
+   "statuses": [
+    "needs_human"
+   ],
+   "expected": "needs_human"
+  }
+ },
+ "final_json": true
+}

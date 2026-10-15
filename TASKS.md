@@ -31,4 +31,4 @@ Submission: 15:00. Two sessions: "web" (steps 2, 3, 10-11) and "agents" (steps 4
 - [x] W2 Minimalist D3 dashboard: live agent workflow, gauge, timeline, POUR, grader + eval cards
 - [x] W3 Interim replay of the real claude-agent-sdk run deployed (honest: no hosted badge)
 - [x] W4 Deliverables tooling for the hosted architecture
-- [ ] W5 Ship a real Managed Agents run (outcome satisfied + eval) and finalize deliverables
+- [x] W5 Real Managed Agents run shipped: grader satisfied, eval recall 1.0 (honesty FAIL on 1 escalation), deliverables updated

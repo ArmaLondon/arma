@@ -15,7 +15,8 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-WEB = ROOT / "web"
+import os
+WEB = Path(os.environ.get("ARMA_WEB_DIR", ROOT / "web"))
 RUN = sys.argv[1] if len(sys.argv) > 1 else "recordings/fixture.jsonl"
 SHOTS = ROOT / "state" / "checks"
 AXE = (ROOT / "vendor" / "axe.min.js").read_text()
@@ -137,7 +138,7 @@ async def main():
                 check("Stop" in await page.text_content("#runBtn"), "Run audit becomes Stop")
                 check(await page.locator("#prBtn").is_disabled(), "Send PR disabled while running")
                 await page.screenshot(path=str(SHOTS / "running-1400.png"), full_page=False)
-                await page.wait_for_function("document.getElementById('runBtn').textContent.includes('Run audit')", timeout=120000)
+                await page.wait_for_function("document.getElementById('runBtn').textContent.includes('Run audit')", timeout=600000)
                 check(await page.text_content("#gVal") == exp["score"], "replay ends on the final score")
                 # send PR
                 if exp["has_pr"]:

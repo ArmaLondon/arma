@@ -41,7 +41,8 @@ def main():
         eval_txt = ("PASS" if ev_res.get("passed") else "FAIL") + "  " + ", ".join(f"{k}={v}" for k, v in ev_res.get("metrics", {}).items()) + (f"  (failing: {', '.join(failed)})" if failed else "")
     else:
         eval_txt = "not run"
-    rejects = sum(1 for e in events if e["type"] == "issue.status" and e["data"]["status"] == "rejected")
+    rejects = sum(1 for e in events if e["type"] == "issue.status" and e["data"]["status"] == "rejected"
+                  and str(e["data"].get("by", "")).startswith("tester"))
     rollbacks = sum(1 for e in events if e["type"] == "log" and e["data"].get("kind") == "rollback")
     lines = [
         "ARMA: agent run log",
