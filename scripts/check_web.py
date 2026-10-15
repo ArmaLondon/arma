@@ -54,6 +54,7 @@ def expected():
         "fixed": str(sum(1 for s in status.values() if s == "validated")),
         "human": str(sum(1 for s in status.values() if s == "needs_human")),
         "has_pr": any(e["type"] == "pr.ready" for e in ev),
+        "has_stmt": any(e["type"] == "document.written" and e["data"].get("name") == "accessibility-statement.md" for e in ev),
     }
 
 
@@ -107,7 +108,8 @@ async def main():
                 await page.keyboard.press("ArrowRight")
                 check(await page.locator("#p-pr").is_visible(), "ArrowRight opens the Pull request tab")
                 await page.keyboard.press("ArrowRight")
-                check(await page.locator("#p-stmt .todo").count() >= 1, "statement shows [TO COMPLETE] fields")
+                if exp["has_stmt"]:
+                    check(await page.locator("#p-stmt .todo").count() >= 1, "statement shows [TO COMPLETE] fields")
                 await axe(page, "statement tab")
                 await page.keyboard.press("Home")
                 # About dialog

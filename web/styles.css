@@ -208,3 +208,4 @@ dialog p{margin:6px 0}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c-orch:#b8a1ff;--c-cart:#5fcfe5;--c-aud:#9db8ff}}
 :root[data-theme="dark"]{--c-orch:#b8a1ff;--c-cart:#5fcfe5;--c-aud:#9db8ff}
 .a-orch{color:var(--c-orch)}.a-cart,.a-writer{color:var(--c-cart)}.a-aud{color:var(--c-aud)}
+.detail pre{white-space:pre-wrap;overflow-wrap:anywhere}
