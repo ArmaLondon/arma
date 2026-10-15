@@ -1,657 +1,556 @@
-# Arma : plan de construction détaillé (pour Claude Code)
+# Arma : plan de construction, version Managed Agents (pour Claude Code)
 
-> **À lire par Claude Code avant de commencer.**
-> - **Spécification de référence** : `arma-spec.md`. En cas de doute, c'est elle qui fait foi.
-> - **Maquette visuelle** : `reference/arma-dashboard-prototype.html`. C'est un prototype
->   fonctionnel du dashboard, données incluses ; il sert de référence pour le rendu.
-> - **Méthode** : exécute les étapes **dans l'ordre**. Ne commence pas une étape avant que la
->   vérification de la précédente passe. Commite à la fin de chaque étape.
-> - **Priorité** : une démo qui marche visuellement à chaque fois. Le réel est un bonus, le
->   fiable est obligatoire.
+> **À lire avant de commencer.**
+> - **`arma-spec.md`** fait foi. Ce plan dit **dans quel ordre** construire.
+> - **`reference/arma-dashboard-prototype.html`** est la maquette fonctionnelle du dashboard.
+> - **Règle d'or** : exécuter les étapes dans l'ordre. Une étape ne commence pas tant que la
+>   vérification de la précédente n'est pas passée. Commit à la fin de chaque étape.
+> - **Priorité** : une démo qui marche visuellement, à chaque fois.
+> - **Vercel héberge l'application Arma** (le dashboard `web/`), c'est-à-dire le produit et le
+>   lien live. **Maison Lumière est une cible de démo temporaire**, servie dans le sandbox et
+>   jamais sur Vercel. Elle se remplace par un vrai site via `targets/*.json` (spec §20).
 
 ---
 
 ## Vue d'ensemble
 
-| Jalon | Étapes | État à la fin du jalon |
+| Jalon | Étapes | Résultat |
 |---|---|---|
-| **A. Démo montrable** | 0 à 3 | Le dashboard en replay sur des données de test, **déployé sur Vercel**. Le lien live existe déjà. |
-| **B. Vrais agents** | 4 à 9 | Le moteur `claude-agent-sdk` tourne sur la boutique démo et produit un vrai run enregistré. |
-| **C. Démo finale** | 10 à 11 | Le dashboard rejoue le **meilleur vrai run**, redéployé, et les livrables sont prêts. |
-| **D. Bonus** | 12 à 14 | Mode live (SSE), vraie PR GitHub, `--chaos` / `--resume`. |
+| **A. Démo montrable** | 0 à 3 | Dashboard en replay sur la fixture, **déployé sur Vercel**. Le lien live existe. |
+| **B. Équipe hébergée** | 4 à 10 | Session Managed Agents réelle sur la boutique démo : audit, correctifs, vérification, outcome, sorties rapatriées, vrai run enregistré. |
+| **C. Prouver** | 11 et 12 | Eval contre la vérité terrain, meilleur run en replay redéployé, livrables. |
+| **D. Bonus** | 13 à 15 | Hill climb, mode live SSE, vraie PR GitHub. |
 
-**Budget temps indicatif** (soumission à 15:00) :
+**Budget indicatif** (soumission à 15:00) :
 
 | Jalon | Durée |
 |---|---|
-| A | ~1h15 |
-| B | ~1h45 |
+| A | ~1h |
+| B | ~2h |
 | C | ~30 min |
 | D | seulement s'il reste du temps |
 
-**Parallélisation possible.** Le contrat d'événements (étape 1) découple le front du back. Dès
-l'étape 1 commitée, on peut ouvrir **deux sessions Claude Code** :
-- session « web » : étapes 2 et 3 ;
-- session « agents » : étapes 4 à 9.
+**Parallélisation.** Après l'étape 1 (le contrat d'événements commité), on peut ouvrir deux
+sessions Claude Code :
+- **« web »** : étapes 2 et 3, uniquement dans `web/` ;
+- **« agents »** : étapes 4 et suivantes, dans tout le reste sauf `web/`.
 
-Les deux sessions ne touchent pas aux mêmes dossiers.
+**Correspondance avec la slide des organisateurs** :
 
-**Règles transverses** :
-- Python 3.11+, et un venv dans `.venv`.
-- Pas de framework front (HTML, CSS et JS vanilla). Pas de base de données.
-- Le texte de l'UI et le contenu produit par les agents sont **en anglais**. La boutique démo
-  est en français.
-- Chaque étape se termine par :
-  1. la vérification demandée ;
-  2. `git add -A && git commit -m "<message indiqué>"`.
-- Si une étape bloque plus longtemps que son budget, appliquer la section **« Si ça bloque »**
-  de l'étape au lieu d'insister.
+| Étape organisateurs | Étape du plan |
+|---|---|
+| `claude auth login --console` | étape 0 |
+| `/claude-api managed-agents-onboard` | étape 5 |
+| `/goal` | étape 0 |
+| `/claude-api build-eval` | étape 11 |
+| `/claude-api hillclimb` | étape 13 |
 
 ---
 
-## Étape 0 : squelette du dépôt *(~15 min)*
+## Étape 0 : connexion, squelette, ligne d'arrivée *(~15 min)*
 
-**Objectif.** Avoir un dépôt propre, les dépendances installées, Chromium et axe-core
-fonctionnels.
-
-**Actions**
-1. **Créer l'arborescence** de `arma-spec.md` §16 avec des fichiers vides :
-   - `arma/__init__.py` ;
-   - `web/` ;
-   - `recordings/`, `runs/` et `state/`, ces trois dossiers étant dans `.gitignore` ;
-   - `scripts/`, `deliverables/` et `reference/`.
-2. **Dépendances**, dans `requirements.txt` :
+1. **Connexion Console** (l'utilisateur le fait si nécessaire) : `claude auth login --console`,
+   sur le compte qui porte les crédits API du hackathon. Mettre `ANTHROPIC_API_KEY` dans `.env`.
+2. **`/goal`** : définir la ligne d'arrivée avec le texte exact de `arma-spec.md` §8.1.
+3. **Arborescence** de la spec §16, avec des fichiers vides. Dans `.gitignore` : `.venv/`,
+   `runs/`, `state/`, `recordings/*.jsonl` (sauf `!web/recordings/*.jsonl`), `__pycache__/`,
+   `.env` et `*.tgz`.
+4. **Dépendances**, dans `requirements.txt` :
    ```
-   claude-agent-sdk
-   playwright
-   pillow
+   anthropic
    fastapi
    uvicorn[standard]
-   markdown
    ```
+   Pas de Playwright local : le navigateur tourne dans le sandbox.
    ```bash
    python3 -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
-   python -m playwright install chromium
    ```
-3. **Vendoriser axe-core** :
-   ```bash
-   mkdir -p vendor && cd vendor && npm pack axe-core@4.10.3 && tar xzf axe-core-*.tgz \
-     && cp package/axe.min.js . && rm -rf package axe-core-*.tgz && cd ..
-   ```
-4. **`.gitignore`** : `.venv/`, `runs/`, `state/`, `recordings/*.jsonl`, sauf
-   `!web/recordings/*.jsonl`, `__pycache__/` et `.env`.
-5. **`.env.example`** avec `ANTHROPIC_API_KEY=` et `GITHUB_REPO=`. Charger `.env` dans `run.py`
-   et `server.py` via une petite fonction maison, sans dépendance.
-6. **`CLAUDE.md`**, une page maximum, qui contient :
-   - le résumé du projet en cinq lignes ;
-   - les commandes de §20 de la spec ;
-   - les règles transverses ci-dessus ;
-   - le lien vers `arma-spec.md` et ce plan.
-7. **`scripts/smoke_browser.py`** : ouvre Chromium, charge `<html><img src=x></html>` avec
-   `set_content`, injecte axe avec `page.add_script_tag(content=open('vendor/axe.min.js').read())`,
-   lance `axe.run()`, puis affiche le nombre de violations.
+5. **CLI `ant`** : installer selon la doc Managed Agents (Homebrew `anthropics/tap/ant` ou binaire
+   GitHub), puis `ant --version`.
+6. **Vendoriser axe-core** dans `sandbox_tools/vendor/axe.min.js`
+   (`npm pack axe-core@4.10.3`, puis extraction).
+7. **`CLAUDE.md`**, une page :
+   - le résumé ;
+   - les commandes ;
+   - les règles d'or ;
+   - les pièges de la spec §17 ;
+   - les liens vers la spec et le plan.
 
 **Vérification**
 ```bash
-python scripts/smoke_browser.py        # doit afficher au moins une violation (image-alt)
-python -c "import claude_agent_sdk; print('sdk ok')"
+python -c "import anthropic; c=anthropic.Anthropic(); print(c.beta.environments.list())"
+ant --version
 ```
+La liste des environnements répond, même vide.
 
-**Commit** : `chore: scaffold repo, deps, vendored axe-core`
-
-**Si ça bloque.** Si `playwright install` échoue, essayer `python -m playwright install --with-deps chromium`.
-Si npm est absent, télécharger `axe.min.js` depuis le paquet npm `axe-core` par tout autre moyen.
+**Commit** : `chore: scaffold, deps, ant CLI, goal`
 
 ---
 
 ## Étape 1 : contrat d'événements + fixture *(~20 min)*
 
-**Objectif.** Figer l'interface unique entre agents et dashboard (`arma-spec.md` §5), et produire
-une fixture réaliste qui permet de construire tout le front sans agents.
+**Fichiers.** `arma_bridge/events.py`, `scripts/make_fixture.py`, `web/recordings/fixture.jsonl`
+et `web/events-contract.md` (copie de la spec §10).
 
-**Fichiers.** `arma/events.py`, `web/events-contract.md` (copie du tableau §5 de la spec),
-`scripts/make_fixture.py`, `web/recordings/fixture.jsonl`.
+- **`EventBus`** :
+  - `emit(type, data, agent=None)` valide le type, ajoute `t` (secondes depuis le début), écrit
+    une ligne JSONL avec flush, et pousse dans les files `asyncio.Queue` abonnées ;
+  - `subscribe()` / `unsubscribe()` ;
+  - thread-safe (`threading.Lock`).
+- **`make_fixture.py`** reproduit **le scénario complet** du prototype :
+  - **les seize problèmes** du tableau `ISSUES` de la maquette ;
+  - auditeurs parallèles et une panne d'outil relancée ;
+  - **le refus A07** (`role="button"`, puis `<button>`, **même fil développeur**) ;
+  - **le rollback du lot 1.4.3** (18 % de pixels, puis texte seul) ;
+  - commits, re-audit et documents réels (`pr-body.md`, `accessibility-statement.md`) ;
+  - **`outcome`** : `needs_revision` à l'itération 0 avec une explication plausible, puis
+    `satisfied` à l'itération 1 ;
+  - **`eval`** avec des métriques plausibles marquées PASS ;
+  - `pr.ready` et `run.finished`.
 
-**`arma/events.py`**
-```python
-EVENT_TYPES = {"run.started","phase.changed","agent.status","subagents","log","baseline",
-  "issue.detected","issue.merged","issue.status","score","batch.started","commit.created",
-  "reaudit","document.written","pr.ready","pr.sent","run.finished"}
+  Les événements `score` sont calculés avec la formule de la spec §10.
 
-class EventBus:
-    def __init__(self, path: Path): ...         # ouvre le .jsonl en append, t0 = time.monotonic()
-    def emit(self, type: str, data: dict, agent: str | None = None) -> dict:
-        # valide type ∈ EVENT_TYPES, ajoute "t" (secondes depuis t0, 2 décimales),
-        # écrit une ligne JSON (ensure_ascii=False) + flush, pousse dans chaque asyncio.Queue abonnée
-    def subscribe(self) -> asyncio.Queue: ...
-    def unsubscribe(self, q): ...
-```
-Rendre `emit` thread-safe avec un `threading.Lock`, car des outils peuvent tourner en parallèle.
+**Vérification** : un script Python qui parse la fixture et vérifie :
+- la présence de tous les types de la spec §10 ;
+- des `t` croissants ;
+- au moins deux `rejected` ;
+- un `outcome` avec `satisfied`.
 
-**`scripts/make_fixture.py`** génère `web/recordings/fixture.jsonl` en reproduisant **le scénario
-complet** d'un run, avec des temps cohérents :
-- **Données** : les **16 problèmes** de `reference/arma-dashboard-prototype.html` (tableau `ISSUES` :
-  reprendre id, wcag, sévérité, source, pages, titre, impact, evidence, fix, files, statut final,
-  `human`).
-- **Déroulé** : identique au `buildScript()` du prototype :
-  1. cartographie ;
-  2. baseline ;
-  3. audit avec quatre sous-auditeurs et une panne injectée relancée ;
-  4. plan en lots par critère ;
-  5. boucle de correction avec **le refus du testeur sur A07** (`role="button"` refusé, puis
-     `<button>` validé) et **le rollback du lot 1.4.3** (diff visuel de 18 %, puis texte seul
-     validé) ;
-  6. commits ;
-  7. re-audit ;
-  8. documents du writer (`pr-body.md` et `accessibility-statement.md`, avec du vrai contenu) ;
-  9. `pr.ready` ;
-  10. `run.finished`.
-- **Score** : émettre un événement `score` à chaque changement de statut (formule §6.3 de la
-  spec). Utiliser `arma/scoring.py` s'il existe déjà, sinon une copie locale de la formule.
-
-**Vérification**
-```bash
-python scripts/make_fixture.py
-python - <<'EOF'
-import json; ev=[json.loads(l) for l in open('web/recordings/fixture.jsonl')]
-types={e['type'] for e in ev}; print(len(ev), 'events'); print(sorted(types))
-assert {'issue.detected','issue.status','score','commit.created','pr.ready','document.written'} <= types
-assert all(ev[i]['t']<=ev[i+1]['t'] for i in range(len(ev)-1))
-print('rejects:', sum(1 for e in ev if e['type']=='issue.status' and e['data']['status']=='rejected'))
-EOF
-```
-Le script doit afficher au moins deux rejets, et tous les types d'événements doivent être présents.
-
-**Commit** : `feat: event contract, EventBus and realistic fixture run`
+**Commit** : `feat: event contract and realistic fixture`
 
 ---
 
-## Étape 2 : dashboard en mode replay *(~45 min)*
-
-**Objectif.** Le dashboard compliance complet (`arma-spec.md` §12), piloté uniquement par les
-événements, sur la fixture.
+## Étape 2 : dashboard en replay *(~40 min)*
 
 **Fichiers.** `web/index.html`, `web/styles.css`, `web/app.js`.
 
-**Point de départ.** Reprendre `reference/arma-dashboard-prototype.html` :
-- garder sa mise en page, ses styles, ses composants et ses textes ;
-- remplacer son moteur de script interne (`buildScript`, `ISSUES` codés en dur) par **un réducteur
-  d'événements**.
+1. **Partir du prototype** : garder la mise en page, les styles, les composants et les textes.
+   Remplacer son `buildScript()` et ses données codées en dur par un **réducteur d'événements
+   pur** (`apply(state, ev)`, un `case` par type) et un rendu throttlé par
+   `requestAnimationFrame`.
+2. **`ReplaySource`** :
+   - charge `?run=…`, avec repli `recordings/demo-run.jsonl` puis `recordings/fixture.jsonl` ;
+   - au chargement, applique tout d'un coup : la page est complète au repos ;
+   - « Run audit » rejoue en 1×, 2× ou 4× ; le bouton devient « Stop » pendant le run.
+3. **`LiveSource`** : un stub (étape 14).
+4. **Ajouts propres à Managed Agents** (spec §15) :
+   - badge « Hosted on Claude Managed Agents · session … » ;
+   - carte **Independent grader** (itération, résultat, explication) ;
+   - carte **Eval** (métriques, seuils, PASS/FAIL) ;
+   - l'équipe d'agents affiche Lead, Auditors ×N, Developer, Tester et Writer.
+5. **Envoi de PR en replay** : simulé côté client (checklist animée, puis carte de confirmation
+   avec la mention « Demo workspace »).
+6. **Panneau `#about`** : le pitch en une ligne, le problème EAA, le schéma de l'équipe hébergée
+   et le lien GitHub.
+7. **Accessibilité et responsive** (exigés) :
+   - onglets ARIA avec les flèches ;
+   - lignes dépliables au clavier, avec `aria-expanded` ;
+   - focus visible ;
+   - contrastes AA en clair et en sombre ;
+   - `prefers-reduced-motion` ;
+   - pas de scroll horizontal à 400 px.
 
-**Architecture de `app.js`**
-```js
-// 1. état dérivé
-const initial = () => ({phase:null, phasesDone:[], agents:{}, subagents:[], logs:[], issues:{},
-  order:[], score:null, baseline:null, byPrinciple:null, scoreHist:[], commits:[], docs:{},
-  pr:null, prSent:null, baselineMetrics:null, reauditMetrics:null, finished:false, t:0});
-function apply(state, ev) { switch(ev.type) { ... } return state; }   // pur, un case par type §5
+**Vérification** : `scripts/check_web.py` (Playwright local, installé à part pour ce test :
+`pip install playwright && python -m playwright install chromium`) :
+- teste 1400 et 400 px, en clair et en sombre ;
+- vérifie qu'il n'y a pas d'erreur console et que `scrollWidth` ne dépasse pas la largeur ;
+- vérifie que le score affiché vaut le dernier `score` ;
+- lance un replay 4× jusqu'à la fin ;
+- envoie la PR ;
+- prend des captures dans `state/checks/`.
 
-// 2. sources
-class ReplaySource { constructor(url){} async load(){} start(speed, onEvent, onEnd){} stop(){} }
-class LiveSource   { constructor(){} start(onEvent, onEnd){} stop(){} }   // étape 12, laisser un stub
-
-// 3. rendu
-function render(state) { renderRail(); renderScore(); renderAgents(); renderLog(); renderRows();
-  renderPR(); renderStatement(); renderButtons(); }   // appelé au plus une fois par frame (requestAnimationFrame)
-
-// 4. démarrage
-// - mode = URLSearchParams 'mode' (replay par défaut), recording = 'run' (défaut recordings/demo-run.jsonl,
-//   repli recordings/fixture.jsonl si 404)
-// - au chargement : appliquer TOUS les événements d'un coup → page complète au repos (dernier run)
-// - "Run audit" : reset + replay temporel à la vitesse choisie (1×/2×/4×) ; devient "Stop" pendant le run
-```
-
-**Points d'attention**
-- **Les numéros d'horloge** du log sont dérivés de `ev.t` (format `mm:ss`).
-- **Le log** ajoute ses lignes de façon incrémentale. Il défile automatiquement seulement si
-  l'utilisateur est déjà en bas.
-- **Une ligne nouvellement détectée** flashe une fois.
-- **L'envoi de PR en replay** est entièrement simulé côté client :
-  - checklist animée étape par étape ;
-  - puis la carte « Pull request #218 opened » ;
-  - avec la mention « Demo workspace: no external system was contacted ».
-- **Le formulaire PR** gère `submit` avec `preventDefault()`.
-- **Accessibilité du dashboard**, exigée :
-  - `lang="en"` et onglets ARIA avec flèches gauche/droite ;
-  - lignes dépliables au clavier (Enter/Espace) avec `aria-expanded` ;
-  - focus visible ;
-  - contrastes AA dans les deux thèmes ;
-  - `prefers-reduced-motion` respecté.
-- **Responsive** : une colonne sous 980 px. La table défile dans son conteneur, et la page ne
-  défile jamais horizontalement, y compris à 400 px.
-- **Bouton « About »** dans la barre : ouvre un panneau (`#about`) avec le one-line pitch, le
-  problème EAA en trois lignes, le schéma des agents (un `<pre>` ou un SVG simple) et le lien
-  GitHub.
-
-**Vérification**, par un script `scripts/check_web.py` (Playwright) qui :
-1. sert `web/` avec `python -m http.server` sur un port libre ;
-2. ouvre `/?run=recordings/fixture.jsonl` à 1400 px puis à 400 px, en clair puis en sombre
-   (`color_scheme`) ;
-3. vérifie qu'il n'y a **aucune erreur console** et que `document.documentElement.scrollWidth <=`
-   la largeur de la fenêtre ;
-4. vérifie que le score affiché vaut le dernier événement `score`, et que les compteurs
-   correspondent ;
-5. clique « Run audit » en vitesse 4× et attend `finished` ;
-6. clique « Send PR to engineering », puis « Send pull request », et attend la carte de
-   confirmation ;
-7. enregistre des captures dans `state/checks/`.
-
-Relire les captures une fois et corriger ce qui est visiblement cassé.
+Relire les captures une fois et corriger.
 
 **Commit** : `feat: compliance dashboard driven by event replay`
 
-**Si ça bloque.** Copier tel quel le prototype dans `web/index.html`, en remplaçant uniquement ses
-données codées en dur par le chargement de la fixture. La démo reste assurée.
+**Si ça bloque** : copier le prototype tel quel, et brancher seulement le chargement de la fixture.
 
 ---
 
 ## Étape 3 : premier déploiement Vercel *(~10 min)*
 
-**Objectif.** Obtenir le **lien live dès maintenant**, puis le mettre à jour plus tard.
-
-**Actions**
-1. `web/vercel.json` : site statique, avec `cleanUrls` et un header `Cache-Control: no-store`
-   sur `/recordings/*`.
-2. Copier `web/recordings/fixture.jsonl` vers `web/recordings/demo-run.jsonl`. Ce fichier sera
-   remplacé à l'étape 10.
+1. Créer `web/vercel.json` : site statique, avec un header `Cache-Control: no-store` sur
+   `/recordings/*`.
+2. Copier `fixture.jsonl` en `demo-run.jsonl` (il sera remplacé à l'étape 12).
 3. Lancer `cd web && npx vercel --prod`. Si la CLI n'est pas connectée, l'utilisateur fait
-   `npx vercel login` une fois.
-4. Noter l'URL dans `README.md` et dans `deliverables/links.md`.
+   `npx vercel login`.
+4. Noter l'URL dans `deliverables/links.md` et dans le `README.md`.
 
-**Vérification.** Ouvrir l'URL en navigation privée : le dashboard est complet au repos, et
-« Run audit » rejoue.
+**Vérification** : en navigation privée, la page est complète au repos et le replay fonctionne.
 
-**Commit** : `chore: deploy dashboard to Vercel (fixture replay)`
+**Commit** : `chore: first Vercel deploy`
 
-> ✅ **Jalon A atteint.** Il y a maintenant quelque chose à montrer et à soumettre.
+> ✅ **Jalon A atteint.** Il y a quelque chose à montrer et à soumettre.
 
 ---
 
-## Étape 4 : boutique démo piégée *(~15 min)*
+## Étape 4 : boutique démo + outils du sandbox *(~30 min)*
 
-**Objectif.** Créer `demo-shop/` (« Maison Lumière ») avec exactement les défauts de
-`arma-spec.md` §11.
+### 4a. `demo-shop/` (cible temporaire)
+Créer aussi `targets/maison-lumiere.json` (spec §20). `bridge.py` lit la cible via
+`--target` (défaut : ce fichier) au lieu de chemins codés en dur.
 
-**Fichiers.** `demo-shop/index.html`, `product.html`, `cart.html`, `checkout.html`, `styles.css`
-et `img/*.svg` (des aplats colorés générés par script).
+Créer la boutique avec **exactement** les défauts de la spec §11 :
+- en-tête et pied de page identiques sur les quatre pages ;
+- checkout atteint via `onclick` ;
+- hero en `#b5b5b5` sur `#faf7f2` ;
+- « Ajouter au panier » en `div` ;
+- iframe tiers dans le paiement.
 
-**Contraintes**
-- **En-tête et pied de page identiques** sur les quatre pages. C'est ce qui rend la fusion du
-  composant visible.
-- **`checkout.html`** n'est atteignable que via `onclick="location.href='checkout.html'"` depuis
-  le panier.
-- **Contraste** : le hero a un fond `#faf7f2` et un texte `#b5b5b5`, pour inciter une première
-  correction maladroite (assombrir le fond).
-- **Le CTA « Ajouter au panier »** est un `div.btn` avec `onclick`.
-- **Paiement** : ajouter un `<iframe title="" src="about:blank" class="card-field">` qui simule
-  le champ de carte d'un prestataire. Ce sera le problème A16, escaladé.
-- **Le JS reste minimal et inline.** La boutique doit fonctionner à la souris.
+### 4b. `sandbox_tools/`
+Écrire les scripts de la spec §12 : `common.py`, `crawl.py`, `audit.py`, `keyboard.py`,
+`baseline.py`, `reaudit.py`, `compare.py` et `audit_static.js`. Règles :
+- **Chromium** : `executable_path` pris dans la variable `ARMA_CHROMIUM` (défaut
+  `/usr/bin/chromium`), avec `--no-sandbox`.
+- **axe** : chargé depuis `vendor/axe.min.js`, relatif au script.
+- **Sorties** : un JSON sur stdout ; en cas d'erreur, `{"error": "...actionable..."}` et un code
+  de sortie non nul.
+- **Fichiers de travail** : `ARMA_WORK` (défaut `/workspace/arma`) pour les JSON et les captures.
 
-**Vérification**
+### 4c. Test local des outils
+Lancer avec un Chromium local (celui de Playwright installé à l'étape 2) :
 ```bash
 python -m http.server 8765 -d demo-shop &
-python - <<'EOF'
-# axe sur les 4 pages : doit trouver color-contrast, html-has-lang, image-alt
-# et NE PAS trouver les défauts « agent » (emoji buttons, placeholders, div buttons) → c'est voulu
-EOF
+ARMA_CHROMIUM=$(python -c "from playwright.sync_api import sync_playwright as p; s=p().start(); print(s.chromium.executable_path)") \
+ARMA_WORK=state/local python sandbox_tools/crawl.py http://127.0.0.1:8765/index.html
+python sandbox_tools/audit.py http://127.0.0.1:8765/index.html
+python sandbox_tools/keyboard.py http://127.0.0.1:8765/product.html
+python sandbox_tools/baseline.py http://127.0.0.1:8765/index.html
+python sandbox_tools/compare.py http://127.0.0.1:8765/index.html
 ```
-Implémenter ce contrôle dans `scripts/check_demo_shop.py`, en réutilisant `arma/browser.py` dès
-qu'il existe (étape 5). Pour l'instant, un script autonome suffit.
 
-**Commit** : `feat: trapped demo storefront (Maison Lumière)`
+**Attendus** :
+- le crawl renvoie quatre pages, checkout comprise ;
+- axe trouve `color-contrast`, `html-has-lang` et `image-alt`, et **pas** les défauts de
+  jugement ;
+- le parcours clavier signale le focus invisible et les `div` inaccessibles ;
+- `compare.py` juste après `baseline.py` renvoie zéro régression et environ 0 % de pixels modifiés.
 
----
-
-## Étape 5 : outils navigateur déterministes *(~25 min)*
-
-**Objectif.** Écrire `arma/browser.py` (spec §8, colonne « effet ») sans aucun appel à Claude.
-
-**Fonctions (toutes async)**
-
-| Fonction | Ce qu'elle fait |
-|---|---|
-| `crawl(base_url, max_pages=30)` | Parcours en largeur des `a[href]` internes + des cibles de `location.href` trouvées dans les `[onclick]` |
-| `axe_audit(url, screenshot_path=None)` | Injecte axe (tags `wcag2a, wcag2aa, wcag21a, wcag21aa`) ; renvoie `{url, violations:[{rule, impact, help, wcag:["1.4.3"], nodes:[{target, html≤200, summary≤300}], count}], total_nodes}` ; capture pleine page si demandée |
-| `keyboard_walk(url, max_tabs=40)` | Presse Tab en boucle ; à chaque arrêt, relève sélecteur, nom accessible, focus visible (outline ou box-shadow), présence à l'écran ; détecte le retour au premier arrêt ; liste les éléments `[onclick]`, `.btn`, `[role=button]` non focusables |
-| `page_html(url, max_chars=15000)` | HTML rendu, tronqué |
-| `screenshot(url, path)` | Capture pleine page |
-| `visual_diff(before, after, out)` | Pillow : padder à la même taille, différence en niveaux de gris avec seuil, superposition rouge ; renvoie la part de pixels modifiés |
-
-Chaque fonction lance son Chromium dans un `async with`, sous un `asyncio.Semaphore(4)`. La
-conversion des critères se fait avec `re.fullmatch(r"wcag\d{3,4}", tag)`, ce qui donne
-`"1.4.3"` ou `"1.4.10"`.
-
-**Vérification** : `scripts/check_demo_shop.py` passe sur `arma/browser.py` et affiche :
-- le crawl : **quatre pages**, checkout comprise ;
-- axe sur index : `color-contrast`, `html-has-lang`, `image-alt` ;
-- `keyboard_walk(product)` : aucun focus visible, et des `div.size` et `div.btn` inaccessibles ;
-- `visual_diff` sur deux captures identiques : `0.0`.
-
-**Commit** : `feat: deterministic browser tools (crawl, axe, keyboard, visual diff)`
+**Commit** : `feat: trapped demo shop and sandbox tools`
 
 ---
 
-## Étape 6 : état, score, contexte *(~15 min)*
+## Étape 5 : onboarding Managed Agents + smoke test du sandbox *(~25 min)*
 
-**Fichiers.** `arma/state.py`, `arma/scoring.py`, `tests/test_state.py`.
+**C'est l'étape la plus risquée. On valide la chaîne d'outils du sandbox avant toute autre chose.**
 
-**`state.py`** reprend `Store` de la spec §6 :
-- JSON dans `state/state.json` ;
-- écritures atomiques (`.tmp` puis `os.replace`) sous `threading.RLock` ;
-- `phases_done`, `pages`, `issues`, `batches`, `baseline`, `final`, `cost_usd`.
+1. **Lancer `/claude-api managed-agents-onboard`.** S'en servir pour générer ou valider la
+   structure `managed/` et le flux `ant apply`. Ce qu'il propose est conservé s'il est compatible
+   avec la spec §5.
+2. **`managed/environment.yaml`** : copier la spec §5.1, puis `ant apply managed/environment.yaml`.
+   L'identifiant va dans `claude-lock.json`.
+3. **`managed/agents/smoke.md`** : un agent minimal, avec `agent_toolset_20260401` (bash, read,
+   write) et le prompt « Run the commands you are given and report outputs verbatim. ». Puis
+   `ant apply`.
+4. **`scripts/smoke_sandbox.py`** :
+   1. compresse `demo-shop/` et `sandbox_tools/` ;
+   2. les uploade (`client.files.upload`) ;
+   3. crée une session avec `resources` (les deux fichiers tgz) et un budget faible ;
+   4. ouvre le stream, **puis** envoie un `user.message` qui demande de :
+      - extraire les deux tgz dans `/workspace` ;
+      - lancer `which chromium` et `python -c "import playwright"` ;
+      - démarrer `http.server` ;
+      - lancer `crawl.py`, puis `audit.py` sur l'index ;
+      - écrire le résultat dans `/mnt/session/outputs/smoke.json` ;
+   5. attend `session.status_idle`, puis télécharge `smoke.json` via
+      `client.beta.files.list(scope_id=session.id, betas=["managed-agents-2026-04-01"])`.
 
-Méthodes :
-- `add_page` ;
-- `add_issue(**fields)`, qui renvoie `(issue, merged: bool)` avec le dédoublonnage de la spec ;
-- `set_status(id, status, by, note)` ;
-- `issues(status=None)`, `issue(id)` ;
-- `phase_done`, `start_phase`, `finish_phase`.
+**Vérification** : `smoke.json` contient les quatre pages et des violations axe.
 
-**Les statuts sont des constantes**, jamais des chaînes libres.
+**Si ça bloque** (Chromium ou Playwright indisponible dans le sandbox), essayer dans l'ordre :
+1. ajouter `apt: [chromium-driver]` ou chercher le binaire (`ls /usr/bin | grep -i chrom`) et
+   l'indiquer dans `ARMA_CHROMIUM` ;
+2. passer `audit.py` et `keyboard.py` en mode `audit_static.js` (Node + jsdom + axe), en ajoutant
+   `npm: [jsdom]` à l'environnement. Le parcours clavier est alors remplacé par une analyse
+   statique des éléments interactifs (`onclick` non focusables, `outline: none`).
 
-**`scoring.py`**
-```python
-PEN = {"critical":10, "major":6, "minor":3}
-def compute(issues, frozen_total=None) -> dict:
-    # returns {"value": int, "by_principle": {"P":%,"O":%,"U":%,"R":%}, "eaa": "non_compliant|partially_compliant|compliant_automated"}
-```
-- **Gel du total** : `frozen_total` (pénalité totale × 1.6) est enregistré dans le store à la fin
-  de l'audit.
-- **Principe** : on le dérive du critère (préfixe 1 = P, 2 = O, 3 = U, 4 = R).
+Le diff visuel est alors désactivé : le testeur s'appuie sur le diff CSS.
 
-**Vérification** : `python -m pytest -q tests/`. Les tests couvrent :
-- la fusion de doublons ;
-- l'atomicité (relecture après écriture) ;
-- un score de départ dans la zone 30 à 45 pour les seize problèmes de la fixture ;
-- un score de 95 environ avec A04 et A16 ouverts.
+**Le plafond pour cette étape est de 40 minutes.** Au-delà, prendre l'option 2.
 
-**Commit** : `feat: persistent store and scoring`
+**Commit** : `feat: managed environment validated by sandbox smoke test`
 
 ---
 
-## Étape 7 : outils MCP, agents, orchestrateur (cartographie et audit) *(~35 min)*
+## Étape 6 : ledger + custom tools + pont minimal *(~25 min)*
 
-**Objectif.** Faire tourner les **premiers vrais agents** : la cartographie, puis l'audit avec des
-sous-agents parallèles, avec émission des événements.
+**Fichiers.** `arma_bridge/store.py`, `scoring.py`, `custom_tools.py`, `translate.py`, `bridge.py`
+et `tests/`.
 
-**Fichiers.** `arma/tools.py`, `arma/agents.py`, `arma/orchestrator.py`, `run.py`.
+- **`store.py`** :
+  - `state/state.json` en écritures atomiques, sous `RLock` ;
+  - pages, issues, batches, commits ;
+  - `add_issue` avec dédoublonnage (spec §6) ;
+  - **machine à états des statuts** : transitions autorisées
+    `detected → fixing → fixed_pending → validated | rejected`, `rejected → fixing`,
+    `* → needs_human`.
+- **`scoring.py`** : la formule de la spec §10, avec le total figé.
+- **`custom_tools.py`** :
+  - un handler par outil de la spec §6 (y compris `start_batch`) ;
+  - chacun valide les entrées et l'appelant (`verdict` réservé à `tester`) ;
+  - chacun émet les événements prévus ;
+  - chacun renvoie un texte court et actionnable.
+- **`translate.py`** : la correspondance des événements Managed Agents vers le contrat (spec §10).
+  Les étiquettes d'agent viennent du champ `agent` des custom tools et des événements de fil.
+- **`bridge.py run`** (premier jet) :
+  1. upload des entrées ;
+  2. session ;
+  3. stream ouvert **avant** l'envoi ;
+  4. boucle d'événements ;
+  5. réponse aux `agent.custom_tool_use` dès réception ;
+  6. reconnexion avec dédoublonnage par `event.id` ;
+  7. fin sur l'idle `end_turn` ;
+  8. enregistrement de `recordings/run-<date>.jsonl`.
 
-**`tools.py`**
-- **Contexte** : `CTX` contient `store`, `bus`, `base_url`, `site_dir`, `work_dir`, `chaos`,
-  `chaos_fired`, `batch_verdict` et `current_agent`.
-- **Outils** : les treize outils de la spec §8, avec `@tool(name, description, schema)`.
-- **Retours** : `_ok(payload)` et `_err(msg)` (avec `is_error: True`). Pas d'exception qui
-  remonte.
-- **Effets** : `add_issue` émet `issue.detected` ou `issue.merged`. `register_page` émet un
-  `log`.
-- **Exports** : `server()` (`create_sdk_mcp_server("a11y", ...)`) et `t(*names)`, qui renvoie
-  les noms `mcp__a11y__*`.
+**Tests** (`pytest -q`) :
+- le dédoublonnage ;
+- les transitions illégales refusées ;
+- un score de départ entre 30 et 45 sur les données de la fixture, puis environ 95 avec A04 et A16
+  ouverts ;
+- un handler `report_issue` qui émet `issue.detected`.
 
-**`agents.py`**
-- **Prompts** : ceux de la spec §7, en anglais, avec le préambule commun.
-- **Outils** : une liste par rôle.
-- **`audit_subagents(model)`** renvoie
-  `{"page-auditor": AgentDefinition(description, prompt, tools, model=model or "inherit", background=False, maxTurns=40)}`.
-  Les champs de `AgentDefinition` sont en camelCase.
+**Commit** : `feat: compliance ledger, custom tool handlers, bridge skeleton`
 
-**`orchestrator.py`** (seulement les phases `crawl`, `baseline`, `audit` à cette étape)
-- **`run_agent(role, system, prompt, allowed, *, cwd, write_root, subagents, max_turns, retries=1)`** :
-  1. construit `ClaudeAgentOptions` comme dans la spec §10 ;
-  2. le hook `guard` journalise chaque appel d'outil (`log` kind `tool`, avec l'agent issu de
-     `input_data.get("agent_type") or role`) et refuse les écritures hors `write_root` ;
-  3. dans la boucle `async for msg in query(...)` :
-     - `TextBlock` → `log` kind `msg` ;
-     - `ToolUseBlock` nommé `Agent` → `log` « dispatching sub-agent » et mise à jour `subagents` ;
-     - `ResultMessage` → cumul du coût, et exception si `is_error` ;
-  4. sur exception : log `err`, puis une seule relance avec le préfixe « RESUMING… ».
-- **Émissions** :
-  - `agent.status` (working, puis done) autour de chaque session ;
-  - `phase.changed` à chaque phase ;
-  - `run.started` au début.
-- **`phase_baseline`** :
-  1. préparation git du site : init si besoin, refus d'un dépôt sale, branche
-     `a11y/eaa-remediation-<date>` ;
-  2. pour chaque page, en parallèle : `axe_audit` + `keyboard_walk` + capture `before.png` ;
-  3. émet l'événement `baseline` agrégé.
-- **Fin de `phase_audit`** : gel du score, émission de `score`, puis log de synthèse (total,
-  invisibles pour axe, bloquants du tunnel).
+---
 
-**`run.py`**
-- **Options** : `--demo`, `--site`, `--url`, `--resume`, `--model`, `--chaos`, `--budget`,
-  `--until <phase>` (pour s'arrêter après une phase).
-- **En `--demo`** :
-  1. copie `demo-shop/` vers `runs/demo-shop/` ;
-  2. sert ce dossier en thread sur 8765 (`ThreadingHTTPServer`, handler sans cache et
-     silencieux) ;
-  3. ouvre l'EventBus sur `recordings/run-<YYYYmmdd-HHMM>.jsonl`.
+## Étape 7 : agents Managed (cartographie + audit) *(~30 min)*
+
+1. **Écrire les agents** dans `managed/agents/` selon la spec §5.2, avec leurs custom tools
+   (`type: custom`, descriptions détaillées, `input_schema`) :
+   - **`page-auditor.md`** : le protocole de la spec §7.2 en entier, avec la liste des problèmes
+     de jugement et l'appel obligatoire à `emit_progress` à chaque étape ;
+   - **`developer.md`**, **`tester.md`** et **`writer.md`** : leurs prompts, même s'ils ne servent
+     qu'à l'étape 8 ;
+   - **`lead.md`** : le protocole complet de la spec §7, et le bloc `multiagent` avec les quatre
+     sous-agents en `predefined_agents` et `inline_agents` désactivé.
+2. **Appliquer d'abord les sous-agents, puis le lead** (`ant apply`), pour que le lead épingle les
+   bonnes versions.
+3. **`managed/prompts/brief.md`** : le brief du run (extraire, git, servir, cartographier,
+   mesurer, auditer en parallèle, planifier, corriger et vérifier, re-auditer, documents,
+   sorties). Ajouter un drapeau `--until audit` dans `bridge.py` : le brief demande alors de
+   s'arrêter après la planification.
+4. **Lancer** `python bridge.py run --until audit --model-override sonnet`.
 
 **Vérification**
-```bash
-python run.py --demo --model sonnet --until audit
-```
 - `state/state.json` contient quatre pages et **au moins douze problèmes**, dont une majorité en
   `source != "axe"`.
-- Le JSONL contient des `issue.detected` et un `score`.
-- Les logs montrent des sous-agents parallèles (étiquettes `auditor·<page>`).
-- **Ouvrir ce run dans le dashboard** :
-  `python -m http.server -d web 8080` puis copier le JSONL dans `web/recordings/`, et ouvrir
-  `/?run=recordings/<fichier>`. Le rendu doit être correct.
+- Le JSONL montre des fils d'auditeurs en parallèle (`session.thread_created`, puis des
+  `report_issue` étiquetés `auditor·<page>`).
+- **Ouvrir ce JSONL dans le dashboard** (`?run=…`) : le rendu est correct.
 
-**Commit** : `feat: real agent team for mapping and audit (claude-agent-sdk)`
+**Commit** : `feat: hosted lead + parallel page auditors on Managed Agents`
 
-**Si ça bloque.**
-- **Si les sous-agents ne se lancent pas en parallèle** : remplacer le lead-auditor par une
-  boucle Python qui lance N sessions `page-auditor` avec `asyncio.gather`. La démo est identique
-  et le parallélisme reste réel.
-- **Si le coût ou la durée explosent** : `max_turns` plus bas et `--model sonnet`.
+**Si ça bloque** :
+- **si la délégation parallèle échoue** : le lead délègue les pages une par une. C'est moins
+  spectaculaire, mais fonctionnel ;
+- **si un sous-agent n'appelle pas les custom tools** : renforcer son prompt avec la consigne
+  « Every finding MUST be recorded with report_issue; findings only in text are lost ».
 
 ---
 
-## Étape 8 : boucle de correction *(~40 min)*
+## Étape 8 : boucle correction ⇄ vérification *(~40 min)*
 
-**Objectif.** Implémenter le cœur de la démo : développeur ⇄ testeur, rollback, commits et
-escalade (spec §9.2).
-
-**À ajouter dans `orchestrator.py`**
-- **`phase_plan`** : un lot par critère, tri par sévérité maximale puis par critère ; émet un
-  `log` par lot.
-- **`phase_fix` → `_fix_batch(batch)`** : exactement le pseudo-code §9.2, plus :
-  - au début de chaque tentative, émettre `batch.started` et passer les problèmes en `fixing`
-    (`issue.status`, avec `attempt`) ;
-  - après le développeur, pour chaque problème en `fixed_pending` : calculer `fix_diff` avec
-    `git diff -- <files>` et l'enregistrer dans l'issue ;
-  - émettre `issue.status` à **chaque** changement (y compris ceux faits par les outils
-    `mark_fixed`, `verdict` et `cannot_fix`) et `score` après chaque changement ;
-  - rollback : `git checkout -- . && git clean -fd`, log kind `rollback` ;
-  - commit : `git -c user.name=arma-agent -c user.email=arma@localhost commit -m "fix(a11y): WCAG <crit> — <titres>"` ;
-    émettre `commit.created {sha, criterion, message, files}`.
-- **Prompt du développeur** : le lot en JSON, plus une section
-  `PREVIOUS TESTER REJECTIONS (fix exactly these)` construite à partir des notes `rejected` de
-  l'historique.
-- **Prompt du testeur** : les problèmes déclarés corrigés (avec `fix_note` et `files`) et les
-  pages concernées. Le testeur ne voit pas le diff, ce qui garantit son indépendance.
-- **`compare_with_baseline`** : comparer à `baseline[url]` (clés `(rule, target)`) ; capture
-  `after.png` ; `visual_diff`.
+1. **Compléter le brief et le prompt du lead** avec la boucle de la spec §7.4 :
+   - `start_batch` ;
+   - délégation au développeur, **en réutilisant le même fil** pour les relances ;
+   - délégation au testeur ;
+   - rollback (`git checkout`, puis `rollback_batch`) ;
+   - commit, puis `record_commit` ;
+   - plafond de trois tentatives.
+2. **Prompt du testeur** :
+   - indépendance : il ne lit pas le diff, il juge le résultat ;
+   - refus des correctifs cosmétiques (`role="button"` sur un `div` non focusable) ;
+   - si plus de 2 % des pixels changent, ouvrir la capture diff et refuser si le fond ou la mise
+     en page a changé ;
+   - raisons actionnables.
+3. **Lancer d'abord un seul lot** : `python bridge.py run --only-batch 2.1.1 --model-override sonnet`.
+   Le brief n'exécute alors que ce lot.
+4. **Puis le run complet** jusqu'au re-audit.
 
 **Vérification**
-1. **Sur un seul lot d'abord** : ajouter `--only-batch 2.1.1` et lancer
-   `python run.py --demo --model sonnet --resume --only-batch 2.1.1`.
-   - Les statuts doivent changer ;
-   - un commit doit apparaître dans `runs/demo-shop` (`git log --oneline`) ;
-   - le diff doit être lisible.
-2. **Puis tous les lots** : `python run.py --demo --model sonnet --until fix`.
-   - Au moins dix problèmes `validated`, et A04 et A16 en `needs_human` ;
-   - le score monte ;
-   - un commit par critère.
-3. **Vérifier dans le dashboard** (replay du nouveau JSONL) que :
-   - les pills changent ;
-   - les lignes dépliées montrent le diff et la piste de vérification ;
-   - les commits apparaissent dans le log.
+- Dans le JSONL :
+  - au moins un `issue.status rejected`, puis `validated` pour le même identifiant, **avec le même
+    fil développeur** (même `session_thread_id` si disponible, ou étiquette identique) ;
+  - au moins un `rollback` ;
+  - des `commit.created` par critère.
+- Dans le state :
+  - au moins dix problèmes `validated` ;
+  - A04 et A16 en `needs_human`.
 
-**Commit** : `feat: developer/tester remediation loop with rollback and escalation`
+**Commit** : `feat: hosted developer/tester loop with rollback and escalation`
 
-**Si ça bloque.**
-- **Si le testeur ne rend pas de verdict** : l'orchestrateur marque `rejected` (« no verdict »)
-  et continue. C'est déjà prévu dans la spec.
-- **Si un lot boucle sans fin** : le plafond de trois tentatives escalade le problème.
-- **Si aucun refus n'apparaît naturellement** : renforcer la consigne du testeur. Un
-  `role="button"` sur un `div` non focusable doit être refusé, et un diff visuel supérieur à 2 %
-  doit déclencher la lecture de la capture et un refus si le fond a changé. Puis relancer.
-  **Ne jamais fabriquer d'événements.**
+**Si aucun refus n'apparaît naturellement** : durcir le prompt du testeur, puis relancer. **Ne
+jamais fabriquer d'événements.**
 
 ---
 
-## Étape 9 : re-audit, documents, PR prête *(~20 min)*
+## Étape 9 : outcome + sorties rapatriées *(~25 min)*
 
-**À ajouter**
-- **`phase_reaudit`** : mesures finales sur toutes les pages, puis événement `reaudit`.
-- **`phase_report`** :
-  1. session `writer` (écriture limitée à `state/out/`) qui produit `pr-body.md` et
-     `accessibility-statement.md` à partir d'un JSON de synthèse (issues, statuts, commits,
-     métriques avant/après) ;
-  2. émettre `document.written {name, path, content}` pour chaque fichier ;
-  3. **repli** : si le writer échoue, générer les deux documents depuis un template Python, pour
-     que la démo ne soit jamais bloquée.
-- **`phase_pr`** :
-  1. `git diff base..branch > state/out/changes.diff` ;
-  2. `git format-patch` dans `state/out/patches/` ;
-  3. émettre `pr.ready {repo, branch, base, commits, files, body}` ;
-  4. émettre `run.finished {cost_usd, duration_s}`.
+1. **Rubric** : `managed/rubric.md` (spec §8.2), uploadée par le pont. La session reçoit
+   `user.define_outcome` avec la rubric en fichier et `max_iterations: 3`, juste après le brief.
+2. **`translate.py`** : `span.outcome_evaluation_start` et `span.outcome_evaluation_end`
+   deviennent des événements `outcome`. Ne pas considérer le run terminé avant un résultat
+   terminal (`satisfied`, `max_iterations_reached`, `failed`).
+3. **Fin de run** (`arma_bridge/outputs.py`) :
+   - lister et télécharger `/mnt/session/outputs/*` dans `state/out/`, en réessayant après
+     quelques secondes ;
+   - copier `demo-shop/` vers `runs/demo-shop/`, faire `git init` puis le commit de baseline, et
+     appliquer `git am state/out/patches/*.patch` sur la branche `a11y/eaa-remediation-<date>` ;
+   - émettre `document.written` (`pr-body`, `statement`), `reaudit` (depuis `report.json`),
+     `pr.ready` et `run.finished` (coût via `session.usage`).
 
-**Vérification**
-```bash
-python run.py --demo --model sonnet           # run complet
-```
-- Le JSONL se termine par `pr.ready` et `run.finished`.
-- `state/out/` contient les deux documents, le diff et les patchs.
-- La déclaration indique « partially compliant » et contient des champs `[TO COMPLETE]`.
-- Dans le dashboard, les onglets « Pull request » et « Accessibility statement » sont remplis
-  avec le **vrai** contenu.
+**Vérification** : run complet `python bridge.py run --model-override sonnet` :
+- l'outcome est `satisfied`, éventuellement après un `needs_revision` ;
+- `state/out/` contient les documents et les patchs ;
+- `git log` dans `runs/demo-shop` montre un commit par critère ;
+- le dashboard affiche la carte grader et les onglets PR et Statement remplis avec le **vrai**
+  contenu.
 
-**Commit** : `feat: re-audit, writer documents, PR-ready output`
+**Commit** : `feat: outcome rubric grading and output retrieval`
 
-> ✅ **Jalon B atteint.** Un vrai run complet est enregistré.
+> ✅ **Jalon B atteint.**
 
 ---
 
-## Étape 10 : choisir le meilleur run et redéployer *(~15 min)*
+## Étape 10 : robustesse du run long *(~15 min)*
 
-**`scripts/pick_demo_run.py <run.jsonl>`**
-- **Contrôles** : le fichier contient `pr.ready`, au moins un `issue.status` en `rejected` suivi
-  d'un `validated` sur le même id, au moins un `log` kind `rollback`, et au moins un `subagents`.
-  Afficher OK ou KO pour chaque contrôle.
-- **Compression des temps morts** : chaque écart entre deux événements consécutifs est plafonné
-  à 4 secondes. L'ordre est conservé et les `t` sont recalculés.
-- **Sortie** : `web/recordings/demo-run.jsonl`.
+- **`bridge.py resume <session_id>`** : rattache le stream, relit l'historique
+  (`events.list`), dédoublonne et reprend les réponses aux custom tools en attente.
+- **Démonstration** : couper le pont (Ctrl-C) en pleine phase fix, puis lancer `resume`. La
+  session a continué côté serveur et le dashboard rattrape. C'est l'argument « long running ».
+- **Budget** : en cas d'idle `budget_reached`, journaliser proprement et proposer `resume` après
+  hausse du budget.
+- **`session.error`** : journaliser ; ne pas abandonner si `retry_status` indique une relance
+  automatique.
 
-**Actions**
-1. Lancer deux ou trois runs complets si nécessaire, puis garder celui qui passe tous les
-   contrôles. Utiliser le modèle par défaut pour le run final si le budget le permet.
-2. Relancer `scripts/check_web.py` sur `demo-run.jsonl`.
-3. Redéployer avec `cd web && npx vercel --prod`.
+**Vérification** : le test Ctrl-C puis `resume` sur un run en cours se termine correctement.
 
-**Vérification.** Sur l'URL Vercel, en navigation privée :
-- « Run audit » rejoue le **vrai** run ;
-- un refus, un rollback et des commits sont visibles ;
-- la PR et la déclaration sont présentes.
-
-**Commit** : `chore: ship best real run as demo replay`
+**Commit** : `feat: resumable bridge for long-running sessions`
 
 ---
 
-## Étape 11 : livrables *(~15 min)*
+## Étape 11 : eval *(~25 min)*
 
-**`scripts/export_logs.py <run.jsonl>`** écrit `deliverables/agent-logs.txt`, avec :
-- un en-tête : projet, date, site, modèle, coût, durée ;
-- puis une ligne par événement `log` au format `mm:ss [agent] texte` ;
-- et des séparateurs lisibles aux `phase.changed`.
+1. **`/claude-api build-eval`** : s'en servir pour générer ou valider l'eval à partir de la spec
+   §9.
+2. **`eval/ground_truth.json`** : seize entrées (spec §11), avec leurs règles de correspondance et
+   `expected_final`.
+3. **`eval/run_eval.py state/out/report.json [state/out/final.json]`** :
+   - calcule les métriques et les seuils de la spec §9.2 ;
+   - affiche PASS/FAIL ;
+   - écrit `eval/results/<run>.json` ;
+   - renvoie un code de sortie non nul en cas d'échec.
+4. **Pont** : à la fin du run, lancer l'eval et émettre l'événement `eval`. Ajouter une ligne à
+   `eval/history.csv` avec la version des agents (lue dans `claude-lock.json`).
 
-**`deliverables/agent-design.txt`**, une page maximum, en anglais, en texte brut :
-1. **Overview** : le problème et ce que fait l'équipe.
-2. **Agents and roles** : cartographer, lead-auditor + parallel page-auditors, developer, tester,
-   writer, et le Python orchestrator.
-3. **Handoffs** : un état partagé, seulement via des outils typés ; les transitions de statut.
-4. **Plan → act → verify loop** : lots par critère WCAG, testeur indépendant, rejets avec
-   feedback actionnable, rollback en cas de régression, plafond de trois tentatives, escalade
-   humaine.
-5. **Error recovery** : relances de session, checkpoints de phase, `--resume`, injection de panne,
-   replis déterministes.
-6. **Governance** : outils restreints par rôle, `dontAsk`, hook de périmètre d'écriture,
-   journal d'audit complet ; jamais d'affirmation de conformité totale.
-7. **Stack** : Claude Agent SDK (Python), outils MCP en processus, Playwright + axe-core, git,
-   dashboard statique piloté par des événements.
+**Vérification** : sur le run de l'étape 9, l'eval sort avec un tableau lisible. Si elle échoue,
+noter les métriques en échec : elles sont la cible du hill climb.
 
-**`deliverables/links.md`** : l'URL Vercel (live link), l'URL `#about` (pitch), le dépôt GitHub,
-et un emplacement pour le lien des slides.
+**Commit** : `feat: ground-truth eval`
 
-**MP4.** Une capture d'écran du dashboard en replay 2× sur l'URL Vercel, faite par l'utilisateur
-(enregistreur d'écran du système).
+---
 
-**Commit** : `docs: hackathon deliverables (agent design, logs, links)`
+## Étape 12 : meilleur run → replay → redéploiement + livrables *(~25 min)*
+
+1. **`scripts/pick_demo_run.py <run.jsonl>`** :
+   - vérifie la présence d'un refus suivi d'une validation sur le même identifiant, d'un
+     rollback, de sous-agents parallèles, d'un `outcome satisfied`, d'un `eval` PASS et de
+     `pr.ready` ;
+   - plafonne chaque écart entre événements à 4 secondes ;
+   - écrit `web/recordings/demo-run.jsonl`.
+2. **Run final** : un run complet sans override de modèle si le budget le permet. Sinon, garder le
+   meilleur run sonnet.
+3. **Vérification du dashboard** : `scripts/check_web.py` sur `demo-run.jsonl`, puis
+   `cd web && npx vercel --prod`.
+4. **`scripts/export_logs.py`** produit `deliverables/agent-logs.txt` :
+   - un en-tête : session, modèle(s), coût, durée, résultat de l'outcome, eval ;
+   - une ligne `mm:ss [agent] texte` par log ;
+   - des séparateurs de phase.
+5. **`deliverables/agent-design.txt`**, une page, en anglais :
+   1. architecture hébergée (lead + sous-agents, fils persistants et isolés, sandbox partagé) ;
+   2. passations via les custom tools du registre de conformité ;
+   3. boucle plan → act → verify, avec rollback et escalade ;
+   4. outcome rubric et grader indépendant ;
+   5. eval contre la vérité terrain et hill climb ;
+   6. reprise (sessions côté serveur, `resume`, budget) ;
+   7. gouvernance (outils par rôle, testeur sans édition, machine à états, audit trail, aucune
+      affirmation de conformité totale) ;
+   8. stack.
+6. **`deliverables/links.md`** : l'URL Vercel, `#about`, le dépôt, et un emplacement pour les
+   slides.
+7. **MP4** : l'utilisateur enregistre l'écran du replay 2× sur l'URL Vercel.
+
+**Vérification** : sur l'URL Vercel, en navigation privée, on voit le **vrai** run : grader
+`satisfied`, eval PASS, refus, rollback, commits et PR.
+
+**Commit** : `chore: ship real run replay and deliverables`
 
 > ✅ **Jalon C atteint. Prêt à soumettre.**
 
 ---
 
-## Bonus : seulement s'il reste du temps, dans cet ordre
+## Bonus, dans cet ordre
 
-### Étape 12 : mode live (SSE) *(~25 min)*
-- **`server.py` (FastAPI)** :
+### Étape 13 : hill climb *(~30 min)*
+1. Lancer `/claude-api hillclimb` sur `eval/run_eval.py`. Cibler d'abord le prompt de
+   `page-auditor` (`recall_agent_only`), puis celui du testeur (`false_fix`, `verified_fix_rate`).
+2. À chaque itération :
+   - `ant apply` du sous-agent modifié **puis du lead**, pour ré-épingler les versions ;
+   - un run ;
+   - l'eval ;
+   - une ligne dans `history.csv`.
+3. Le dashboard affiche la mini-courbe de l'historique dans la carte Eval.
+4. Redéployer avec le meilleur run.
+
+### Étape 14 : mode live (SSE)
+- **`server.py`** :
+  - `GET /api/events` (SSE depuis l'EventBus) ;
   - `GET /api/state` ;
-  - `GET /api/events` (SSE : `StreamingResponse` qui lit une `asyncio.Queue` de l'EventBus,
-    préfixe `data: `, keep-alive) ;
-  - `POST /api/run` (lance `Orchestrator.run()` en tâche de fond si aucun run en cours ; sinon
-    409) ;
-  - `POST /api/pr` (étape 13) ;
-  - statique `web/` sur `/`.
-- **`LiveSource`** dans `app.js` : `EventSource('/api/events')`.
-  - Si `/api/state` répond, le mode par défaut devient `live`.
-  - En cas d'erreur, bascule automatique en replay avec un toast discret.
-- **Vérification** : `uvicorn server:app --port 8000`, ouvrir `/?mode=live`, cliquer
-  « Run audit » et voir le run réel défiler.
+  - `POST /api/run` (lance `bridge.run` en tâche de fond ; renvoie 409 si un run est en cours) ;
+  - `POST /api/pr` ;
+  - statique `web/`.
+- **`LiveSource`** : `EventSource('/api/events')`. Mode `live` par défaut si `/api/state` répond,
+  avec repli automatique sur le replay (et un toast).
 
-### Étape 13 : vraie PR GitHub *(~15 min)*
-- **`arma/pr.py`** :
-  - si `GITHUB_REPO` est défini, `gh auth status` est OK et un remote `origin` existe : `git push`,
-    puis `gh pr create --title "a11y: EAA remediation, WCAG 2.1 AA" --body-file <corps> --head <branch>`,
-    puis `--reviewer` si fourni ;
-  - sinon, envoi simulé ;
-  - le corps est le `pr-body.md`, précédé du message compliance et de « Approved by compliance ».
-- **`POST /api/pr`** appelle `pr.py`, émet `pr.sent {number, url, notified, simulated}` et renvoie
-  le résultat. Slack, Jira et email restent simulés et sont affichés comme tels.
+### Étape 15 : vraie PR GitHub
+- **`arma_bridge/pr.py`** : si `GITHUB_REPO` est défini, `gh` connecté et un remote présent, alors
+  `git push` puis `gh pr create --body-file state/out/pr-body.md`. Sinon, envoi simulé.
+- **Émettre** `pr.sent`.
 
-### Étape 14 : `--chaos` et `--resume`
-- **`--chaos`** : la première erreur `audit_page` est injectée, et le log l'étiquette
-  « Injected fault ».
-- **`--resume`** : relit `state.json`, saute les phases faites et annule les modifications non
-  commitées du lot en cours.
-- **Vérification** : Ctrl-C en pleine phase `fix`, puis `--resume` repart au bon lot.
+### Étape 16 : passer à un vrai site
+Créer `targets/<site>.json` (spec §20) et adapter l'environnement (`packages`, `allowed_hosts`).
+Lancer `bridge.py run --target …`, rejouer dans le dashboard, puis redéployer si le run est bon.
 
 ---
 
 ## Ordre de coupe si le temps manque
 
-1. Bonus 14, puis 13, puis 12.
-2. L'étape 9 réduite : documents générés par template plutôt que par le writer.
-3. L'étape 8 limitée aux trois ou quatre lots les plus visibles (2.4.7, 2.1.1, 1.4.3, 4.1.2).
+1. Bonus 15, puis 14, puis 13.
+2. **Étape 10** : ne garder que la reconnexion et le dédoublonnage.
+3. **Étape 8** : limiter aux lots 2.4.7, 2.1.1, 1.4.3 et 4.1.2.
+4. **Étape 5**, si le navigateur du sandbox est impossible : le fallback statique.
 
 **Ne jamais couper** :
-- **le dashboard (étape 2) et le déploiement (étape 3)** ;
-- **au moins un vrai run** avec cartographie et audit (étape 7) ;
-- **les livrables** (étape 11).
+- le dashboard en replay et le déploiement (étapes 2 et 3) ;
+- **au moins un vrai run hébergé** avec audit parallèle (étape 7) ;
+- l'outcome (étape 9) ;
+- les livrables (étape 12).
+
+**Filet de sécurité absolu** : si aucune session hébergée n'aboutit, le dashboard reste en ligne
+sur la fixture. Le dire honnêtement au pitch et montrer les logs du smoke test.
 
 ---
 
 ## Pièges à garder en tête
 
-Rappel de la spec §18 :
-- **`AgentDefinition` est en camelCase.** Mettre `background=False` sur le sous-auditeur.
-- **`allowed_tools` auto-approuve sans restreindre.** La restriction passe par `tools=`,
-  `disallowed_tools=` et `permission_mode="dontAsk"`.
-- **Les outils MCP des sous-agents** doivent aussi être dans `allowed_tools` de la session parente.
-- **Ne jamais faire `break`** dans `async for … in query(...)`.
-- **`setting_sources=[]`**.
-- **Les outils renvoient `is_error: True`** plutôt que de lever une exception.
-- **Le `cwd` du développeur** est le dépôt du site. Le hook refuse toute écriture ailleurs.
-- **Le coût** : `--model sonnet` pour les répétitions. Surveiller `cost_usd` dans `state.json`.
+Résumé de la spec §17 :
+- **Stream avant envoi.**
+- **Répondre à chaque `agent.custom_tool_use` immédiatement**, même pendant `running`.
+- **Un seul niveau de multiagent.** Après une mise à jour d'un sous-agent, ré-appliquer le lead.
+- **Fils développeur persistants** : réutiliser le même pour les relances.
+- **Sorties** uniquement depuis `/mnt/session/outputs/`, avec quelques secondes de délai.
+- **Budget** fixé à la création de la session.
+- **Ne jamais appeler `playwright install` dans le sandbox** (réseau `limited`).
+- **Développement en `claude-sonnet-5-5`** via `agent_with_overrides`.
+- **Ne jamais fabriquer d'événements** pour simuler un run réel.

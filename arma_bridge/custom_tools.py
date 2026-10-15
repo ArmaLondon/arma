@@ -1,4 +1,4 @@
-"""Custom tools = Arma's compliance ledger (arma-spec 2 §6).
+"""Custom tools = Arma's compliance ledger (arma-spec.md §6).
 
 Claude does not run these: the hosted agents call them, the bridge answers each call. Every handler
 validates its input and the caller, enforces the status state machine, records the audit trail and

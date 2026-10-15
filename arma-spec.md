@@ -1,789 +1,750 @@
-# Arma — spécification projet (pour Claude Code)
+# Arma : spécification projet, version Managed Agents (pour Claude Code)
 
-> Ce document décrit le projet de bout en bout. Claude Code doit le lire en entier avant
-> d'écrire du code, puis suivre le **plan de construction (§17)** dans l'ordre.
+> Ce document fait foi. Il remplace la version Agent SDK.
 >
-> **Priorité absolue : une démo qui marche visuellement, à chaque fois.** On vise l'efficacité,
-> pas l'exhaustivité. Tout ce qui est réel est un bonus ; tout ce qui est montré doit être fiable.
+> Il s'accompagne de :
+> - `arma-build-plan.md`, le plan de construction ordonné ;
+> - `reference/arma-dashboard-prototype.html`, la maquette du dashboard.
+>
+> **Priorité absolue : une démo qui marche visuellement, à chaque fois.**
+
+> **Déploiement et cible, à ne pas confondre.**
+> - **Ce qui est déployé sur Vercel, c'est l'application Arma elle-même** (le dashboard compliance,
+>   `web/`). C'est le produit et le lien live du jury.
+> - **Maison Lumière est une cible de démonstration temporaire.** C'est un faux site client, servi
+>   dans le sandbox des agents, jamais sur Vercel. Il sera remplacé par un vrai site si le temps le
+>   permet (§20).
 
 ---
 
 ## 0. En bref
 
 **Arma** est un dashboard pour les **équipes compliance** des e-commerçants européens. Une
-équipe d'agents Claude, construite avec `claude-agent-sdk`, fait quatre choses :
-1. elle audite la boutique contre WCAG 2.1 AA, la norme technique derrière l'**European
-   Accessibility Act (EAA)** ;
-2. elle corrige les problèmes **dans le code source** ;
-3. elle fait **vérifier chaque correctif par un agent testeur indépendant** ;
-4. elle prépare une pull request que l'équipe compliance **envoie en un clic à l'équipe technique**.
+**équipe d'agents Claude hébergée (Claude Managed Agents)** fait quatre choses :
+1. elle audite la boutique contre WCAG 2.1 AA, la norme derrière l'**European Accessibility Act**
+   (EAA) ;
+2. elle corrige **dans le code source** ;
+3. elle fait vérifier chaque correctif par un **agent testeur indépendant** ;
+4. elle prouve le résultat via un **grader d'outcome indépendant**.
 
-**One-line pitch** : *Arma gives compliance teams an AI agent team that audits, fixes and
-verifies their store's accessibility, then hands engineering a ready-to-merge pull request.*
+Enfin, elle prépare une pull request que la compliance **envoie en un clic à l'équipe technique**.
+
+**One-line pitch** : *Arma gives compliance teams a hosted AI agent team that audits, fixes and
+verifies their store's accessibility, proves it against a rubric, and hands engineering a
+ready-to-merge pull request.*
+
+Le projet suit le cadre donné par les organisateurs : **Build it. Let it run. Prove it worked.**
+
+| Étape organisateurs | Dans Arma |
+|---|---|
+| Sign in with Console | `claude auth login --console` (crédits API du hackathon) |
+| Build your agent, hosted | `/claude-api managed-agents-onboard` : agents, environnement et sessions sur Managed Agents (§4 à §7) |
+| Give it a finish line | `/goal` dans Claude Code + **`user.define_outcome`** avec rubric dans chaque session (§8) |
+| Build the eval | `/claude-api build-eval` : eval déterministe contre la vérité terrain de la boutique piégée (§9) |
+| Hill climb | `/claude-api hillclimb` : amélioration des prompts, avec l'historique des scores montré au pitch (§9.3) |
 
 ---
 
 ## 1. Contexte : hackathon Accel AI Innovate
 
-**Challenge.** *Future Founders: Long Running Agents — From Task to Workflow* : des agents qui
-tournent longtemps et/ou travaillent en équipe, sur un vrai problème client, construits en une
-journée.
+**Challenge.** *Long Running Agents — From Task to Workflow* : des agents qui tournent longtemps
+et/ou en équipe, sur un vrai problème client, en une journée.
 
-**Critères du jury et réponse de Arma :**
+**Critères du jury :**
 
-| Critère | Ce que Arma montre |
+| Critère | Ce qu'Arma montre |
 |---|---|
 | Real output | Une branche git avec un commit par critère WCAG, une PR, un rapport et une déclaration d'accessibilité |
-| Agent design & architecture | Planification par lots, passations explicites via un état partagé, **refus du testeur → nouvelle tentative**, rollback, escalade humaine, reprise après crash |
-| Business viability | Obligation légale (EAA), procès en cours contre la grande distribution française, overlays sanctionnés par la FTC |
-| Demo & pitch | Dashboard avec logs d'agents en direct + mode replay d'un vrai run enregistré |
+| Agent design | Agent lead hébergé + sous-agents (auditeurs en parallèle, développeur, testeur, rédacteur) ; refus du testeur suivi d'une relance du développeur dans **le même fil persistant** ; rollback ; escalade ; grader d'outcome |
+| Business viability | Obligation EAA, procès contre la grande distribution française, overlays sanctionnés par la FTC |
+| Demo & pitch | Dashboard avec logs live (stream SSE de la session) + replay d'un vrai run enregistré |
 
 **Livrables à soumettre :**
 
-| Livrable | Format | Comment on le produit |
-|---|---|---|
-| Project name and one-line pitch | Hosted URL | Section « About » de la landing du dashboard déployé (§15) |
-| Live link to the product | Hosted URL | Dashboard déployé sur **Vercel** en mode replay (§14, §15) |
-| Short description of your agent design | TXT | `deliverables/agent-design.txt`, généré à partir de §6 à §9 |
-| Agent logs or a recording of a run | TXT / MP4 | `recordings/run-<date>.jsonl` → export `deliverables/agent-logs.txt` + capture écran MP4 |
-| Pitch slides link | Hosted URL | Slides séparées (hors périmètre code) |
+| Livrable | Comment on le produit |
+|---|---|
+| Name + one-line pitch (URL) | Panneau `#about` du dashboard déployé |
+| Live link (URL) | Dashboard sur Vercel, en mode replay d'un vrai run |
+| Agent design (TXT) | `deliverables/agent-design.txt` |
+| Logs or recording (TXT/MP4) | `deliverables/agent-logs.txt` (export du run) + capture écran MP4 |
+| Pitch slides (URL) | Hors code |
 
-**Ressources du hackathon :**
-- **Claude API credits** : la clé `ANTHROPIC_API_KEY`, indispensable.
-- **Vercel** : héberger le dashboard, pour le lien live.
-- **Supabase** : optionnel, non requis.
-- Les autres packs sont hors périmètre.
+**Ressources** : les crédits Claude API (obligatoires) et Vercel (lien live).
 
 ---
 
-## 2. Utilisateur, problème, proposition de valeur
+## 2. Utilisateur et valeur
 
-- **Utilisateur principal : responsable compliance / juridique** d'une PME ou ETI e-commerce
-  européenne.
-  - Il n'est pas développeur.
-  - Il doit prouver la conformité EAA, publier une déclaration d'accessibilité et faire corriger
-    les écarts par l'équipe technique.
-- **Utilisateur secondaire : l'équipe technique**, qui reçoit une PR propre, découpée par
-  critère, déjà vérifiée.
-- **Le problème.**
-  - Les audits manuels sont chers et lents.
-  - Les overlays JavaScript ne corrigent rien (amende FTC contre accessiBe en 2025).
-  - Les scanners automatiques ne voient qu'une partie des problèmes.
-  - La compliance ne sait pas traduire un rapport en tickets techniques.
-- **La valeur.**
-  - Un score et un statut EAA compréhensibles par la compliance.
-  - Des spécifications précises par problème : critère, clause EN 301 549, impact, preuve,
-    correctif, vérification.
-  - Une PR prête à merger envoyée à la tech.
-  - Une déclaration d'accessibilité pré-remplie.
+- **Utilisateur principal : la compliance / le juridique** d'un e-commerçant européen. Ce n'est
+  pas un développeur. Il doit prouver la conformité, publier une déclaration d'accessibilité et
+  faire corriger les écarts.
+- **Utilisateur secondaire : l'équipe technique**, qui reçoit une PR découpée par critère et déjà
+  vérifiée.
+- **La valeur** :
+  - un score et un statut EAA ;
+  - une spécification par problème : critère, clause EN 301 549, impact, preuve, diff,
+    vérification ;
+  - une PR envoyée en un clic ;
+  - une déclaration pré-remplie ;
+  - **une preuve indépendante** : le grader d'outcome et l'eval.
 - **Business model** :
-  - audit et correctifs facturés à l'acte ;
-  - abonnement de surveillance continue, avec un re-audit à chaque déploiement ;
-  - offre marque blanche pour les agences web.
+  - audit et correctifs à l'acte ;
+  - abonnement de surveillance, avec un session programmée à chaque déploiement grâce aux
+    *scheduled deployments* de Managed Agents ;
+  - offre marque blanche pour les agences.
 
 ---
 
 ## 3. Périmètre
 
-### MVP (obligatoire pour la démo)
-1. Le dashboard compliance (§12), en **mode replay**, fiable à 100 %.
-2. Le moteur d'agents réel (§6 à §9) sur la **boutique démo piégée** (§11) :
-   - il produit un vrai run enregistré en JSONL ;
-   - il crée une vraie branche git avec de vrais commits.
-3. Le **mode live** : le dashboard branché en direct sur un run en cours via SSE.
-4. Le bouton « Send PR to engineering » : vraie PR si `gh` et un remote sont configurés, sinon
-   envoi simulé (§13).
-5. Le déploiement Vercel et les fichiers livrables.
+### MVP
+1. Le **dashboard** en mode replay, fiable à 100 % (inchangé par rapport à la v1, piloté par
+   événements).
+2. L'**équipe d'agents hébergée** sur la boutique démo, qui produit un vrai run enregistré, une
+   vraie branche git et de vrais commits (dans le sandbox, puis rapatriés).
+3. Le **pont local** (`bridge.py`) :
+   - il crée la session ;
+   - il répond aux custom tools ;
+   - il traduit les événements Managed Agents vers le contrat du dashboard ;
+   - il enregistre le JSONL ;
+   - il rapatrie les fichiers de sortie.
+4. **L'outcome avec rubric**, et l'**eval** déterministe.
+5. **« Send PR to engineering »** : vraie PR si `gh` et un remote sont configurés, sinon simulée.
+6. Le **déploiement Vercel** et les livrables.
 
-### Nice-to-have (seulement si le MVP est terminé)
-- Rapport HTML exportable.
-- Injection de panne `--chaos` (§9.4).
-- Reprise `--resume` après un Ctrl-C.
-- Audit d'une URL réelle saisie dans le dashboard, en lecture seule, sans correctifs.
-
-### Hors périmètre
-- Authentification et multi-tenant.
-- Base de données (le JSON sur disque suffit).
-- Frameworks front (pas de React : du HTML, du CSS et du JS vanilla).
-- Sites autres que du HTML/CSS/JS statique.
+### Nice-to-have
+- Mode live dans le dashboard (SSE du pont).
+- Hill climb avec historique des scores affiché.
+- Scheduled deployment (« re-audit à chaque déploiement »).
 
 ### Règle d'arbitrage
 En cas de conflit entre « réel » et « fiable à l'écran », **le fiable gagne**.
 
-Le replay d'un vrai run enregistré est une démo honnête : on montre ce que les agents ont
-réellement fait, accéléré. Un badge **« Demo workspace »** reste visible en permanence dans le
-dashboard.
+Le replay d'un vrai run est honnête : on montre ce que les agents ont fait, accéléré. Un badge
+« Demo workspace » reste visible en permanence. **On ne fabrique jamais d'événements à la main**
+pour simuler un run réel. Les données de test servent uniquement au développement du front.
 
 ---
 
 ## 4. Architecture
 
 ```
-┌────────────────────────── backend Python ──────────────────────────┐
-│                                                                     │
-│  run.py ──► Orchestrator (machine à états persistée)                │
-│               │  lance des sessions claude-agent-sdk (query())      │
-│               │  avec outils MCP en processus + hooks               │
-│               ▼                                                     │
-│     Agents : cartographer · lead-auditor (+ page-auditors ×N)       │
-│              developer · tester · writer                            │
-│               │ (outils MCP) ──► Store (state.json)                 │
-│               ▼                                                     │
-│     EventBus.emit(event) ──► recordings/run-<date>.jsonl            │
-│                          └─► abonnés SSE                            │
-│                                                                     │
-│  server.py (FastAPI)                                                │
-│     GET  /api/events      SSE : flux d'événements du run courant    │
-│     GET  /api/state       snapshot (state.json)                     │
-│     POST /api/run         lance un run (démo)                       │
-│     POST /api/pr          envoie la PR (réelle ou simulée)          │
-│     GET  /                sert web/ (dashboard statique)            │
-└─────────────────────────────────────────────────────────────────────┘
-                     ▲ live (SSE)              ▲ replay (fichier)
-┌──────────────────────────── web/ (statique) ───────────────────────┐
-│  dashboard : index.html + app.js + styles.css                       │
-│  source d'événements = LiveSource (SSE) | ReplaySource (JSONL)      │
-│  ?mode=replay&speed=2 par défaut sur Vercel                         │
-└─────────────────────────────────────────────────────────────────────┘
+┌──────────────── Anthropic Managed Agents (hébergé) ─────────────────┐
+│ Environment "arma-env" (cloud sandbox : chromium, playwright, git…) │
+│ Session (une par run)                                                │
+│   primary thread : ARMA LEAD (multiagent_20261001)                   │
+│     ├─ subagent  PAGE AUDITOR  ×N en parallèle (un par page)         │
+│     ├─ subagent  DEVELOPER     (fil persistant : relances avec       │
+│     │                           le feedback du testeur)              │
+│     ├─ subagent  TESTER        (fil isolé, sans édition)             │
+│     └─ subagent  WRITER                                              │
+│   Filesystem partagé : /workspace/site (git), /workspace/arma         │
+│   Entrées montées : /mnt/session/uploads/{demo-shop.tgz, tools/…}    │
+│   Sorties : /mnt/session/outputs/{patches, pr-body.md, statement,    │
+│             report.json, eval.json}                                  │
+│   Outcome : user.define_outcome + rubric → grader indépendant        │
+└────────────────────┬────────────────────────────────────▲───────────┘
+          SSE events │                                    │ user.custom_tool_result
+                     ▼                                    │ user.message / define_outcome
+┌──────────────────── bridge.py (local, Python, SDK anthropic) ────────┐
+│ • upload des entrées (Files API), création de session (+budget)      │
+│ • répond aux custom tools = LE LEDGER (§6) : issues, statuts,        │
+│   commits, score → Store + EventBus                                  │
+│ • traduit les events Managed Agents → contrat dashboard (§10)        │
+│ • enregistre recordings/run-<date>.jsonl ; SSE /api/events           │
+│ • à la fin : télécharge /mnt/session/outputs, applique les patches   │
+│   sur le dépôt local du site, prépare la PR                          │
+└────────────────────┬─────────────────────────────────────────────────┘
+                     ▼
+            web/ (dashboard statique) : LiveSource (SSE du pont)
+                                        | ReplaySource (JSONL)
 ```
 
-**Décision clé.** Le dashboard **ne connaît que des événements** (§5) :
-- le moteur d'agents les émet ;
-- le replay les relit avec leurs horodatages.
-
-Live et replay donnent exactement le même rendu. Le déploiement Vercel n'a besoin d'aucun backend :
-c'est `web/` plus un fichier `recordings/demo-run.jsonl`.
+### Décisions clés
+1. **Le cerveau et les mains sont hébergés.** Raisonnement, bash, fichiers, navigateur et git
+   tournent dans le sandbox. **Le registre de conformité reste chez nous.** Chaque constat et
+   chaque changement de statut passe par un **custom tool**, auquel le pont répond. On obtient
+   ainsi :
+   - des passations typées et auditables ;
+   - le flux d'événements du dashboard ;
+   - un point de gouvernance (validation des transitions de statut).
+2. **Les outils déterministes** (crawl, axe, parcours clavier, diff visuel) sont des **scripts
+   Python montés dans le sandbox** (`/mnt/session/uploads/tools/`). Les agents les lancent via
+   `bash`. Pas de navigateur côté client.
+3. **Le dashboard ne connaît que le contrat d'événements** (§10). Live et replay donnent un rendu
+   identique. Vercel n'héberge que du statique.
 
 ---
 
-## 5. Contrat d'événements (l'interface unique backend ↔ UI)
+## 5. Ressources Managed Agents
 
-Chaque ligne de `run-<date>.jsonl` est un événement :
+Elles sont versionnées dans le dépôt sous forme de fichiers `ant` (`managed/`), appliquées avec
+`ant apply`. Les identifiants sont dans `claude-lock.json`, qui est commité.
 
-```jsonc
-{ "t": 12.4,            // secondes depuis le début du run
-  "type": "issue.detected",
-  "agent": "auditor·product",   // optionnel : qui l'a produit
-  "data": { ... } }
+Toutes les requêtes passent par le beta header `managed-agents-2026-04-01`, posé automatiquement
+par le SDK `anthropic` et la CLI `ant`.
+
+### 5.1 Environnement : `managed/environment.yaml`
+```yaml
+# yaml-language-server: $schema=https://platform.claude.com/schemas/ant/beta/environment.json
+name: arma-env
+config:
+  type: cloud
+  packages:
+    apt: [chromium, git, fonts-dejavu-core]
+    pip: [playwright, pillow]
+    npm: [axe-core@4.10.3]
+  networking:
+    type: limited
+    allow_package_managers: true
+    # la boutique est servie en local dans le sandbox (http://127.0.0.1:8765) : aucun hôte externe requis
 ```
 
-| `type` | `data` | Effet dans l'UI |
-|---|---|---|
-| `run.started` | `{site, repo, branch}` | Réinitialise l'état, horloge à zéro |
-| `phase.changed` | `{phase}` parmi `crawl, baseline, audit, plan, fix, reaudit, report, pr` | Rail des phases |
-| `agent.status` | `{agent, status: idle\|working\|done, activity}` | Panneau « Agent team » |
-| `subagents` | `{agent:"auditors", states:["working","done",…]}` | Points des sous-auditeurs parallèles |
-| `log` | `{text, kind: msg\|tool\|ok\|err\|reject\|rollback\|commit\|phase}` | Journal en direct |
-| `baseline` | `{axe_violations, unreachable, focus_visible:[a,b]}` | Indicateurs avant |
-| `issue.detected` | objet issue complet (§6.1) | Ligne dans Findings (surlignée), KPIs |
-| `issue.merged` | `{id, page}` | Ajoute une page à un problème existant |
-| `issue.status` | `{id, status, by, note, attempt}` | Pill de statut + piste de vérification |
-| `score` | `{value, baseline, by_principle:{P,O,U,R}}` | Jauge, barres, sparkline |
-| `batch.started` | `{id, criterion, issue_ids, attempt}` | Log de type phase |
-| `commit.created` | `{sha, criterion, message, files}` | Log vert + liste de commits |
-| `reaudit` | `{axe_violations, unreachable, focus_visible:[a,b]}` | Indicateurs après |
-| `document.written` | `{name, path, content}` | Onglet Statement / contenu de la PR |
-| `pr.ready` | `{repo, branch, base, commits, files, body}` | Active « Send PR to engineering » |
-| `pr.sent` | `{number, url, notified:[…], simulated:bool}` | Carte de confirmation |
-| `run.finished` | `{cost_usd, duration_s}` | Horloge « Last run » |
+- **Navigateur** : Playwright est lancé avec `executable_path="/usr/bin/chromium"`.
+  `playwright install` n'est jamais appelé, car il télécharge depuis un CDN non autorisé.
+- **Fallback** si Chromium est indisponible dans le sandbox : `tools/audit_static.js`
+  (Node + jsdom + axe-core). Le contraste n'est alors pas mesuré par axe ; l'auditeur le calcule à
+  partir du CSS. Voir l'étape « smoke test sandbox » du plan.
 
-Règles :
-- **L'UI est une pure fonction de la séquence d'événements** : `state = events.reduce(apply)`.
-  Pas de logique métier côté UI, à l'exception du recalcul d'affichage.
-- **Le score est calculé côté backend** et émis via `score`. L'UI ne fait que l'afficher.
-- Les événements sont **append-only** : on ne réécrit jamais un fichier enregistré.
+### 5.2 Agents : `managed/agents/*.md`
 
----
+Tous utilisent `tools: [{type: agent_toolset_20260401, configs…}]` et les custom tools du §6.
 
-## 6. Modèle de données
+| Agent | Modèle | Outils intégrés | Custom tools | Rôle |
+|---|---|---|---|---|
+| `arma-lead` | `claude-opus-5-5` | bash, read, glob, grep (pas write ni edit) | `register_page`, `list_issues`, `plan_batches`, `start_batch`, `record_commit`, `rollback_batch`, `emit_progress` | Orchestre le run (§7). `multiagent: {type: multiagent_20261001, subagents: {type: enabled, inline_agents: {type: disabled}, predefined_agents: [page-auditor, developer, tester, writer]}, workflows: null}` |
+| `arma-page-auditor` | `claude-sonnet-5-5` | bash, read, glob, grep | `report_issue`, `emit_progress` | Audite une page : scripts axe + clavier + jugement (§7.2) |
+| `arma-developer` | `claude-sonnet-5-5` | bash, read, edit, write, glob, grep | `mark_fixed`, `cannot_fix`, `emit_progress` | Corrige la source partagée dans `/workspace/site` |
+| `arma-tester` | `claude-opus-5-5` | bash, read, glob, grep (**pas write ni edit**) | `verdict`, `batch_verdict`, `emit_progress` | Vérifie de façon indépendante (scripts compare, clavier, diff visuel ; ouvre les captures avec `read`) |
+| `arma-writer` | `claude-sonnet-5-5` | read, write, glob | `emit_progress` | Écrit `pr-body.md` et `accessibility-statement.md` dans `/mnt/session/outputs/` |
 
-### 6.1 Issue
-```jsonc
-{
-  "id": "A07",
-  "wcag": "2.1.1", "criterion_name": "Keyboard", "level": "A",
-  "principle": "O",                       // P | O | U | R
-  "en301549": "9.2.1.1",                  // = "9." + wcag
-  "title": "“Add to bag” cannot be reached with the keyboard",
-  "impact": "Keyboard and switch users cannot add anything to their bag.",
-  "evidence": "<div class=\"btn\" onclick=\"addToCart()\">Add to bag</div>",
-  "severity": "critical",                 // critical | major | minor
-  "source": "axe" | "keyboard" | "agent", // agent = jugement, invisible pour les scanners
-  "selector": "div.btn", "rule": "",
-  "pages": ["/products/leather-sneakers"],
-  "status": "detected",                   // detected | fixing | fixed_pending | rejected | validated | needs_human
-  "attempts": 0, "files": [], "fix_diff": "", "fix_note": "",
-  "history": [{"t": 0, "status": "detected", "by": "auditor·product", "note": "…"}],
-  "human_action": ""                      // si needs_human : quoi faire et par qui
-}
-```
+Notes :
+- Les sous-agents **ne doivent pas** avoir de champ `multiagent`, car la délégation est limitée à
+  un niveau.
+- `web_search` et `web_fetch` sont désactivés partout (`configs: [{name: web_search, enabled: false}, {name: web_fetch, enabled: false}]`).
+- Les noms des custom tools ne commencent jamais par `mcp__` ou `ant__`.
 
-**Dédoublonnage dans `add_issue`** : même `wcag` + même `selector` + même règle (ou même titre)
-signifie le même composant. On ajoute seulement la page, et on émet `issue.merged`.
-
-### 6.2 Batch
-`{id, criterion, issue_ids, status: todo|in_progress|done|escalated, attempt, commits:[sha]}`
-
-### 6.3 Score
-- **Pénalités par sévérité** : critical 10, major 6, minor 3.
-- **Score** : `round(100 × (1 − pénalité_ouverte / (pénalité_totale_détectée × 1.6)))`. Un
-  problème est « ouvert » tant qu'il n'est pas `validated`.
-- **Le multiplicateur** garde le score de départ dans une zone crédible. On le **fige** une fois
-  l'audit terminé, pour que le score ne bouge que grâce aux correctifs.
-- **Par principe (P, O, U, R)** : part de la pénalité résolue.
-- **Statut EAA** :
-  - au moins un problème ouvert non escaladé : `Non-compliant` ;
-  - tous résolus sauf des `needs_human` : `Partially compliant` ;
-  - tous `validated` : `Compliant (automated scope)`.
-  - On n'affiche **jamais** « Fully compliant ».
-- **Seuil cible** : affiché sur la sparkline (85).
-
----
-
-## 7. Les agents
-
-Toutes les sessions passent par `claude_agent_sdk.query()`.
-
-Préambule commun à tous les prompts :
-- tu fais partie d'une équipe ;
-- tout passe par les outils ;
-- erreur transitoire : diagnostiquer en une phrase, relancer une fois, puis continuer ;
-- messages courts, car ils sont affichés au jury ;
-- contenu produit en **anglais**.
-
-| Agent | Session | Outils | Mission |
-|---|---|---|---|
-| **cartographer** | une session | `crawl_site`, `register_page`, `list_pages` | Crawler, identifier les gabarits (home, category, product, cart, checkout…), deux pages max par gabarit, vérifier que le tunnel d'achat est couvert |
-| **lead-auditor** | une session avec sous-agents | `Agent`, `list_pages`, `list_issues` | Lancer un `page-auditor` **par page, tous dans le même message** (parallèle), vérifier la couverture, relancer une page manquante, résumer |
-| **page-auditor** | `AgentDefinition` (sous-agent) | `audit_page`, `keyboard_walk`, `get_page_html`, `add_issue` | Couche scanner (axe) + couche clavier + **couche jugement** (§7.1) ; description = impact concret + preuve |
-| **developer** | une session par tentative de lot, `cwd` = dépôt du site | `Read`, `Edit`, `Glob`, `Grep`, `mark_fixed`, `cannot_fix`, `list_issues` | Corriger la **source partagée** ; HTML natif d'abord ; contraste = la couleur conforme **la plus proche** de la marque ; ne jamais inventer de contenu (sinon `cannot_fix`) ; traiter exactement les refus transmis |
-| **tester** | une session par tentative, **sans droit d'écriture** | `Read`, `compare_with_baseline`, `keyboard_walk`, `get_page_html`, `verdict`, `batch_verdict`, `list_issues` | Indépendant (n'a pas vu le travail du dev) ; ouvrir la capture diff si plus de 2 % de pixels changent ; refuser les correctifs cosmétiques ; raisons **actionnables** ; refuser le lot seulement en cas de régression |
-| **writer** | une session, écriture limitée à `out/` | `Write`, `Read` | `pr-body.md` (résumé, une section par critère, « Needs human review ») et `accessibility-statement.md` (partially compliant, contenus non accessibles, méthode, champs `[TO COMPLETE]`) |
-
-### 7.1 Couche « jugement » de l'auditeur (le différenciateur)
-
-L'auditeur doit chercher au minimum ces problèmes, que les scanners ne voient pas :
-
-| Problème | Critère WCAG |
-|---|---|
-| Bouton-icône nommé par un emoji ou un symbole | 4.1.2 |
-| `alt` présent mais inutile (« image », nom de fichier) | 1.1.1 |
-| Lien ambigu hors contexte (« Learn more ») | 2.4.4 |
-| Placeholder utilisé à la place d'un label | 3.3.2 / 1.3.1 |
-| Erreur signalée par la couleur seule | 1.4.1 / 3.3.1 |
-| Pas de `h1` ou niveaux de titres sautés | 1.3.1 |
-| Titre de page vague | 2.4.2 |
-| `div` cliquables ou sélecteurs personnalisés sans rôle ni état | 2.1.1 / 4.1.2 |
-| Focus supprimé (`outline: none`) | 2.4.7 |
-
-Le KPI **« missed by automated scanners »** = nombre de problèmes dont `source != "axe"`. C'est
-l'argument central du pitch.
-
----
-
-## 8. Outils MCP
-
-Un serveur en processus : `create_sdk_mcp_server(name="a11y", tools=[...])`. Les noms vus par
-les agents sont de la forme `mcp__a11y__<outil>`.
-
-Un objet de contexte global donne accès :
-- au Store et à l'EventBus ;
-- à `base_url`, au dossier du site et au dossier de travail ;
-- au flag chaos et au verdict de lot courant.
-
-Chaque outil qui modifie l'état **émet l'événement correspondant**.
-
-| Outil | Entrée | Sortie / effet |
-|---|---|---|
-| `crawl_site` | `max_pages` | Pages internes en largeur d'abord (Playwright), y compris la navigation cachée dans `onclick="location.href=…"` |
-| `register_page` | `url, title, template` | Store |
-| `list_pages` | — | Pages |
-| `audit_page` | `url` | Violations axe-core (tags `wcag2a, wcag2aa, wcag21a, wcag21aa`), critère normalisé `wcag143 → 1.4.3`, nœuds tronqués |
-| `keyboard_walk` | `url` | Ordre de tabulation (sélecteur, nom, focus visible ?), éléments cliquables non focusables, cycle complet ou non |
-| `get_page_html` | `url` | HTML rendu, tronqué |
-| `add_issue` | champs de §6.1 | Id (fusion si doublon) ; émet `issue.detected` ou `issue.merged` |
-| `list_issues` | `status?` | Problèmes |
-| `mark_fixed` | `issue_id, files, explanation` | → `fixed_pending` ; l'orchestrateur calcule `fix_diff` via `git diff` |
-| `cannot_fix` | `issue_id, reason` | → `needs_human` + `human_action` |
-| `compare_with_baseline` | `url` | `resolved`, `still_failing`, `new_violations_regressions`, `changed_pixels_ratio`, chemins des captures avant/après/diff |
-| `verdict` | `issue_id, accepted, reason` | → `validated` / `rejected` |
-| `batch_verdict` | `accepted, reason` | Verdict de lot (rollback si refus) |
-
-Règles :
-- **Les erreurs ne lèvent pas d'exception.** Elles renvoient
-  `{"content":[{"type":"text","text":"<message actionnable>"}], "is_error": True}`.
-- **Chaque outil navigateur lance son propre Chromium**, avec un sémaphore qui limite le nombre
-  de navigateurs simultanés.
-- **axe-core est vendorisé** dans `vendor/axe.min.js` et injecté avec `page.add_script_tag(content=…)`.
-  Pas de CDN au runtime.
-- **Le diff visuel** (Pillow) renvoie la part des pixels modifiés et une image de superposition.
-
----
-
-## 9. Orchestration
-
-### 9.1 Machine à états persistée
-
-```
-crawl → baseline → audit → plan → fix → reaudit → report → pr
-```
-
-| Phase | Ce qui se passe |
-|---|---|
-| `crawl` | Session cartographer. Repli : crawl brut en Python si aucune page n'est enregistrée |
-| `baseline` | Python, sans agent. Préparation git (init si besoin, refus d'un dépôt sale, branche `a11y/eaa-remediation-<date>`), puis pour chaque page : axe + clavier + capture `before.png`. Émet `baseline` |
-| `audit` | Session lead-auditor avec sous-agents parallèles. Puis calcul et gel du score de départ, émission de `score` |
-| `plan` | Python. Un lot par critère WCAG, trié par sévérité max (purchase blockers first) |
-| `fix` | Boucle §9.2 |
-| `reaudit` | Python. Re-mesure toutes les pages, émet `reaudit` |
-| `report` | Session writer, puis `document.written` ; rapport HTML optionnel |
-| `pr` | Python. `git diff base..branch`, `format-patch` ; émet `pr.ready` avec le body |
-
-Chaque phase terminée est ajoutée à `phases_done` dans `state.json`.
-
-### 9.2 Boucle de correction par lot (le cœur de la démo)
-
-```
-pour chaque lot non terminé :
-  tant que attempt < 3 :
-    todo = problèmes du lot en detected | rejected | fixing | fixed_pending ; si vide → sortir
-    attempt += 1 ; émettre batch.started ; statut → fixing
-    DEVELOPER (prompt = lot en JSON + « PREVIOUS TESTER REJECTIONS » tirées de l'historique)
-      → mark_fixed | cannot_fix
-    resté en fixing → rejected (« not handled by developer »)
-    TESTER → verdict par problème + batch_verdict
-    resté en fixed_pending → rejected (« no verdict »)
-    si lot refusé : git checkout -- . && git clean -fd ; émettre log rollback ; tous → rejected ; continuer
-    sinon : si des problèmes sont validés et le dépôt modifié → git commit
-            "fix(a11y): WCAG <crit> — <titres>" ; émettre commit.created ; recalculer score
-            (les refusés repartent pour la tentative suivante, sur le code déjà commité)
-  restants → needs_human ; lot → done | escalated
-```
-
-C'est **ce que le jury doit voir** :
-1. un refus du testeur, avec une raison précise ;
-2. le développeur qui corrige exactement ça ;
-3. la validation ;
-4. le commit ;
-5. et au moins une fois, un rollback pour régression visuelle.
-
-### 9.3 Reprise
-- **Après une phase** : `--resume` saute les phases faites.
-- **En plein lot** : annule les modifications non commitées, puis rejoue la tentative.
-- **Session d'agent en échec** : l'exception est journalisée, puis une relance unique avec le
-  préfixe « RESUMING after an interruption: check state via tools, finish only what is missing ».
-- **Budget** : arrêt propre si le coût cumulé dépasse `--budget`.
-
-### 9.4 Injection de panne (`--chaos`)
-Le premier appel à `audit_page` renvoie **une fois** une erreur transitoire (« Chromium crashed
-during analysis (Target closed)… may be retried »). L'agent doit la diagnostiquer et relancer.
-
-Elle est annoncée dans le log comme `Injected fault`, sans rien cacher.
-
-### 9.5 Rendre la démo déterministe (important)
-Le run réel doit **produire naturellement** les deux refus. Le site démo (§11) est conçu pour :
-
-- **Contraste.** Le prompt du dev l'incite à préserver la marque, mais le fond du hero a lui aussi
-  un contraste limite. Une première tentative qui assombrit le fond est probable, et le testeur la
-  refuse (diff > 2 %).
-- **« Add to bag ».** Un `div` avec `onclick` est souvent « corrigé » d'abord par `role="button"`.
-  Le testeur le refuse car l'élément n'est pas focusable.
-
-Si un run réel ne montre aucun refus :
-1. **on relance** (le coût est faible sur le site démo) ;
-2. **on garde le meilleur run** comme `recordings/demo-run.jsonl`.
-
-On ne fabrique jamais d'événements à la main.
-
----
-
-## 10. Gouvernance et sécurité
-
-C'est un argument du pitch : des agents contrôlables et auditables.
-
-Options de chaque session :
-
+### 5.3 Session (créée par `bridge.py` à chaque run)
 ```python
-ClaudeAgentOptions(
-  system_prompt=..., mcp_servers={"a11y": server},
-  tools=[built-in tools of the role],      # ex. ["Read","Edit","Glob","Grep"] ; ["Agent"] pour le lead
-  allowed_tools=role_tools + subagent_tools,
-  disallowed_tools=other_a11y_tools,
-  permission_mode="dontAsk",               # tout ce qui n'est pas autorisé est refusé sans prompt
-  cwd=..., agents=subagents, model=..., max_turns=..., setting_sources=[],
-  hooks={"PreToolUse": [HookMatcher(hooks=[guard])]},
+session = client.beta.sessions.create(
+    agent=LEAD_ID, environment_id=ENV_ID, title=f"Arma run {date}",
+    resources=[
+      {"type":"file","file_id": shop_tgz.id,  "mount_path":"/demo-shop.tgz"},
+      {"type":"file","file_id": tools_tgz.id, "mount_path":"/tools.tgz"},
+      {"type":"file","file_id": rubric.id,    "mount_path":"/rubric.md"},
+    ],
+    budget={"type":"limit","max_list_cost":{"amount": str(BUDGET_CENTS), "currency":"USD"}},
 )
 ```
+- Les fichiers montés sont en lecture seule, sous `/mnt/session/uploads/…`. Le lead les extrait
+  dans `/workspace`.
+- Le run démarre avec deux événements :
+  1. `user.message` : le brief du run (URL locale, étapes) ;
+  2. `user.define_outcome` : la description et la rubric (§8).
+- En développement : `agent_with_overrides` avec `model: claude-sonnet-5-5` pour réduire le coût.
 
-**Hook `guard`** :
-- il refuse tout `Edit` / `Write` / `MultiEdit` hors du périmètre du rôle (dépôt du site pour le
-  dev, `out/` pour le writer, rien pour les autres) ;
-- il émet un `log` pour chaque appel d'outil, avec le nom de l'agent (`input_data["agent_type"]`
-  pour les sous-agents).
+---
 
-**Audit trail.**
-- Chaque changement de statut est horodaté avec son auteur (agent ou humain) dans `history`.
-- La signature compliance (clic sur « Send PR ») est enregistrée comme un événement `pr.sent`
-  avec `by: "compliance"`.
+## 6. Custom tools : le registre de conformité
+
+**Déclaration.** Chaque custom tool est déclaré dans la définition de l'agent qui l'utilise :
+`type: custom`, `name`, `description` (trois ou quatre phrases), `input_schema`.
+
+**Fonctionnement.** Claude ne les exécute pas. Le pont reçoit `agent.custom_tool_use`, exécute,
+puis renvoie `user.custom_tool_result` avec `custom_tool_use_id` et `content`.
+
+**Champ commun.** Chaque appel inclut `agent` (le nom de rôle, ex. `auditor·product`). Il sert à
+étiqueter les logs, car les appels bloquants des sous-agents sont relayés sur le fil principal.
+
+| Tool | Entrée | Effet côté pont | Événements dashboard émis |
+|---|---|---|---|
+| `register_page` | `agent, url, template` | Store.pages | `log` |
+| `report_issue` | `agent, page, wcag, title, impact, evidence, severity, selector, source(axe\|keyboard\|agent), rule?` | `Store.add_issue` avec dédoublonnage (même wcag + selector + rule/titre → ajoute la page) ; renvoie l'`id` | `issue.detected` ou `issue.merged`, `log` |
+| `list_issues` | `status?` | Lecture | — |
+| `plan_batches` | `agent, batches:[{criterion, issue_ids}]` | Store.batches (vérifie que chaque issue n'est que dans un lot) | `log` par lot |
+| `start_batch` | `agent, batch_id, attempt` | Statuts des problèmes ouverts du lot → `fixing` | `batch.started`, `issue.status` |
+| `mark_fixed` | `agent, issue_id, files[], explanation, diff` | Statut → `fixed_pending` (refusé si le statut courant n'est pas `fixing`) | `issue.status`, `score` |
+| `cannot_fix` | `agent, issue_id, reason, human_action` | → `needs_human` | `issue.status`, `score` |
+| `verdict` | `agent, issue_id, accepted, reason` | → `validated` / `rejected` (refusé si l'appelant n'est pas le testeur) | `issue.status`, `score` |
+| `batch_verdict` | `agent, batch_id, accepted, reason` | Verdict de lot | `log` (reject ou ok) |
+| `rollback_batch` | `agent, batch_id, reason` | Statuts du lot → `rejected` | `log` kind `rollback` |
+| `record_commit` | `agent, batch_id, sha, message, files[]` | Store.commits | `commit.created`, `log` |
+| `emit_progress` | `agent, text, kind(msg\|tool\|ok\|reject)` | — | `log`, `agent.status` |
+
+**Gouvernance côté pont** (argument du pitch) :
+- **Machine à états des statuts.** Elle est validée : une transition illégale renvoie un
+  `user.custom_tool_result` explicatif, par exemple « verdict refused: issue A07 is not
+  fixed_pending ».
+- **Seul `arma-tester` peut appeler `verdict`.** Le pont vérifie `agent`, et le testeur est le seul
+  agent qui déclare cet outil.
+- **Audit trail.** Chaque transition est horodatée avec son auteur, dans `history`.
+
+---
+
+## 7. Déroulé d'un run (piloté par `arma-lead`)
+
+Le prompt système du lead décrit ce protocole. Le brief du run le rappelle.
+
+### 7.1 Préparation (lead, via bash)
+1. Extraire `/mnt/session/uploads/demo-shop.tgz` vers `/workspace/site` et
+   `/mnt/session/uploads/tools.tgz` vers `/workspace/arma/tools`.
+2. `cd /workspace/site && git init && git add -A && git commit -m "baseline"`, puis créer la
+   branche `a11y/eaa-remediation-<date>`.
+3. Servir le site : `python -m http.server 8765 -d /workspace/site &`.
+4. **Cartographie** : `python tools/crawl.py http://127.0.0.1:8765/index.html`, puis
+   `register_page` pour chaque page avec son gabarit.
+5. **Mesure de départ** : `python tools/baseline.py`, qui produit `/workspace/arma/baseline.json`
+   et les captures `before`. Rapporter les métriques via `emit_progress`.
+
+### 7.2 Audit (sous-agents en parallèle)
+- Le lead délègue **un `arma-page-auditor` par page, toutes les délégations ensemble**.
+- Chaque auditeur :
+  1. lance `python tools/audit.py <url>` (axe-core) → `report_issue` source `axe`, en regroupant
+     les nœuds identiques ;
+  2. lance `python tools/keyboard.py <url>` → focus invisible et éléments non atteignables →
+     source `keyboard` ;
+  3. lit la source HTML/CSS (`read`, `grep`) et applique son **jugement** → source `agent`. Il
+     cherche au minimum :
+
+     | Problème | Critère |
+     |---|---|
+     | Bouton-icône nommé par un emoji ou un symbole | 4.1.2 |
+     | `alt="image"` ou alt inutile | 1.1.1 |
+     | « Learn more » ambigu | 2.4.4 |
+     | Placeholder sans label | 3.3.2 |
+     | Erreur signalée par la couleur seule | 3.3.1 |
+     | Pas de `h1` ou niveaux sautés | 1.3.1 |
+     | Titre de page vague | 2.4.2 |
+     | `div` cliquable ou sélecteur sans rôle ni état | 2.1.1 / 4.1.2 |
+     | `outline: none` | 2.4.7 |
+     | Iframe tiers non vérifiable | 1.3.1 |
+
+  4. Utilise un sélecteur stable pour les composants partagés (en-tête, pied de page), afin que
+     la fusion fonctionne.
+- Le lead vérifie la couverture (`list_issues`) et relance une page manquante si besoin.
+
+### 7.3 Plan
+Le lead appelle `plan_batches` : un lot par critère WCAG, trié par sévérité maximale (purchase
+blockers first).
+
+### 7.4 Correction ⇄ vérification (le cœur de la démo)
+```
+pour chaque lot :
+  start_batch(lot, tentative)
+  → DEVELOPER (fil persistant) : lot + refus précédents
+      corrige la source partagée, HTML natif d'abord, contraste = couleur conforme la plus
+      proche de la marque, ne jamais inventer de contenu (sinon cannot_fix) ;
+      mark_fixed(issue, files, explanation, diff = `git diff -- files`)
+  → TESTER (fil isolé, sans édition) : problèmes déclarés corrigés + pages
+      python tools/compare.py <url> (baseline vs maintenant, régressions, % pixels modifiés,
+      captures before/after/diff) ; tools/keyboard.py si clavier, focus ou interactif ;
+      read de la capture diff si plus de 2 % ; verdict par problème (raison actionnable) ;
+      batch_verdict (refus uniquement si régression ou design cassé)
+  si lot refusé : le lead fait git checkout -- . && git clean -fd, rollback_batch, puis renvoie
+                  le feedback au MÊME fil développeur (suivi) et recommence
+  sinon : le lead commite les fichiers validés
+          git commit -m "fix(a11y): WCAG <crit> — <titres>" → record_commit ;
+          les problèmes refusés repartent vers le développeur (même fil) avec la raison
+  plafond de trois tentatives par problème → cannot_fix / needs_human (via le développeur)
+```
+
+**Ce que le jury doit voir** :
+1. un refus du testeur avec sa raison ;
+2. le **même** développeur qui reprend en tenant compte du feedback ;
+3. la validation ;
+4. le commit ;
+5. au moins un rollback pour régression visuelle.
+
+**Démo déterministe.** La boutique (§11) est conçue pour provoquer naturellement deux refus :
+- **« Add to bag »** : un `div` corrigé d'abord avec `role="button"` (refusé parce qu'il reste non
+  focusable) ;
+- **le hero** : un fond assombri (refusé pour régression visuelle).
+
+Si un run n'en montre pas, on relance et on garde le meilleur.
+
+### 7.5 Re-audit, documents, sorties
+1. `python tools/reaudit.py`, qui produit `/workspace/arma/final.json`.
+2. Le `arma-writer` écrit `pr-body.md` et `accessibility-statement.md` dans
+   `/mnt/session/outputs/`.
+3. Le lead écrit dans `/mnt/session/outputs/` :
+   - `patches/` (`git format-patch baseline..HEAD`) ;
+   - `changes.diff` ;
+   - `report.json` (issues, statuts, métriques avant/après, commits).
+4. Le lead termine son tour. Le **grader d'outcome** évalue alors la rubric (§8).
+
+---
+
+## 8. Ligne d'arrivée : `/goal` et outcome
+
+### 8.1 `/goal` dans Claude Code (pour la construction)
+```
+/goal Arma is done when: the dashboard is deployed on Vercel and replays a real recorded Managed
+Agents run; the run shows parallel page auditors, at least one tester rejection followed by a
+validated fix in the same developer thread, one rollback, and git commits per WCAG criterion; the
+outcome grader returns "satisfied"; the eval passes its thresholds; "Send PR to engineering"
+completes; deliverables/agent-design.txt and deliverables/agent-logs.txt exist.
+```
+
+### 8.2 Outcome de session (pour chaque run) : `managed/rubric.md`
+```markdown
+# Arma remediation rubric
+## Audit coverage
+- Every page of the purchase funnel (home, product, cart, checkout) was audited.
+- Findings include issues not detectable by automated scanners (keyboard, naming, labels, structure).
+## Fix quality
+- Every issue marked validated was re-checked by the tester with tools/compare.py and passed.
+- No new automated violations versus baseline (tools/reaudit.py shows zero regressions).
+- The visual design is preserved: no page changed more than 5% of pixels except intended focus rings.
+- Purchase funnel is fully operable by keyboard (tools/keyboard.py: no unreachable controls).
+## Honesty
+- Items that need business or vendor input are marked needs_human with a concrete human action, not invented.
+- The accessibility statement says "partially compliant" unless every issue is validated; never "fully compliant".
+## Deliverables in /mnt/session/outputs
+- patches/ (one commit per WCAG criterion), changes.diff, report.json, pr-body.md, accessibility-statement.md.
+```
+
+- **Envoi** : `user.define_outcome` avec `description: "Remediate maison-lumiere storefront accessibility to WCAG 2.1 AA and deliver a verified PR package"`,
+  `rubric: {type: "file", file_id: rubric.id}` et `max_iterations: 3`.
+- **Résultat** : le pont traduit `span.outcome_evaluation_start` et `span.outcome_evaluation_end`
+  (`result` vaut `satisfied`, `needs_revision`, etc., avec une `explanation`) en événement
+  `outcome` pour le dashboard.
+- **Affichage** : un badge « Independent grader: satisfied », avec l'explication au survol ou au
+  dépli.
+
+---
+
+## 9. Eval et hill climb
+
+### 9.1 Vérité terrain : `eval/ground_truth.json`
+Un objet par défaut planté de la boutique (§11) :
+```json
+{"key":"hero-contrast","wcag":"1.4.3","pages":["*"],"match":{"wcag":["1.4.3"],"selector_any":[".hero p",".price-note",".footer"]},
+ "detectable_by_axe":true,"expected_final":"validated"}
+```
+- **Correspondance** : un problème rapporté correspond à un défaut si son critère est dans
+  `match.wcag` ET que son sélecteur ou son evidence recoupe `selector_any` ou `evidence_any`.
+- **`expected_final`** : `validated`, ou `needs_human` pour l'alt produit et l'iframe tiers.
+
+### 9.2 `eval/run_eval.py <report.json> [final.json]` : métriques et seuils
+
+| Métrique | Définition | Seuil |
+|---|---|---|
+| `recall_all` | Défauts plantés retrouvés / total | ≥ 0.9 |
+| `recall_agent_only` | Idem, sur les défauts invisibles pour axe | ≥ 0.8 |
+| `precision` | Problèmes rapportés correspondant à un défaut ou à une vraie violation axe / total rapporté | ≥ 0.8 |
+| `verified_fix_rate` | Défauts `expected_final=validated` effectivement validés ET absents de `final.json` | ≥ 0.85 |
+| `false_fix` | Validés par le testeur mais toujours présents au re-audit | = 0 |
+| `regressions` | Nouvelles violations au re-audit | = 0 |
+| `honesty` | Les deux défauts `needs_human` attendus sont escaladés, pas « corrigés » | = 1 |
+
+La sortie est `eval/results/<run>.json`. Le script affiche un tableau PASS/FAIL et renvoie un code
+de sortie non nul en cas d'échec. **C'est la cible de `/claude-api build-eval`.**
+
+### 9.3 Hill climb
+- **Cible** : `/claude-api hillclimb` itère sur les prompts de `arma-page-auditor`, puis de
+  `arma-tester` (`ant apply` crée une nouvelle version d'agent), relance un run et mesure.
+- **Historique** : `eval/history.csv` (version de l'agent, métriques).
+- **Dashboard** : le panneau « About » ou une carte « Eval » affiche la courbe
+  `recall_agent_only` et `verified_fix_rate` par version. C'est la preuve chiffrée du
+  « Prove it worked ».
+
+---
+
+## 10. Contrat d'événements (dashboard)
+
+C'est le contrat de la v1, inchangé, plus un type `outcome` et un type `eval`. Chaque ligne JSONL
+a la forme `{t, type, agent?, data}`.
+
+| `type` | `data` | Source côté pont |
+|---|---|---|
+| `run.started` | `{site, repo, branch, session_id}` | Création de session |
+| `phase.changed` | `{phase}` : crawl, baseline, audit, plan, fix, reaudit, report, pr | `emit_progress` avec `kind=phase`, ou appels caractéristiques |
+| `agent.status` | `{agent, status, activity}` | `session.thread_status_running` / `_idle`, `emit_progress` |
+| `subagents` | `{agent:"auditors", states:[…]}` | `session.thread_created` et statuts de fil, agrégés |
+| `log` | `{text, kind}` | `agent.message` (texte), `agent.tool_use` (kind `tool` : bash, read…), `emit_progress`, résultats de custom tools |
+| `baseline` / `reaudit` | métriques | `emit_progress` + lecture de `report.json` à la fin |
+| `issue.detected` / `issue.merged` / `issue.status` | voir v1 | Custom tools (§6) |
+| `score` | `{value, baseline, by_principle}` | Calculé par le pont après chaque statut (formule ci-dessous) |
+| `batch.started` | `{id, criterion, issue_ids, attempt}` | `start_batch` |
+| `commit.created` | `{sha, criterion, message, files}` | `record_commit` |
+| `document.written` | `{name, content}` | Après téléchargement des sorties |
+| `outcome` | `{iteration, result, explanation}` | `span.outcome_evaluation_*` |
+| `pr.ready` | `{repo, branch, base, commits, files, body}` | Après téléchargement et application des patches |
+| `pr.sent` | `{number, url, notified, simulated}` | `POST /api/pr` |
+| `eval` | `{metrics, thresholds, passed}` | Après `run_eval.py` |
+| `run.finished` | `{cost_usd, duration_s}` | `session.usage` + idle final |
+
+**Étiquetage des agents.**
+- Les custom tools portent `agent`.
+- Pour les autres événements des sous-agents (messages, `bash`), le pont suit les fils via
+  `session.thread_created` et les statuts de fil. Si un flux par fil est disponible (voir le
+  cookbook *« Multiagent: watch a curriculum team work in real time »*), il est utilisé pour
+  enrichir le log.
+- Sinon, `emit_progress` suffit : les prompts imposent aux sous-agents de l'appeler à chaque étape
+  significative.
+
+**Score** :
+- pénalités par sévérité : critical 10, major 6, minor 3 ;
+- `score = round(100 × (1 − ouvert / (total_détecté × 1.6)))`, total figé à la fin de l'audit ;
+- statut EAA : *non-compliant*, puis *partially compliant*, puis *compliant (automated scope)*,
+  jamais « fully compliant ».
 
 ---
 
 ## 11. Boutique démo piégée : `demo-shop/` (« Maison Lumière »)
 
-**Pages** : HTML/CSS/JS statique, sans build. Quatre pages partagent le même en-tête et pied de
-page : `index.html`, `product.html`, `cart.html`, `checkout.html`, plus `styles.css` et des
-images produit en SVG dans `img/`. Le contenu est en français (c'est une boutique française) ;
-l'UI de Arma est en anglais.
+*Cible temporaire, remplaçable (§20). Elle n'est pas déployée sur Vercel.*
 
-**Défauts plantés** (le tableau final doit les montrer corrigés) :
+**Pages** : HTML/CSS/JS statique, contenu en français. `index.html`, `product.html`, `cart.html`
+et `checkout.html` partagent le même en-tête et pied de page ; s'y ajoutent `styles.css` et
+`img/*.svg`. `checkout.html` n'est atteignable que via un `onclick="location.href=…"`.
 
-| Défaut | Pages | WCAG | Scanner ? | Résultat attendu |
+| Défaut | Pages | WCAG | axe ? | Final attendu |
 |---|---|---|---|---|
-| Texte gris clair (`.hero p`, `.price-note`, `.footer`) | toutes | 1.4.3 | oui | validé après **un refus** |
+| Texte gris clair (`.hero p` sur fond `#faf7f2`, `.price-note`, `.footer`) | toutes | 1.4.3 | oui | validé après un refus (régression visuelle) |
 | `<html>` sans `lang` | index | 3.1.1 | oui | validé |
 | Images produit sans `alt` | index, cart | 1.1.1 | oui | validé |
-| `alt="image"` sur la photo produit | product | 1.1.1 | non | **needs_human** (couleur et matière à confirmer) |
-| `*:focus { outline: none }` | toutes | 2.4.7 | non | validé |
-| Boutons-icônes 🔍 ♡ 🛒 sans nom accessible | en-tête | 4.1.2 | non | validé (fusion de toutes les pages) |
-| « Add to bag » en `div onclick` | product | 2.1.1 | non | validé après **un refus** |
-| Tailles en `div` cliquables | product | 2.1.1 / 4.1.2 | non | validé (fieldset + radios) |
-| « Checkout » et « Pay » en `div onclick` | cart, checkout | 2.1.1 | non | validé |
-| Champs avec placeholder et sans label | checkout | 3.3.2 | non | validé |
-| Erreurs signalées par une bordure rouge seule | checkout | 3.3.1 | non | validé |
-| « En savoir plus » répétés | index | 2.4.4 | non | validé |
+| `alt="image"` sur la photo produit | product | 1.1.1 | non | needs_human |
+| `*:focus{outline:none}` | toutes | 2.4.7 | non | validé |
+| Boutons-icônes 🔍 ♡ 🛒 sans nom | en-tête | 4.1.2 | non | validé (fusionné sur toutes les pages) |
+| « Ajouter au panier » en `div onclick` | product | 2.1.1 | non | validé après un refus |
+| Tailles en `div` cliquables | product | 2.1.1 / 4.1.2 | non | validé |
+| « Passer commande » / « Payer » en `div` | cart, checkout | 2.1.1 | non | validé |
+| Placeholders sans labels | checkout | 3.3.2 | non | validé |
+| Erreur en bordure rouge seule | checkout | 3.3.1 | non | validé |
+| « En savoir plus » ×4 | index | 2.4.4 | non | validé |
 | Pas de `h1`, `h3` direct | index | 1.3.1 | non | validé |
 | `<title>Paiement</title>` | checkout | 2.4.2 | non | validé |
 | Boutons − + 🗑 sans nom | cart | 4.1.2 | non | validé |
-| `<iframe>` de paiement tiers | checkout | 1.3.1 | non | **needs_human** (rapport de conformité du prestataire) |
+| `<iframe>` de paiement tiers | checkout | 1.3.1 | non | needs_human |
 
-**Fonctionnement en démo.**
-- `run.py --demo` **copie** `demo-shop/` vers `runs/demo-shop/` : le modèle reste vierge et le
-  run est rejouable.
-- La copie est initialisée en dépôt git, puis servie sur `localhost:8765` avec
-  `Cache-Control: no-store`.
-- Pour la vraie PR, cette copie peut être poussée vers un dépôt GitHub de démo (§13).
+Le contenu est compressé en `demo-shop.tgz` par le pont et monté dans la session.
 
 ---
 
-## 12. Dashboard compliance : `web/`
+## 12. Outils déterministes du sandbox : `sandbox_tools/`
 
-### 12.1 Principes
-- **Utilisateur** : un non-développeur. Le vocabulaire est compliance (score, criterion, evidence,
-  status, needs review), pas technique.
-- **Lecture** : la synthèse d'abord, le détail ensuite. L'état se lit à la forme (pills,
-  pastilles de sévérité, couleurs sémantiques).
-- **Accessible lui-même** : contrastes AA, focus visible, navigation clavier complète, onglets
-  ARIA, `lang="en"`, `prefers-reduced-motion`, thème clair et sombre. *Un outil d'accessibilité
-  inaccessible serait éliminatoire devant le jury.*
-- **Identité visuelle** :
-  - accent jaune « bande podotactile » (`#f4c20d`), réservé à la marque et à l'action principale ;
-  - neutres ardoise ;
-  - police **Atkinson Hyperlegible Next** + **Atkinson Hyperlegible Mono** (Google Fonts),
-    conçues pour la lisibilité par le Braille Institute. C'est un détail propre au sujet, à
-    mentionner au pitch.
-- **Démarrage** : au chargement, le dashboard affiche **le dernier run terminé** (page complète au
-  repos). « Run audit » relance un replay ou un run live.
+Ces scripts Python tournent **dans le sandbox**. Ils sont montés via `tools.tgz` et lancés par
+les agents avec `bash`. Chacun écrit un JSON sur stdout et ne lève jamais d'exception non gérée :
+il sort avec un code non nul et un JSON `{"error": "...actionable..."}`.
 
-### 12.2 Mise en page
-```
-┌ Command bar (sticky) ───────────────────────────────────────────────────────────┐
-│ ▣ Arma  [DEMO WORKSPACE]  ● maison-lumiere.fr storefront·main   1× 2× 4×   │
-│                                          [▶ Run audit] [Send PR to engineering] │
-├ Phase rail ─────────────────────────────────────────────────────────────────────┤
-│ ✓ Map site — ✓ Baseline — ● Audit — Plan — Fix & verify — Re-audit — Report — PR│
-├───────────────────────────────────────────────┬─────────────────────────────────┤
-│ COMPLIANCE SCORE                               │ AGENT TEAM                      │
-│  jauge semi-circulaire 0–100 + repère baseline │ ● Orchestrator   activité       │
-│  pill EAA status · « baseline 38 »             │ ● Cartographer                  │
-│  BY WCAG PRINCIPLE : 4 barres P/O/U/R + %      │ ● Auditors ●●●● (sous-agents)   │
-│  sparkline du score sur le run (cible 85)      │ ● Developer · ● Tester · ● Writer│
-│ ─ KPIs : issues found | missed by scanners |   ├─────────────────────────────────┤
-│          fixed & verified | need human review  │ LIVE AGENT LOG   [Copy log]     │
-├───────────────────────────────────────────────┤ 00:42 [tester] REJECTED A07: …  │
-│ [Findings 16] [Pull request] [Accessibility    │ 00:43 [orchestrator] Rollback…  │
-│  statement]                                    │ (monospace, couleur par agent,  │
-│ filtres : All · Open · Fixed · Needs review ·  │  auto-scroll si en bas)         │
-│           Missed by scanners                   │                                 │
-│ table : ID | Criterion (num, level, nom) |     │                                 │
-│   Issue (+ pages) | Severity | Found by | Status│                                │
-│ ▸ ligne dépliable : Specification (WCAG +      │                                 │
-│   EN 301 549 + principe), User impact,         │                                 │
-│   Evidence (code), Fix applied (diff coloré +  │                                 │
-│   fichiers), Verification trail (historique)   │                                 │
-└───────────────────────────────────────────────┴─────────────────────────────────┘
-```
-Sous 980 px, une seule colonne. Les tables défilent horizontalement dans leur conteneur, et la
-page ne défile jamais horizontalement.
+| Script | Rôle |
+|---|---|
+| `common.py` | Lancement Chromium (`executable_path=/usr/bin/chromium`, `--no-sandbox`), chemin axe (`node_modules/axe-core/axe.min.js` global npm, ou copie vendorisée dans le tgz), conversion `wcag143 → 1.4.3` |
+| `crawl.py <url>` | Parcours en largeur, y compris les `onclick` |
+| `audit.py <url>` | Violations axe (tags `wcag2a, wcag2aa, wcag21a, wcag21aa`), nœuds tronqués |
+| `keyboard.py <url>` | Ordre de tabulation, focus visible, interactifs non focusables |
+| `baseline.py` / `reaudit.py` | Toutes les pages : axe + clavier + captures → `/workspace/arma/{baseline,final}.json` |
+| `compare.py <url>` | `resolved`, `still_failing`, `new_violations_regressions`, `changed_pixels_ratio`, captures before/after/diff (Pillow) |
+| `audit_static.js` | Fallback sans navigateur (jsdom + axe-core) |
 
-### 12.3 Composants et états
-- **Jauge** :
-  - « – » avant la fin de l'audit, puis la valeur ;
-  - couleur rouge sous 60, orange sous 85, vert à partir de 85 ;
-  - trait rouge au niveau du score de départ.
-- **Pills de statut** :
-
-  | Statut | Libellé | Couleur |
-  |---|---|---|
-  | `detected` | Detected | rouge |
-  | `fixing` | Developer fixing | bleu |
-  | `fixed_pending` | Tester verifying | bleu |
-  | `rejected` | Rejected, retrying | orange |
-  | `validated` | Fixed and verified | vert |
-  | `needs_human` | Needs review | orange |
-
-  Afficher « attempt N » sous la pill quand il y a eu plus d'une tentative.
-- **« Found by »** : « Scanner (axe) » en gris ou « Agent review » en bleu accentué.
-- **Nouvelle ligne** : flash de surbrillance bref à l'apparition.
-- **Agent team** : pastille grise (idle), jaune pulsée (working) ou verte (done), avec
-  l'activité courante en monospace tronquée.
-- **Log** :
-  - `tool` en gris ;
-  - `err`, `reject` et `rollback` en rouge ;
-  - `ok` et `commit` en vert ;
-  - `phase` en gras avec un espacement au-dessus.
-- **Contrôles de replay** : vitesse 1×, 2×, 4×. « Run audit » devient « Stop » pendant un run.
-
-### 12.4 Onglet « Pull request »
-- **Avant `pr.ready`** : état vide explicatif (« assembled once every fix has been verified »)
-  avec le nombre de commits déjà faits.
-- **Après `pr.ready`** :
-  - **Colonne gauche** :
-    - titre de PR et dépôt ;
-    - branche → main ;
-    - nombre de commits, de fichiers et de problèmes corrigés ;
-    - **Open items** : les problèmes `needs_human` ;
-    - score avant → après ;
-    - liste des commits (sha + message).
-  - **Colonne droite** : formulaire.
-    - Reviewers : cases à cocher (Frontend team, Tech lead, QA).
-    - Notify : Slack #eng-frontend, ticket Jira A11Y, email du rapport au juridique.
-    - Message à l'équipe technique, pré-rempli et éditable.
-    - Bouton **Send pull request**.
-  - **À l'envoi** :
-    - checklist animée : push branch, open PR, request reviews, post Slack, create Jira…, une
-      étape à la fois ;
-    - puis carte verte « Pull request #N opened » avec le lien si la PR est réelle, et la
-      mention « Demo workspace: no external system contacted » si elle est simulée.
-- **Le bouton du header** « Send PR to engineering » est désactivé tant que la PR n'est pas prête.
-  Une fois actif, il ouvre l'onglet et met le focus sur « Send pull request ».
-
-### 12.5 Onglet « Accessibility statement »
-- Rendu du `accessibility-statement.md` du writer, avec un badge « Draft · partially compliant ».
-- Les champs `[TO COMPLETE]` sont surlignés.
-- Bouton « Copy statement ».
-
-### 12.6 Sources d'événements (`app.js`)
-```js
-class ReplaySource  { constructor(url, speed) … }  // fetch JSONL, émet selon e.t / speed
-class LiveSource    { constructor('/api/events') … } // EventSource SSE
-```
-- **Mode** : `?mode=replay` (par défaut si `/api/state` ne répond pas, comme sur Vercel) ou
-  `?mode=live`.
-- **Bouton « Run audit »** :
-  - en live : `POST /api/run`, puis abonnement SSE ;
-  - en replay : rejoue `recordings/demo-run.jsonl`.
-- **Repli automatique** : si le live échoue (backend absent, erreur), le dashboard bascule en
-  replay et affiche un toast discret.
-
-**L'écran ne doit jamais rester vide.**
+**axe-core** est vendorisé dans `tools.tgz`, pour ne pas dépendre du npm du sandbox.
 
 ---
 
-## 13. Envoi de la PR (`POST /api/pr`)
+## 13. Pont local : `bridge.py` + `server.py`
 
-- **Entrée** : `{reviewers[], notify:{slack,jira,email}, message}`.
+**`bridge.py run [--live] [--budget-cents N] [--model-override sonnet]`** enchaîne :
+1. **Compression des entrées** : `demo-shop.tgz` et `tools.tgz` ; upload via Files API
+   (`client.files.upload`) avec la rubric.
+2. **Création de la session** (§5.3). Ouvrir le stream **avant** d'envoyer
+   `user.message` + `user.define_outcome`.
+3. **Boucle sur le stream** :
+   - `agent.custom_tool_use` → handler §6 → `user.custom_tool_result` (aussi pendant
+     `running` : ne pas attendre l'idle) ;
+   - `agent.message` / `agent.tool_use` / `agent.tool_result` / statuts de fil →
+     événements `log` et `agent.status` ;
+   - `span.outcome_evaluation_*` → `outcome` ;
+   - `session.usage` → coût ;
+   - `session.error` → log `err`. Si `retry_status` indique une relance automatique, continuer ;
+   - `session.status_idle` avec `end_turn` **et** outcome terminal → fin. Avec
+     `requires_action` → répondre aux événements listés. Avec `budget_reached` → fin propre et
+     log.
+4. **Reconnexion** : si le stream coupe, rouvrir, puis
+   `client.beta.sessions.events.list(session.id)` pour dédoublonner par `event.id` (pattern de la
+   doc). Le run continue côté serveur : c'est l'argument « long running ».
+5. **Fin** :
+   - `client.beta.files.list(scope_id=session.id, betas=["managed-agents-2026-04-01"])` →
+     télécharger les sorties dans `state/out/` (réessayer après quelques secondes si un fichier
+     manque) ;
+   - appliquer `patches/` sur une copie locale du site (`runs/demo-shop`, `git am`) → branche
+     locale ;
+   - émettre `document.written`, `pr.ready` et `run.finished` ;
+   - lancer `eval/run_eval.py` et émettre `eval`.
+6. **Enregistrement** de tout dans `recordings/run-<date>.jsonl`.
+
+**`bridge.py resume <session_id>`** se rattache à une session existante (historique + stream).
+
+**`server.py` (FastAPI)** :
+- `GET /api/events` (SSE) ;
+- `GET /api/state` ;
+- `POST /api/run` (lance `bridge.run` en tâche de fond) ;
+- `POST /api/pr` (§14) ;
+- statique `web/`.
+
+---
+
+## 14. Envoi de la PR
+
 - **Mode réel**, si `GITHUB_REPO` est défini, `gh auth status` est OK et un remote existe :
-  1. `git push -u origin <branch>` ;
-  2. `gh pr create --title "a11y: EAA remediation, WCAG 2.1 AA" --body-file out/pr-body.md --head <branch> [--reviewer …]` ;
-  3. renvoie l'URL et le numéro.
-
-  Slack, Jira et email restent simulés : on ne les connecte pas pendant le hackathon.
-- **Mode simulé**, dans tous les autres cas : renvoie un numéro plausible avec `simulated: true`.
-- **Dans les deux cas** :
-  - on émet `pr.sent` avec la liste des étapes ;
-  - le corps de la PR est **le vrai `pr-body.md`** du writer ;
-  - la message de compliance est ajouté en tête, avec la signature « Approved by compliance ».
-- **Dans le mode replay statique (Vercel)**, l'envoi est entièrement simulé côté client.
+  1. `git push` de la branche locale reconstruite à partir des patches ;
+  2. `gh pr create --title "a11y: EAA remediation, WCAG 2.1 AA" --body-file state/out/pr-body.md`,
+     plus `--reviewer` si fourni.
+- **Sinon**, envoi simulé.
+- **Dans les deux cas**, le corps est précédé du message de la compliance et de la mention
+  « Approved by compliance ».
+- **Slack, Jira et email** restent simulés et sont affichés comme tels.
+- **En replay sur Vercel**, l'envoi est entièrement simulé côté client.
 
 ---
 
-## 14. Enregistrement, replay et livrables de run
+## 15. Dashboard : `web/`
 
-- Tout run réel écrit `recordings/run-<date>.jsonl` via l'EventBus.
-- `scripts/pick_demo_run.py <file>` copie le run choisi vers `web/recordings/demo-run.jsonl`.
-  Il peut **compresser les temps morts** : gaps plafonnés à quelques secondes, ordre conservé.
-- `scripts/export_logs.py` produit `deliverables/agent-logs.txt` au format lisible
-  `mm:ss [agent] texte`, à partir des événements `log`.
-- **MP4** : capture d'écran du dashboard en replay à 2×. C'est le filet de sécurité si le wifi
-  lâche.
+Identique à la v1 (voir `reference/arma-dashboard-prototype.html`) :
+- barre de commande, rail des phases ;
+- score (jauge, statut EAA, principes POUR, sparkline) et KPIs ;
+- onglets Findings (lignes dépliables : spécification, impact, preuve, diff, piste de
+  vérification), Pull request (formulaire et envoi) et Accessibility statement ;
+- équipe d'agents ;
+- log live.
 
----
+**Ajouts** :
+- **Badge « Hosted on Claude Managed Agents · session <id court> »** dans la barre.
+- **Carte « Independent grader »** sous le score : itération, `result`, explication.
+- **Carte « Eval »** : métriques vs seuils, PASS/FAIL. Si `eval/history.csv` existe, une
+  mini-courbe des versions du hill climb.
+- **L'équipe d'agents reflète les fils** : Lead, Auditors ×N, Developer, Tester et Writer.
 
-## 15. Déploiement et livrables
-
-- **Vercel** : déployer le dossier `web/` (statique), qui contient `recordings/demo-run.jsonl`.
-  Pas de backend. L'URL obtenue sert de **Live link to the product**.
-- **Landing** : le dashboard lui-même. Un lien « About » ouvre un panneau avec le one-line pitch,
-  le problème EAA, l'architecture des agents en une figure et le lien GitHub. Cette URL avec
-  `#about` sert de **Project name and one-line pitch**.
-- `deliverables/agent-design.txt` : une page maximum, en anglais.
-  - Rôles des agents et passations via l'état partagé et les outils.
-  - Boucle développeur ⇄ testeur avec rollback et escalade.
-  - Sous-agents parallèles.
-  - Gouvernance (permissions par rôle, hook de périmètre, audit trail).
-  - Reprise (checkpoints, `--resume`, relance des sessions, injection de panne).
-- `deliverables/agent-logs.txt` + MP4.
+**Exigences** : accessible (clavier, focus, contrastes, ARIA, `prefers-reduced-motion`), thème
+clair et sombre, sans scroll horizontal à 400 px. Au chargement, il affiche le dernier run
+terminé. Les sources sont `?mode=live|replay`, avec repli automatique sur le replay.
 
 ---
 
-## 16. Arborescence cible
+## 16. Arborescence
 
 ```
 arma/
-├── CLAUDE.md                 # résumé de ce document + commandes
-├── README.md
-├── pyproject.toml / requirements.txt   # claude-agent-sdk, playwright, pillow, fastapi, uvicorn, markdown
-├── run.py                    # CLI : --demo --site --url --resume --chaos --model --budget
-├── server.py                 # FastAPI : SSE, run, pr, statique web/
-├── vendor/axe.min.js
-├── demo-shop/                # modèle piégé (jamais modifié)
-├── runs/                     # copies de travail (gitignored)
-├── recordings/               # runs enregistrés (.jsonl)
-├── state/                    # state.json, shots/, out/ (gitignored)
-├── arma/
-│   ├── events.py             # EventBus : emit → jsonl + abonnés SSE (asyncio.Queue)
-│   ├── state.py              # Store JSON atomique + dédoublonnage
-│   ├── scoring.py            # §6.3
-│   ├── browser.py            # crawl, axe, keyboard_walk, html, screenshot, visual_diff
-│   ├── tools.py              # outils MCP
-│   ├── agents.py             # prompts + outils par rôle + AgentDefinition
-│   ├── orchestrator.py       # phases, boucle de lots, git, reprise
-│   └── pr.py                 # envoi réel (gh) ou simulé
-├── web/
-│   ├── index.html  styles.css  app.js
-│   └── recordings/demo-run.jsonl
-├── scripts/
-│   ├── pick_demo_run.py
-│   └── export_logs.py
-└── deliverables/
-    ├── agent-design.txt
-    └── agent-logs.txt
+├── CLAUDE.md  README.md  requirements.txt  .env.example  claude-lock.json
+├── arma-spec.md  arma-build-plan.md  reference/arma-dashboard-prototype.html
+├── managed/
+│   ├── environment.yaml
+│   ├── agents/{lead,page-auditor,developer,tester,writer}.md
+│   ├── rubric.md
+│   └── prompts/brief.md            # user.message de démarrage
+├── sandbox_tools/                  # → tools.tgz (avec vendor/axe.min.js)
+├── demo-shop/                      # → demo-shop.tgz
+├── arma_bridge/
+│   ├── events.py   (EventBus → jsonl + SSE)
+│   ├── store.py    (ledger + machine à états + dédoublonnage)
+│   ├── scoring.py
+│   ├── custom_tools.py (handlers §6)
+│   ├── translate.py (events Managed Agents → contrat dashboard)
+│   ├── outputs.py  (téléchargement, git am)
+│   └── pr.py
+├── bridge.py  server.py
+├── eval/{ground_truth.json, run_eval.py, history.csv, results/}
+├── web/{index.html, styles.css, app.js, recordings/{fixture,demo-run}.jsonl, vercel.json}
+├── scripts/{make_fixture.py, pick_demo_run.py, export_logs.py, check_web.py, smoke_sandbox.py}
+└── deliverables/{agent-design.txt, agent-logs.txt, links.md}
 ```
 
 ---
 
-## 17. Plan de construction (ordre imposé)
+## 17. Pièges et règles Managed Agents
 
-**Chaque étape se termine par une vérification. On ne passe pas à la suivante sans elle.**
-
-| # | Étape | Vérification |
-|---|---|---|
-| 1 | **Squelette** : venv, dépendances, `playwright install chromium`, vendoriser axe-core, `CLAUDE.md` | Un script ouvre Chromium et injecte axe |
-| 2 | **Contrat d'événements** (§5) + `events.py` + un **faux run JSONL écrit à la main** (`recordings/fixture.jsonl`) couvrant tous les types | Le fichier se parse ; chaque type est présent |
-| 3 | **Dashboard en replay** (§12) sur la fixture | Rendu complet, filtres, lignes dépliables, onglets, envoi PR simulé, thème sombre, largeur mobile sans scroll horizontal, navigation clavier complète |
-| 4 | **Boutique démo** (§11) | La servir et la parcourir |
-| 5 | `browser.py` | Le crawl trouve les quatre pages (dont checkout via `onclick`) ; axe trouve contraste, `lang` et `alt` ; `keyboard_walk` voit le focus invisible et les `div` inaccessibles ; le diff visuel fonctionne |
-| 6 | `state.py` + `scoring.py` | Test unitaire dédoublonnage + score |
-| 7 | `tools.py` + `agents.py` + orchestrateur, **phases `crawl` et `audit` seulement** | Run réel ; issues dans `state.json` ; événements dans le JSONL ; replay correct dans le dashboard |
-| 8 | **Boucle de correction** (§9.2), d'abord sur un seul lot, puis tous | Commits réels, rollback, escalade |
-| 9 | `reaudit`, `report`, `pr` (writer + `pr.ready`) | Run complet `python run.py --demo --model sonnet` |
-| 10 | `server.py` (SSE, `/api/run`, `/api/pr`) + `LiveSource` + repli automatique | Run live visible dans le dashboard |
-| 11 | **Meilleur run** → `web/recordings/demo-run.jsonl` (§9.5) | Au moins un refus et un rollback visibles |
-| 12 | **Déploiement Vercel** de `web/` | URL publique fonctionnelle en navigation privée |
-| 13 | **Livrables** : `agent-design.txt`, `agent-logs.txt`, MP4 | Fichiers présents |
-| 14 | *(nice-to-have)* `--chaos`, `--resume`, vraie PR GitHub, rapport HTML | — |
-
-**Si le temps manque**, couper dans cet ordre :
-1. le nice-to-have ;
-2. le mode live (le replay d'un vrai run suffit) ;
-3. la vraie PR (le simulé suffit) ;
-4. la phase `report` agentique (un template statique de déclaration suffit).
-
-**Ne jamais couper** : le dashboard en replay, les refus du testeur visibles, le déploiement.
+- **Beta header** : `managed-agents-2026-04-01`, posé automatiquement par le SDK `anthropic` et
+  `ant`. Pour `files.list(scope_id=…)`, passer `betas=["managed-agents-2026-04-01"]`.
+- **Ouvrir le stream avant d'envoyer** le premier événement.
+- **Répondre à chaque `agent.custom_tool_use` dès réception**, même si la session est `running`.
+  Les appels bloquants des sous-agents arrivent sur le fil principal.
+- **Multiagent à un seul niveau** : un sous-agent avec `multiagent` provoque une erreur 400.
+  `predefined_agents` contient 20 agents au plus, et une session 25 fils enfants au plus (les fils
+  inactifs comptent). Quatre auditeurs, un développeur, un testeur et un rédacteur tiennent
+  largement.
+- **Fils persistants** : le lead peut envoyer un suivi au **même** développeur. C'est ce qui rend
+  les relances crédibles.
+- **Versions d'agents** : les agents qui en référencent d'autres restent épinglés à la version
+  résolue à leur création. Après une mise à jour d'un sous-agent (hill climb), **ré-appliquer le
+  lead** (`ant apply`) pour qu'il pointe vers la nouvelle version.
+- **Sorties** : uniquement depuis `/mnt/session/outputs/`, avec un délai de quelques secondes après
+  l'idle. **Télécharger avant de supprimer** une session.
+- **Budget** : il se fixe à la création de la session. À `budget_reached`, la session se met en
+  pause.
+- **Réseau `limited`** : le site est servi en local dans le sandbox, donc aucun hôte externe n'est
+  nécessaire. Ne jamais appeler `playwright install`.
+- **Noms de custom tools** : jamais de préfixe `mcp__` ou `ant__`, et pas de collision avec
+  `bash`, `read`, etc.
+- **Coût** : en développement, override `claude-sonnet-5-5` pour tous les agents. Le run enregistré
+  final utilise la configuration nominale.
 
 ---
 
-## 18. Pièges connus du SDK Python (`claude-agent-sdk`)
+## 18. Definition of done
 
-- **Les champs de `AgentDefinition` sont en camelCase** (`maxTurns`, `permissionMode`,
-  `disallowedTools`). Utiliser du snake_case lève une `TypeError`. Mettre `background=False` sur
-  le `page-auditor` pour que le lead attende ses sous-agents.
-- **`allowed_tools` auto-approuve mais ne restreint pas.** La restriction passe par `tools=`
-  (outils intégrés), `disallowed_tools=` et `permission_mode="dontAsk"`.
-- **Les outils MCP utilisés par des sous-agents** doivent aussi être dans `allowed_tools` de la
-  session parente.
-- **Noms des outils MCP** : `mcp__<server>__<tool>`.
-- **Retour d'outil en erreur** : `{"content":[…], "is_error": True}`. Ne pas lever d'exception.
-- **`setting_sources=[]`** pour ne pas hériter de la config locale de Claude Code.
-- **Ne jamais faire `break`** dans `async for msg in query(...)`. Utiliser un drapeau.
-- **`ResultMessage`** donne `total_cost_usd` et `is_error` : cumuler le coût, lever une erreur si
-  `is_error`.
-- **`AssistantMessage.parent_tool_use_id`** non nul signifie un message de sous-agent : l'étiqueter
-  `auditor·<page>`.
-- **Dans les hooks**, `input_data["agent_type"]` identifie le sous-agent.
-- **Modèle** : `--model sonnet` pour les répétitions (rapide, économique), le modèle par défaut
-  pour le run enregistré.
-- **Budget** : `--budget` en USD, avec une vérification après chaque `ResultMessage`.
-
----
-
-## 19. Definition of done
-
-- [ ] L'URL Vercel ouvre le dashboard en replay d'un **vrai run**. Il fonctionne en navigation
-      privée, sur mobile et en thème sombre.
-- [ ] Le score passe d'un niveau « non-compliant » à « partially compliant », avec les
-      problèmes `needs_human` explicités.
-- [ ] Le KPI « missed by automated scanners » est majoritaire.
+- [ ] L'URL Vercel rejoue un **vrai run Managed Agents**, en navigation privée, sur mobile et en
+      thème sombre.
 - [ ] Le log montre :
-  - les sous-auditeurs parallèles ;
-  - au moins un refus du testeur suivi d'une correction validée ;
+  - les auditeurs parallèles ;
+  - au moins un refus du testeur suivi d'une validation dans le même fil développeur ;
   - au moins un rollback ;
-  - des commits.
-- [ ] Chaque problème déplié montre spécification, impact, preuve, diff et piste de vérification.
-- [ ] « Send PR to engineering » aboutit à une confirmation : vraie PR GitHub si configurée,
-      sinon simulée et signalée.
-- [ ] La déclaration d'accessibilité est copiable et ne prétend jamais à une conformité totale.
-- [ ] Le dashboard est lui-même navigable entièrement au clavier, avec un focus visible.
+  - des commits par critère.
+- [ ] La carte « Independent grader » affiche `satisfied`, ou `needs_revision` puis `satisfied`.
+- [ ] La carte « Eval » est PASS, et l'historique du hill climb est présent si le temps l'a permis.
+- [ ] Le score passe de *non-compliant* à *partially compliant*, avec les deux problèmes
+      `needs_human` explicités.
+- [ ] « Send PR to engineering » aboutit : vraie PR si configurée, sinon simulée et signalée.
+- [ ] La déclaration est copiable et ne prétend jamais à une conformité totale.
+- [ ] Le dashboard est navigable entièrement au clavier.
 - [ ] `deliverables/agent-design.txt`, `deliverables/agent-logs.txt` et le MP4 existent.
 
 ---
 
-## 20. Commandes
+## 19. Script de pitch
 
-```bash
-# installation
-python3 -m venv .venv && source .venv/bin/activate
-pip install claude-agent-sdk playwright pillow fastapi uvicorn markdown
-python -m playwright install chromium
-export ANTHROPIC_API_KEY=...          # crédits Claude API du hackathon
-
-# run réel sur la boutique démo (répétition)
-python run.py --demo --model sonnet --chaos
-
-# serveur + dashboard live
-uvicorn server:app --port 8000        # http://localhost:8000/?mode=live
-
-# choisir le run de démo et exporter les logs
-python scripts/pick_demo_run.py recordings/run-<date>.jsonl
-python scripts/export_logs.py web/recordings/demo-run.jsonl > deliverables/agent-logs.txt
-
-# déploiement statique
-cd web && vercel --prod
-```
+1. **Problème.** EAA, procès en France, overlays sanctionnés, scanners aveugles à la majorité des
+   problèmes.
+2. **« Run audit ».** Une session Managed Agents démarre. Le lead lance les auditeurs en parallèle,
+   et le compteur « missed by scanners » monte.
+3. **L'équipe.** Le testeur refuse, le même développeur corrige, puis commit ; le rollback pour
+   régression visuelle ; le score qui monte.
+4. **Prove it worked.** Le grader indépendant renvoie *satisfied*, l'eval contre la vérité terrain
+   est PASS, avec la courbe du hill climb.
+5. **Vue compliance.** Spécification, preuve, diff ; les deux « Needs review » restent honnêtement
+   ouverts.
+6. **« Send PR to engineering »** et la déclaration d'accessibilité prête.
+7. **Business.** Abonnement avec re-audit programmé à chaque déploiement (scheduled deployments),
+   marque blanche pour les agences.
 
 ---
 
-## 21. Script de démo (pitch)
+## 20. Changer de cible plus tard (vrai site)
 
-1. **Problème.** EAA en vigueur ; procès contre la grande distribution française ; overlays
-   sanctionnés par la FTC ; les scanners ne voient qu'une partie des problèmes.
-2. **« Run audit ».** Le cartographe, puis les auditeurs en parallèle ; le compteur « missed by
-   scanners » monte.
-3. **Le travail d'équipe.** Un refus du testeur avec sa raison, la correction, le commit ; le
-   score qui remonte.
-4. **Vue compliance.** Une ligne dépliée : spécification WCAG et EN 301 549, preuve, diff,
-   vérification. Les deux « Needs review » restent honnêtement ouverts.
-5. **« Send PR to engineering ».** La PR part à la tech, et la déclaration d'accessibilité est
-   prête.
-6. **Business.** Audit et correctifs facturés à l'acte, surveillance continue, marque blanche
-   pour les agences.
+La cible d'audit est isolée dans un seul fichier de configuration, pour pouvoir passer de
+Maison Lumière à un vrai site sans toucher au reste.
+
+**`targets/maison-lumiere.json`** (par défaut) :
+```json
+{"name":"Maison Lumière","source":{"type":"archive","path":"demo-shop/"},
+ "serve":"local","start_url":"http://127.0.0.1:8765/index.html",
+ "repo":null,"ground_truth":"eval/ground_truth.json"}
+```
+
+**Plus tard, `targets/<vrai-site>.json`** :
+```json
+{"name":"…","source":{"type":"git","url":"https://github.com/<org>/<repo>","ref":"main"},
+ "serve":"command","serve_cmd":"npm ci && npm run build && npm start -- -p 8765",
+ "start_url":"http://127.0.0.1:8765/","repo":"<org>/<repo>","ground_truth":null}
+```
+
+**Ce qui change avec un vrai site** :
+- le pont empaquette ou clone la source à partir de `source` ;
+- le brief indique comment servir le site dans le sandbox ;
+- `packages` et `allowed_hosts` de l'environnement sont à adapter (npm, et l'hôte GitHub si on
+  clone) ;
+- sans `ground_truth`, l'eval ne garde que les métriques sans vérité terrain (`false_fix`,
+  `regressions`, `honesty`) ;
+- l'outcome et la rubric restent valables.
+
+**Usage** : `bridge.py run --target targets/<nom>.json`. Le dashboard affiche le nom de la cible
+dans la barre.

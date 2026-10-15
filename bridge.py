@@ -1,4 +1,4 @@
-"""Arma bridge: runs one Claude Managed Agents session and keeps the compliance ledger (spec 2 §13).
+"""Arma bridge: runs one Claude Managed Agents session and keeps the compliance ledger (arma-spec.md §13).
 
 usage:
   python bridge.py run [--until audit] [--smoke] [--budget-cents 3000] [--model-override claude-sonnet-5-5]

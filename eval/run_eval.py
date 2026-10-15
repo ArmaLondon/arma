@@ -1,4 +1,4 @@
-"""Eval of an Arma run against the planted defects of the demo store (arma-spec 2 §9).
+"""Eval of an Arma run against the planted defects of the demo store (arma-spec.md §9).
 
 usage: python eval/run_eval.py [state/state.json] [state/out/final.json] [--json] [--no-history]
 An issue matches a defect when its criterion is in the defect's criteria AND its title, selector,
