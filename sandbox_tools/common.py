@@ -48,10 +48,11 @@ def main(fn):
 
 
 def launch(p):
-    exe = os.environ.get("ARMA_CHROMIUM", "/usr/bin/chromium")
     kw = {"args": ["--no-sandbox", "--disable-dev-shm-usage"]}
-    if exe and Path(exe).exists():
-        kw["executable_path"] = exe
+    for exe in (os.environ.get("ARMA_CHROMIUM"), "/usr/bin/chromium", "/usr/bin/chromium-browser"):
+        if exe and Path(exe).exists():
+            kw["executable_path"] = exe
+            break
     return p.chromium.launch(**kw)
 
 

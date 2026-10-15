@@ -1,0 +1,38 @@
+{
+  "environment": {
+    "id": "env_019j6TftJUofnQ3e8eh7iRHB",
+    "name": "arma-env"
+  },
+  "agents": {
+    "page-auditor": {
+      "id": "agent_01N1HVmxfTxbFh25MapsXjRB",
+      "version": 1,
+      "name": "arma-page-auditor",
+      "model": "claude-sonnet-5-5"
+    },
+    "developer": {
+      "id": "agent_01RLfKqaHKPowYHZ3D6Ux3QU",
+      "version": 1,
+      "name": "arma-developer",
+      "model": "claude-sonnet-5-5"
+    },
+    "tester": {
+      "id": "agent_0165Nm2v3vVRkto3bXp6X54S",
+      "version": 1,
+      "name": "arma-tester",
+      "model": "claude-opus-5-5"
+    },
+    "writer": {
+      "id": "agent_01VufAWu24tDT6p9bsdEtPsX",
+      "version": 1,
+      "name": "arma-writer",
+      "model": "claude-sonnet-5-5"
+    },
+    "lead": {
+      "id": "agent_018v6z3r2LhESZvoy9scEbor",
+      "version": 1,
+      "name": "arma-lead",
+      "model": "claude-opus-5-5"
+    }
+  }
+}
