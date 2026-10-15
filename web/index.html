@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Arma Compliance · EAA accessibility, audited, fixed and verified by AI agents</title>
+<title>Arma: accessibility audited, fixed and verified by an AI agent team</title>
 <meta name="description" content="Arma gives compliance teams an AI agent team that audits, fixes and verifies their store's accessibility, then hands engineering a ready-to-merge pull request.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,60 +15,79 @@
 <a class="skip" href="#main">Skip to main content</a>
 
 <header class="bar">
-  <div class="wrap">
-    <div class="brand">
-      <span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 14h5l4-6h5" fill="none" stroke="#141a24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      Arma
-    </div>
-    <span class="chip">Demo workspace</span>
-    <div class="site" title="Audited site"><span class="dot" id="liveDot"></span><b id="siteName">maison-lumiere.fr</b><span class="muted mono" style="font-size:12px" id="siteRef">storefront · main</span></div>
-    <span class="spacer"></span>
-    <div class="speed" role="group" aria-label="Replay speed">
-      <button type="button" data-speed="1" aria-pressed="false">1×</button>
-      <button type="button" data-speed="2" aria-pressed="true">2×</button>
-      <button type="button" data-speed="4" aria-pressed="false">4×</button>
-    </div>
-    <button class="btn" id="runBtn" type="button">▶ Run audit</button>
-    <button class="btn primary" id="prBtn" type="button" disabled>Send PR to engineering</button>
-    <button class="btn" id="aboutBtn" type="button" aria-haspopup="dialog">About</button>
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 14h5l4-6h5" fill="none" stroke="#15181d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    Arma
   </div>
+  <span class="chip">Demo workspace</span>
+  <span class="chip hosted" id="hosted" hidden>Hosted on Claude Managed Agents · session <b id="sess"></b></span>
+  <p class="site"><span class="dot" id="liveDot" aria-hidden="true"></span><b id="siteName">maison-lumiere.fr</b> <span class="muted" id="siteRef">storefront, main</span></p>
+  <span class="spacer"></span>
+  <div class="speed" role="group" aria-label="Replay speed">
+    <button type="button" data-speed="1" aria-pressed="false">1×</button>
+    <button type="button" data-speed="2" aria-pressed="true">2×</button>
+    <button type="button" data-speed="4" aria-pressed="false">4×</button>
+  </div>
+  <button class="btn" id="runBtn" type="button">▶ Run audit</button>
+  <button class="btn primary" id="prBtn" type="button" disabled>Send PR to engineering</button>
+  <button class="btn ghost" id="aboutBtn" type="button" aria-haspopup="dialog">About</button>
 </header>
 
-<nav class="rail" aria-label="Run phases"><div class="wrap" id="rail" tabindex="0"></div></nav>
+<main id="main">
+  <section class="flow" aria-labelledby="flowH">
+    <div class="flow-head">
+      <h1 id="flowH">Agent workflow</h1>
+      <p class="flow-now" id="flowNow" aria-live="polite">Run an audit to watch the agents work.</p>
+      <span class="clock" id="clock">Idle</span>
+    </div>
+    <div class="flow-scroll" tabindex="0" role="region" aria-label="Agent workflow diagram, scrollable">
+      <svg id="flow" role="img" aria-labelledby="flowDesc"><desc id="flowDesc">Agent workflow</desc></svg>
+    </div>
+    <ul class="vh" id="agentList" aria-label="Agent status"></ul>
+  </section>
 
-<main class="wrap" id="main">
-  <div class="main">
+  <div class="grid">
     <div class="col">
-      <section class="card" aria-labelledby="scoreH">
-        <div class="score">
-          <div>
-            <h2 id="scoreH">Compliance score</h2>
-            <svg class="gauge" viewBox="0 0 230 156" role="img" aria-labelledby="gaugeLbl">
-              <title id="gaugeLbl">Compliance score</title>
-              <path d="M20 125 A95 95 0 0 1 210 125" fill="none" stroke="var(--faint)" stroke-width="16" stroke-linecap="round"/>
-              <path id="gArc" d="M20 125 A95 95 0 0 1 210 125" fill="none" stroke="var(--ink)" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" style="transition:stroke-dasharray .6s"/>
-              <line id="gBase" x1="0" y1="0" x2="0" y2="0" stroke="var(--bad)" stroke-width="3"/>
-              <text id="gVal" class="val" x="115" y="112" text-anchor="middle">–</text>
-              <text id="gSub" class="sub" x="115" y="152" text-anchor="middle">WCAG 2.1 AA · EN 301 549</text>
-            </svg>
-            <div class="status-line" id="eaa"></div>
+      <section class="score" aria-labelledby="scoreH">
+        <div class="score-num">
+          <h2 id="scoreH">Compliance score</h2>
+          <div class="gauge" role="img" id="gaugeBox" aria-label="Compliance score not measured yet">
+            <div id="gauge" aria-hidden="true"></div>
+            <p class="gnum" aria-hidden="true"><span id="gVal">–</span><span class="of">/100</span></p>
           </div>
-          <div style="min-width:0">
-            <h2>By WCAG principle</h2>
-            <div class="pour" id="pour" style="margin-top:12px"></div>
-            <svg class="spark" id="spark" viewBox="0 0 300 54" width="100%" height="54" preserveAspectRatio="none" role="img" aria-label="Score during the run"></svg>
-            <div class="muted" style="font-size:12.5px" id="sparkLbl">Score over the run</div>
-          </div>
+          <p class="status-line" id="eaa"></p>
         </div>
-        <div class="kpis">
-          <div class="kpi"><b id="kFound">–</b><span>issues found</span></div>
-          <div class="kpi"><b id="kHidden">–</b><span>missed by automated scanners</span></div>
-          <div class="kpi"><b id="kFixed">–</b><span>fixed and verified</span></div>
-          <div class="kpi"><b id="kHuman">–</b><span>need human review</span></div>
+        <figure class="chart">
+          <figcaption id="timelineH">Score during the run</figcaption>
+          <div id="timeline" class="timeline"></div>
+          <table class="vh" id="timelineTable"><caption>Score during the run</caption><thead><tr><th scope="col">Time</th><th scope="col">Score</th></tr></thead><tbody></tbody></table>
+        </figure>
+        <figure class="chart">
+          <figcaption>Resolved by WCAG principle</figcaption>
+          <div id="pour" class="pour"></div>
+        </figure>
+      </section>
+
+      <dl class="kpis">
+        <div><dt>issues found</dt><dd id="kFound">–</dd></div>
+        <div><dt>missed by automated scanners</dt><dd id="kHidden">–</dd></div>
+        <div><dt>fixed and verified</dt><dd id="kFixed">–</dd></div>
+        <div><dt>need human review</dt><dd id="kHuman">–</dd></div>
+      </dl>
+
+      <section class="proof" aria-labelledby="proofH">
+        <h2 id="proofH" class="vh">Proof</h2>
+        <div class="grader" id="grader">
+          <h3>Independent grader</h3>
+          <div id="graderBody"><p class="muted">The outcome rubric is graded once the agents finish their work.</p></div>
+        </div>
+        <div class="evalbox" id="evalbox">
+          <h3>Eval against ground truth</h3>
+          <div id="evalBody"><p class="muted">Recall, precision and fix rate are measured against the planted defects after the run.</p></div>
         </div>
       </section>
 
-      <section class="card" aria-label="Compliance workspace">
+      <section class="work" aria-label="Compliance workspace">
         <div class="tabs" role="tablist" aria-label="Compliance workspace">
           <button class="tab" role="tab" id="t-findings" aria-controls="p-findings" aria-selected="true">Findings <span class="n" id="nFind">0</span></button>
           <button class="tab" role="tab" id="t-pr" aria-controls="p-pr" aria-selected="false" tabindex="-1">Pull request</button>
@@ -83,7 +102,7 @@
             <button class="fbtn" data-f="agent" aria-pressed="false">Missed by scanners</button>
           </div>
           <div class="tablewrap" tabindex="0" role="region" aria-label="Findings table">
-            <table>
+            <table class="findings">
               <thead><tr><th scope="col">ID</th><th scope="col">Criterion</th><th scope="col">Issue</th><th scope="col">Severity</th><th scope="col">Found by</th><th scope="col">Status</th></tr></thead>
               <tbody id="rows"></tbody>
             </table>
@@ -94,41 +113,30 @@
       </section>
     </div>
 
-    <div class="col">
-      <section class="card" aria-labelledby="teamH">
-        <div class="loghead"><h2 id="teamH">Agent team</h2><span class="muted" style="font-size:13px" id="clock">–</span></div>
-        <div class="agents" id="agents"></div>
-      </section>
-      <section class="card" aria-labelledby="logH">
-        <div class="loghead"><h2 id="logH">Live agent log</h2><button class="btn small" id="copyLog" type="button">Copy log</button></div>
-        <div class="log" id="log" role="log" aria-live="off" tabindex="0" aria-labelledby="logH"></div>
-      </section>
-    </div>
+    <section class="logbox" aria-labelledby="logH">
+      <div class="loghead"><h2 id="logH">Live agent log</h2><button class="btn small" id="copyLog" type="button">Copy log</button></div>
+      <div class="log" id="log" role="log" aria-live="off" tabindex="0" aria-labelledby="logH"></div>
+    </section>
   </div>
-  <p class="foot">Arma runs a team of Claude agents (Claude Agent SDK) that map, audit, fix and independently verify a storefront against WCAG 2.1 AA, the standard behind the European Accessibility Act. Automated tools cover only part of WCAG: items marked “needs review” and testing with disabled users remain required.</p>
+
+  <p class="foot">Arma runs a team of Claude agents hosted on Claude Managed Agents that map, audit, fix and independently verify a storefront against WCAG 2.1 AA, the standard behind the European Accessibility Act. Automated tools cover only part of WCAG: items marked “needs review” and testing with disabled users remain required.</p>
 </main>
 
 <dialog id="about" aria-labelledby="aboutH">
   <h2 id="aboutH">Arma</h2>
-  <p><b>Arma gives compliance teams an AI agent team that audits, fixes and verifies their store's accessibility, then hands engineering a ready-to-merge pull request.</b></p>
+  <p><b>Arma gives compliance teams a hosted AI agent team that audits, fixes and verifies their store's accessibility, proves it against a rubric, and hands engineering a ready-to-merge pull request.</b></p>
   <h3>The problem</h3>
   <p>Since June 2025 the European Accessibility Act makes WCAG 2.1 AA (EN 301 549) a legal duty for e-commerce, and French retailers are already being sued. JavaScript overlays fix nothing (FTC fine against accessiBe, 2025). Scanners only catch part of the issues, and compliance teams cannot turn a report into engineering tickets.</p>
   <h3>The agent team</h3>
-  <pre aria-label="Agent architecture" tabindex="0">  cartographer ──► lead auditor ──► page auditors ×4 (parallel)
-                         │  shared state via typed MCP tools
-                         ▼
-  per WCAG batch:  developer ──► tester (independent, read-only)
-                      ▲   rejected: actionable reason │
-                      └──────── retry ◄───────────────┘
-                   regression → git rollback · 3 attempts → human
-                         ▼
-  writer ──► pull request + accessibility statement ──► compliance sign-off</pre>
-  <p>Built with the Claude Agent SDK (Python), in-process MCP tools, Playwright + axe-core and git. This page replays a recorded run: no external system is contacted.</p>
+  <p>Build it. Let it run. Prove it worked. A lead agent hosted on Claude Managed Agents maps the store and sends one auditor per page, in parallel threads. For each WCAG criterion, a developer fixes the source code and an independent tester, who cannot edit and never sees the developer's diff, accepts or rejects each fix with a reason. A rejection goes back to the same developer thread; regressions are rolled back with git; after three attempts an issue goes to a human. A writer drafts the pull request and the accessibility statement.</p>
+  <p>Every finding and status change goes through typed tools answered by Arma's own compliance ledger, which enforces the status rules and keeps the audit trail. An independent grader checks the result against a rubric, and an eval measures it against the store's known defects.</p>
+  <p>This page replays a recorded run: no external system is contacted.</p>
   <p><a href="https://github.com/moogrocker/arma">Source code on GitHub</a></p>
   <form method="dialog"><button class="btn primary" type="submit">Close</button></form>
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="vendor/d3.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

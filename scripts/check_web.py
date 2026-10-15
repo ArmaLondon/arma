@@ -54,6 +54,9 @@ def expected():
         "fixed": str(sum(1 for s in status.values() if s == "validated")),
         "human": str(sum(1 for s in status.values() if s == "needs_human")),
         "has_pr": any(e["type"] == "pr.ready" for e in ev),
+        "outcome": ([e["data"]["result"] for e in ev if e["type"] == "outcome"] or [None])[-1],
+        "eval": ([e["data"]["passed"] for e in ev if e["type"] == "eval"] or [None])[-1],
+        "session": any(e["type"] == "run.started" and e["data"].get("session_id") for e in ev),
         "has_stmt": any(e["type"] == "document.written" and e["data"].get("name") == "accessibility-statement.md" for e in ev),
     }
 
@@ -87,6 +90,16 @@ async def main():
             got = {k: await page.text_content(sel) for k, sel in
                    [("score", "#gVal"), ("found", "#kFound"), ("hidden", "#kHidden"), ("fixed", "#kFixed"), ("human", "#kHuman")]}
             check(all(got[k] == exp[k] for k in got), f"{label}: score and counters match the events {got}")
+            check(await page.locator("#flow .node").count() >= 7, f"{label}: agent workflow rendered")
+            check(await page.locator("#gauge svg path.g-fill").count() == (1 if exp["score"] != "–" else 0), f"{label}: gauge drawn")
+            check(await page.locator("#timeline svg .score-line").count() == 1, f"{label}: score timeline drawn")
+            if exp["outcome"]:
+                got_o = (await page.text_content("#graderBody")).lower()
+                check(exp["outcome"].replace("_", " ") in got_o, f"{label}: grader card shows {exp['outcome']}")
+            if exp["eval"] is not None:
+                got_e = await page.text_content("#evalBody")
+                check(("Eval passed" if exp["eval"] else "Eval failed") in got_e, f"{label}: eval card verdict")
+            check(await page.locator("#hosted").is_visible() == exp["session"], f"{label}: hosted badge only with a session id")
             await page.screenshot(path=str(SHOTS / f"rest-{width}-{scheme}.png"), full_page=True)
             await axe(page, label)
 
